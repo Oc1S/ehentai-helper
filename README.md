@@ -7,10 +7,6 @@
 ![](https://badges.aleen42.com/src/vitejs.svg)
 ![GitHub action badge](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite/actions/workflows/build-zip.yml/badge.svg)
 <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/Jonghakseo/chrome-extension-boilerplate-react-viteFactions&count_bg=%23#222222&title_bg=%23#454545&title=😀&edge_flat=true" alt="hits"/>
-
-> This boilerplate
-> has [Legacy version](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite/tree/legacy)
-
 </div>
 
 > [!TIP]
@@ -23,19 +19,20 @@
 
 ## Table of Contents
 
-- [Intro](#intro)
-- [Features](#features)
-- [Structure](#structure)
-    - [ChromeExtension](#chrome-extension)
-    - [Packages](#packages)
-    - [Pages](#pages)
-- [Install](#install)
-    - [Procedures](#procedures)
-        - [Chrome](#chrome)
-        - [Firefox](#firefox)
-- [Reference](#reference)
-- [Star History](#starhistory)
-- [Contributors](#contributors)
+- [Table of Contents](#table-of-contents)
+- [Intro ](#intro-)
+- [Features ](#features-)
+- [Install ](#install-)
+- [Procedures: ](#procedures-)
+- [And next, depending on the needs:](#and-next-depending-on-the-needs)
+  - [For Chrome: ](#for-chrome-)
+  - [For Firefox: ](#for-firefox-)
+  - [Remember in firefox you add plugin in temporary mode, that's mean it's disappear after close browser, you must do it again, on next launch.](#remember-in-firefox-you-add-plugin-in-temporary-mode-thats-mean-its-disappear-after-close-browser-you-must-do-it-again-on-next-launch)
+- [Structure ](#structure-)
+  - [ChromeExtension ](#chromeextension-)
+  - [Packages ](#packages-)
+  - [Pages ](#pages-)
+- [Reference ](#reference-)
 
 ## Intro <a name="intro"></a>
 
@@ -137,25 +134,3 @@ Some shared packages
 - [Turborepo](https://turbo.build/repo/docs)
 - [Rollup-plugin-chrome-extension](https://www.extend-chrome.dev/rollup-plugin)
 
-## Star History <a name="starhistory"></a>
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Jonghakseo/chrome-extension-boilerplate-react-vite&type=Date)](https://star-history.com/#Jonghakseo/chrome-extension-boilerplate-react-vite&Date)
-
-## Contributors <a name="contributors"></a>
-
-This Boilerplate is made possible thanks to all of its contributors.
-
-<a href="https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite/graphs/contributors">
-  <img width="500px" src="https://contrib.rocks/image?repo=Jonghakseo/chrome-extension-boilerplate-react-vite" alt="All Contributors"/>
-</a>
-
----
-
-## Special Thanks To
-
-| <a href="https://jb.gg/OpenSourceSupport"><img width="40" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo."></a> | <a href="https://www.linkedin.com/in/j-acks0n"><img width="40" style="border-radius:50%" src='https://avatars.githubusercontent.com/u/23139754' alt='Jackson Hong'/></a> |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-
----
-
-Made by [Jonghakseo](https://nookpi.tistory.com/)

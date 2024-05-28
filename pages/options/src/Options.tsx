@@ -1,39 +1,202 @@
-import '@src/Options.css';
-import { useStorageSuspense, withErrorBoundary, withSuspense } from '@chrome-extension-boilerplate/shared';
-import { exampleThemeStorage } from '@chrome-extension-boilerplate/storage';
-import { ComponentPropsWithoutRef } from 'react';
+import { FC, useState } from 'react';
+import { withErrorBoundary, withSuspense, useMounted } from '@chrome-extension-boilerplate/shared';
+import { Button, Checkbox, Radio, RadioGroup, Input } from '@nextui-org/react';
+import { Toast } from './components';
 
-const Options = () => {
-  const theme = useStorageSuspense(exampleThemeStorage);
+const PATTERN_INVALID_FILE_PATH_CHAR = /[:*?"<>|]/g;
+const STATUS_SHOWING_DURATION = 3_000; // In ms.
 
+// Default config.
+const DEFAULT_INTERMEDIATE_DOWNLOAD_PATH = 'e-hentai helper/';
+const DEFAULT_SAVE_ORIGINAL_IMAGES = false;
+const DEFAULT_SAVE_GALLERY_INFO = false;
+const DEFAULT_SAVE_GALLERY_TAGS = false;
+const DEFAULT_FILENAME_CONFLICT_ACTION = 'uniquify';
+const DEFAULT_DOWNLOAD_INTERVAL = 300; // In ms.
+
+const showDefaultDownloadFolder = () => {
+  chrome.downloads.showDefaultFolder();
+};
+
+const processFilePath = (path: string) => {
+  if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
+    return null;
+  }
+  path = path.replace(/\\/g, '/');
+  if (path[path.length - 1] !== '/') {
+    path += '/';
+  }
+  return path;
+};
+
+const Row = ({ label, content }: Record<'label' | 'content', React.ReactNode>) => {
   return (
-    <div
-      className="App-container"
-      style={{
-        backgroundColor: theme === 'light' ? '#eee' : '#222',
-      }}>
-      <img src={chrome.runtime.getURL('options/logo.svg')} className="App-logo" alt="logo" />
-      <span style={{ color: theme === 'light' ? '#0281dc' : undefined, marginBottom: '10px' }}>Options</span>
-      Edit <code>pages/options/src/Options.tsx</code> and save to reload.
-      <ToggleButton>Toggle theme</ToggleButton>
+    <div className="flex items-center">
+      <div className="w-[200px]">{label}</div>
+      <div className="w-[600px]">{content}</div>
     </div>
   );
 };
 
-const ToggleButton = (props: ComponentPropsWithoutRef<'button'>) => {
-  const theme = useStorageSuspense(exampleThemeStorage);
-  return (
-    <button
-      className={
-        props.className +
-        ' ' +
-        'font-bold mt-4 py-1 px-4 rounded shadow hover:scale-105 ' +
-        (theme === 'light' ? 'bg-white text-black' : 'bg-black text-white')
+const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) => (
+  <input type="text" className={`border-b border-primary bg-transparent text-primary ${className}`} {...rest} />
+);
+
+const Options: FC = () => {
+  const [status, setStatus] = useState('');
+
+  const [form, setForm] = useState({
+    intermediateDownloadPath: DEFAULT_INTERMEDIATE_DOWNLOAD_PATH,
+    saveOriginalImages: DEFAULT_SAVE_ORIGINAL_IMAGES,
+    saveGalleryInfo: DEFAULT_SAVE_GALLERY_INFO,
+    saveGalleryTags: DEFAULT_SAVE_GALLERY_TAGS,
+    filenameConflictAction: DEFAULT_FILENAME_CONFLICT_ACTION,
+    downloadInterval: DEFAULT_DOWNLOAD_INTERVAL,
+  });
+
+  const restoreOptions = () => {
+    chrome.storage.sync.get(
+      {
+        intermediateDownloadPath: DEFAULT_INTERMEDIATE_DOWNLOAD_PATH,
+        saveOriginalImages: DEFAULT_SAVE_ORIGINAL_IMAGES,
+        saveGalleryInfo: DEFAULT_SAVE_GALLERY_INFO,
+        saveGalleryTags: DEFAULT_SAVE_GALLERY_TAGS,
+        filenameConflictAction: DEFAULT_FILENAME_CONFLICT_ACTION,
+        downloadInterval: DEFAULT_DOWNLOAD_INTERVAL,
+      },
+      items => {
+        setForm(items as typeof form);
       }
-      onClick={exampleThemeStorage.toggle}>
-      {props.children}
-    </button>
+    );
+  };
+
+  const showEphemeralStatus = (text: string, duration: number) => {
+    setStatus(text);
+    setTimeout(() => setStatus(''), duration);
+  };
+
+  const saveOptions = () => {
+    const intermediateDownloadPath = processFilePath(form.intermediateDownloadPath);
+
+    if (!intermediateDownloadPath) {
+      // process file path.
+      setStatus(
+        'Failed to save options. ' + 'File path should not contain the following characters ' + ': * ? " < > |'
+      );
+      return;
+    }
+    if (intermediateDownloadPath !== form.intermediateDownloadPath) {
+      setForm({ ...form, intermediateDownloadPath });
+    }
+    chrome.storage.sync.set(form, () => showEphemeralStatus('Options saved.', STATUS_SHOWING_DURATION));
+  };
+
+  useMounted(() => {
+    restoreOptions();
+  });
+
+  return (
+    <div className="relative flex flex-col gap-4 items-center">
+      <Toast visible={!!status}>{status}</Toast>
+      {/* table */}
+      <div className="flex flex-col bg-content1 rounded-lg p-4 gap-4">
+        <Row
+          label={
+            <span title="For security reasons, you can only set a directory inside the default download folder.">
+              Download folder
+            </span>
+          }
+          content={
+            <div className="flex items-baseline">
+              <div className="underline" onClick={showDefaultDownloadFolder}>
+                [Default download folder]/
+              </div>
+              <TextInput />
+            </div>
+          }
+        />
+
+        <Row
+          label="Save original images"
+          content={
+            <Checkbox
+              isSelected={form.saveOriginalImages}
+              onChange={e => {
+                setForm({ ...form, saveOriginalImages: e.target.checked });
+              }}
+            />
+          }
+        />
+
+        <Row
+          label="Save gallery information"
+          content={
+            <div className="flex gap-4">
+              <Checkbox
+                isSelected={form.saveGalleryInfo}
+                onChange={e => {
+                  setForm({ ...form, saveGalleryInfo: e.target.checked });
+                }}>
+                Info
+              </Checkbox>
+              <Checkbox
+                isSelected={form.saveGalleryTags}
+                onChange={e => {
+                  setForm({ ...form, saveGalleryTags: e.target.checked });
+                }}>
+                Tags
+              </Checkbox>
+            </div>
+          }
+        />
+
+        <Row
+          label="filenameConflictAction"
+          content={
+            <RadioGroup
+              orientation="horizontal"
+              value={form.filenameConflictAction}
+              onValueChange={val =>
+                setForm({
+                  ...form,
+                  filenameConflictAction: val,
+                })
+              }>
+              <Radio value="uniquify">Uniquify</Radio>
+              <Radio value="overwrite">Overwrite</Radio>
+            </RadioGroup>
+          }
+        />
+
+        <Row
+          label={
+            <span title="The interval between each image download. This is to avoid blocking due to high QPS.">
+              Download interval
+            </span>
+          }
+          content={
+            <Input
+              type="number"
+              placeholder="300"
+              value={String(form.downloadInterval)}
+              endContent={
+                <div className="pointer-events-none flex items-center">
+                  <span className="text-default-400 text-small">ms</span>
+                </div>
+              }
+              className="w-32"
+              onChange={e => {
+                setForm({ ...form, downloadInterval: +e.target.value });
+              }}
+            />
+          }
+        />
+      </div>
+      <Button color="primary" className="text-black" onClick={saveOptions}>
+        Save
+      </Button>
+    </div>
   );
 };
 
-export default withErrorBoundary(withSuspense(Options, <div> Loading ... </div>), <div> Error Occur </div>);
+export default withErrorBoundary(withSuspense(Options, <div> Loading ... </div>), <div> Something went wrong </div>);

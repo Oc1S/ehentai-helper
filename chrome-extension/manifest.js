@@ -14,6 +14,12 @@ const sidePanelConfig = {
   permissions: !isFirefox ? ['sidePanel'] : [],
 };
 
+const features = {
+  background: false,
+  content: false,
+  devltool: false,
+};
+
 const manifest = Object.assign(
   {
     manifest_version: 3,
@@ -27,7 +33,7 @@ const manifest = Object.assign(
     description: '__MSG_extensionDescription__',
     permissions: ['storage'].concat(sidePanelConfig.permissions),
     options_page: 'options/index.html',
-    background: {
+    background: features.background && {
       service_worker: 'background.iife.js',
       type: 'module',
     },
@@ -35,27 +41,26 @@ const manifest = Object.assign(
       default_popup: 'popup/index.html',
       default_icon: 'icon-34.png',
     },
-    chrome_url_overrides: {
-      newtab: 'newtab/index.html',
-    },
     icons: {
       128: 'icon-128.png',
     },
-    content_scripts: [
-      {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-        js: ['content/index.iife.js'],
-      },
-      {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-        js: ['content-ui/index.iife.js'],
-      },
-      {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-        css: ['content.css'], // public folder
-      },
-    ],
-    devtools_page: 'devtools/index.html',
+    content_scripts: features.content
+      ? [
+          {
+            matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+            js: ['content/index.iife.js'],
+          },
+          {
+            matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+            js: ['content-ui/index.iife.js'],
+          },
+          {
+            matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+            css: ['content.css'], // public folder
+          },
+        ]
+      : [],
+    devtools_page: features.devltool ? 'devtools/index.html' : undefined,
     web_accessible_resources: [
       {
         resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
@@ -63,7 +68,7 @@ const manifest = Object.assign(
       },
     ],
   },
-  !isFirefox && { side_panel: { ...sidePanelConfig.side_panel } },
+  !isFirefox && { side_panel: { ...sidePanelConfig.side_panel } }
 );
 
 export default manifest;

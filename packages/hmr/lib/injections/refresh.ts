@@ -1,5 +1,6 @@
 import initClient from '../initClient';
 
+/* client */
 function addRefresh() {
   let pendingReload = false;
 
