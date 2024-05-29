@@ -17,7 +17,6 @@ const sidePanelConfig = {
 const features = {
   background: false,
   content: false,
-  devltool: false,
 };
 
 const manifest = Object.assign(
@@ -60,7 +59,6 @@ const manifest = Object.assign(
           },
         ]
       : [],
-    devtools_page: features.devltool ? 'devtools/index.html' : undefined,
     web_accessible_resources: [
       {
         resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],

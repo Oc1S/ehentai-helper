@@ -1,18 +1,13 @@
 import { FC, useState } from 'react';
-import { withErrorBoundary, withSuspense, useMounted } from '@chrome-extension-boilerplate/shared';
+import {
+  withErrorBoundary,
+  withSuspense,
+  useMounted,
+  PATTERN_INVALID_FILE_PATH_CHAR,
+  defaultConfig,
+} from '@chrome-extension-boilerplate/shared';
 import { Button, Checkbox, Radio, RadioGroup, Input } from '@nextui-org/react';
 import { Toast } from './components';
-
-const PATTERN_INVALID_FILE_PATH_CHAR = /[:*?"<>|]/g;
-const STATUS_SHOWING_DURATION = 3_000; // In ms.
-
-// Default config.
-const DEFAULT_INTERMEDIATE_DOWNLOAD_PATH = 'e-hentai helper/';
-const DEFAULT_SAVE_ORIGINAL_IMAGES = false;
-const DEFAULT_SAVE_GALLERY_INFO = false;
-const DEFAULT_SAVE_GALLERY_TAGS = false;
-const DEFAULT_FILENAME_CONFLICT_ACTION = 'uniquify';
-const DEFAULT_DOWNLOAD_INTERVAL = 300; // In ms.
 
 const showDefaultDownloadFolder = () => {
   chrome.downloads.showDefaultFolder();
@@ -45,29 +40,12 @@ const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputEl
 const Options: FC = () => {
   const [status, setStatus] = useState('');
 
-  const [form, setForm] = useState({
-    intermediateDownloadPath: DEFAULT_INTERMEDIATE_DOWNLOAD_PATH,
-    saveOriginalImages: DEFAULT_SAVE_ORIGINAL_IMAGES,
-    saveGalleryInfo: DEFAULT_SAVE_GALLERY_INFO,
-    saveGalleryTags: DEFAULT_SAVE_GALLERY_TAGS,
-    filenameConflictAction: DEFAULT_FILENAME_CONFLICT_ACTION,
-    downloadInterval: DEFAULT_DOWNLOAD_INTERVAL,
-  });
+  const [form, setForm] = useState(defaultConfig);
 
   const restoreOptions = () => {
-    chrome.storage.sync.get(
-      {
-        intermediateDownloadPath: DEFAULT_INTERMEDIATE_DOWNLOAD_PATH,
-        saveOriginalImages: DEFAULT_SAVE_ORIGINAL_IMAGES,
-        saveGalleryInfo: DEFAULT_SAVE_GALLERY_INFO,
-        saveGalleryTags: DEFAULT_SAVE_GALLERY_TAGS,
-        filenameConflictAction: DEFAULT_FILENAME_CONFLICT_ACTION,
-        downloadInterval: DEFAULT_DOWNLOAD_INTERVAL,
-      },
-      items => {
-        setForm(items as typeof form);
-      }
-    );
+    chrome.storage.sync.get(defaultConfig, items => {
+      setForm(items as typeof form);
+    });
   };
 
   const showEphemeralStatus = (text: string, duration: number) => {
