@@ -1,4 +1,3 @@
-import './Popup.css';
 import {
   EXTENSION_NAME,
   PATTERN_GALLERY_PAGE_URL,
@@ -9,6 +8,8 @@ import {
 } from '@chrome-extension-boilerplate/shared';
 import { useRef, useState } from 'react';
 import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
+import { Button } from '@nextui-org/react';
+import clsx from 'clsx';
 
 // Gallery information.
 let galleryFrontPageUrl = '';
@@ -21,7 +22,7 @@ const isEHentaiUrl = (url: string) => {
 };
 
 const Popup = () => {
-  const [status, setStatus] = useState('Initializing...');
+  const [status, setStatus] = useState<React.ReactNode>('Initializing...');
   const [isBtnDisabled, setIsBtnDisabled] = useState(true);
   const [isBtnHidden, setIsBtnHidden] = useState(true);
   const configRef = useRef(defaultConfig);
@@ -130,7 +131,6 @@ const Popup = () => {
     return key + separator + val + terminator;
   };
 
-  // Business logic =============================================================
   /**
    * 获取页码信息
    */
@@ -242,6 +242,7 @@ const Popup = () => {
     return str;
   };
 
+  const fileNameRef = useRef(1);
   useMounted(() => {
     getCurrentTabUrl(url => {
       // On valid page.
@@ -259,30 +260,35 @@ const Popup = () => {
             setStatus('Ready to download.');
           });
         });
-
         // Not on valid page.
       } else {
         setIsBtnDisabled(true);
         setIsBtnHidden(true);
-        setStatus('Cannot work on the current page. ' + 'Please go to a E-Hentai / ExHentai gallery page.');
+        setStatus(
+          <>
+            Cannot work on the current page. <br />
+            Please go to a E-Hentai / ExHentai gallery page.
+          </>
+        );
       }
     });
 
     // Save to the corresponding folder and rename files.
-    chrome.downloads?.onDeterminingFilename.addListener((downloadItem, suggest) => {
+    chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
       if (downloadItem.byExtensionName === EXTENSION_NAME) {
         let filename = downloadItem.filename;
         const fileType = filename.substring(filename.lastIndexOf('.') + 1);
         // Metadata.
-        if (fileType == 'txt') {
+        if (fileType === 'txt') {
           const { url } = downloadItem;
           // 'name' is the first key of info file.
           const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
-          filename = isInfoFile ? 'info.txt' : 'tags.txt';
+          filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
+        } else {
+          filename = configRef.current.intermediateDownloadPath + '/' + (filename || fileNameRef.current++);
         }
-        filename = configRef.current.intermediateDownloadPath + '/' + filename;
         suggest({
-          filename,
+          filename: `${filename}`,
           conflictAction: configRef.current.filenameConflictAction,
         });
       }
@@ -290,18 +296,17 @@ const Popup = () => {
   });
 
   return (
-    <div
-      style={{
-        width: '200px',
-      }}>
-      <h2>{EXTENSION_NAME}</h2>
-      <button
+    <div className="flex items-center flex-col">
+      <h2 className="fixed top-4 text-xl text-primary">{EXTENSION_NAME}</h2>
+      <div className="-mt-4">{status}</div>
+      <Button
+        color="primary"
         disabled={isBtnDisabled}
         hidden={isBtnHidden}
-        style={{ margin: '0 0 10px 0' }}
+        className={clsx('fixed bottom-4 mt-4', isBtnHidden && 'hidden')}
         onClick={() => {
           setIsBtnDisabled(true);
-          setStatus('Please do NOT close the extension popup page ' + 'before ALL download tasks start.');
+          setStatus('Please do NOT close the extension popup page before ALL download tasks start.');
           downloadImages();
           if (configRef.current.saveGalleryInfo) {
             generateTxtFile(galleryInfoToString(galleryInfo));
@@ -311,8 +316,7 @@ const Popup = () => {
           }
         }}>
         Download Gallery
-      </button>
-      <div>{status}</div>
+      </Button>
     </div>
   );
 };

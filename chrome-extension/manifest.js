@@ -27,7 +27,7 @@ const manifest = Object.assign(
      * if you want to support multiple languages, you can use the following reference
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Internationalization
      */
-    name: '__MSG_extensionName__',
+    name: 'E-Hentai Helper',
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
     permissions: ['storage', 'tabs', 'downloads', 'activeTab'].concat(sidePanelConfig.permissions),

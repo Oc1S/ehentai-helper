@@ -12,7 +12,7 @@ const isProduction = !isDev;
 export default defineConfig({
   resolve: {
     alias: {
-      '@src': srcDir,
+      '@': srcDir,
     },
   },
   base: '',

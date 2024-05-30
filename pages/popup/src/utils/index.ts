@@ -1,4 +1,5 @@
 const PATTERN_INVALID_FILENAME_CHAR = /[\\/:*?"<>|.~]/g;
+
 export const removeInvalidCharFromFilename = (filename: string) => {
   return filename.replace(PATTERN_INVALID_FILENAME_CHAR, ' ').replace(/\s+$/, '');
 };

@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
-import '@src/index.css';
-import Options from '@src/Options';
+import '@chrome-extension-boilerplate/shared/styles/index.css';
+import './index.css';
+import Options from '@/Options';
 import { NextUIProvider } from '@nextui-org/react';
 
 function init() {
