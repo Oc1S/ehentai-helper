@@ -1,5 +1,7 @@
 export const PATTERN_INVALID_FILE_PATH_CHAR = /[:*?"<>|]/g;
-export const STATUS_SHOWING_DURATION = 3_000; // In ms.
+export const EXTENSION_NAME = 'E-Hentai Helper';
+export const PATTERN_GALLERY_PAGE_URL = /https?:\/\/e[-x]hentai.org\/g\/*/;
+export const PATTERN_IMAGE_PAGE_URL = /https?:\/\/e[-x]hentai.org\/s\/*/;
 
 // Default config.
 export const DEFAULT_INTERMEDIATE_DOWNLOAD_PATH = 'e-hentai helper/';
@@ -9,7 +11,7 @@ export const DEFAULT_SAVE_GALLERY_TAGS = false;
 export const DEFAULT_FILENAME_CONFLICT_ACTION = 'uniquify';
 export const DEFAULT_DOWNLOAD_INTERVAL = 300; // In ms.
 
-const defaultConfig = {
+export const defaultConfig = {
   intermediateDownloadPath: DEFAULT_INTERMEDIATE_DOWNLOAD_PATH,
   saveOriginalImages: DEFAULT_SAVE_ORIGINAL_IMAGES,
   saveGalleryInfo: DEFAULT_SAVE_GALLERY_INFO,

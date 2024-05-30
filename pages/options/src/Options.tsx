@@ -9,6 +9,8 @@ import {
 import { Button, Checkbox, Radio, RadioGroup, Input } from '@nextui-org/react';
 import { Toast } from './components';
 
+const STATUS_SHOWING_DURATION = 3_000;
+
 const showDefaultDownloadFolder = () => {
   chrome.downloads.showDefaultFolder();
 };

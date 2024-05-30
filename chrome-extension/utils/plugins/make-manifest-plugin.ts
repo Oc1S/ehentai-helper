@@ -8,7 +8,7 @@ import * as process from 'process';
 const { resolve } = path;
 
 const rootDir = resolve(__dirname, '..', '..');
-const manifestFile = resolve(rootDir, 'manifest.ts');
+const manifestFile = resolve(rootDir, 'manifest.js');
 
 const getManifestWithCacheBurst = (): Promise<{ default: chrome.runtime.ManifestV3 }> => {
   const withCacheBurst = (path: string) => `${path}?${Date.now().toString()}`;
