@@ -1,17 +1,11 @@
 {
-  "extends": "@chrome-extension-boilerplate/tsconfig/base",
+  "extends": "@ehentai-helper/tsconfig/base",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@lib/*": [
-        "lib/*"
-      ]
+      "@lib/*": ["lib/*"]
     },
-    "types": [
-      "chrome"
-    ]
+    "types": ["chrome"]
   },
-  "include": [
-    "lib"
-  ]
+  "include": ["lib"]
 }

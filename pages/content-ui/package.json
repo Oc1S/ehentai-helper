@@ -1,5 +1,5 @@
 {
-  "name": "@chrome-extension-boilerplate/content-ui",
+  "name": "@ehentai-helper/content-ui",
   "version": "0.0.1",
   "description": "chrome extension content ui",
   "type": "module",
@@ -20,11 +20,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@chrome-extension-boilerplate/shared": "workspace:*"
+    "@ehentai-helper/shared": "workspace:*"
   },
   "devDependencies": {
-    "@chrome-extension-boilerplate/tailwindcss-config": "workspace:*",
-    "@chrome-extension-boilerplate/tsconfig": "workspace:*",
-    "@chrome-extension-boilerplate/hmr": "workspace:*"
+    "@ehentai-helper/tailwindcss-config": "workspace:*",
+    "@ehentai-helper/tsconfig": "workspace:*",
+    "@ehentai-helper/hmr": "workspace:*"
   }
 }

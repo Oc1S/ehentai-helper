@@ -1,18 +1,12 @@
 {
-  "extends": "@chrome-extension-boilerplate/tsconfig/base",
+  "extends": "@ehentai-helper/tsconfig/base",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@src/*": [
-        "src/*"
-      ]
+      "@src/*": ["src/*"]
     },
     "jsx": "react-jsx",
-    "types": [
-      "chrome"
-    ]
+    "types": ["chrome"]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

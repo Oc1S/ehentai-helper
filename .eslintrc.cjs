@@ -21,13 +21,15 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', '@typescript-eslint', 'react-hooks', 'import', 'jsx-a11y', 'prettier'],
+  plugins: ['react', '@typescript-eslint', 'react-hooks', 'import', 'jsx-a11y', 'prettier', 'simple-import-sort'],
   settings: {
     react: {
       version: 'detect',
     },
   },
   rules: {
+    'simple-import-sort/imports': 'warn',
+    'simple-import-sort/exports': 'warn',
     'react/react-in-jsx-scope': 'off',
     'import/no-unresolved': 'off',
     'react-hooks/exhaustive-deps': 'off',

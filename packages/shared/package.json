@@ -1,5 +1,5 @@
 {
-  "name": "@chrome-extension-boilerplate/shared",
+  "name": "@ehentai-helper/shared",
   "version": "0.0.1",
   "description": "chrome extension shared code",
   "private": true,
@@ -21,8 +21,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@chrome-extension-boilerplate/storage": "workspace:*",
-    "@chrome-extension-boilerplate/tsconfig": "workspace:*",
+    "@ehentai-helper/storage": "workspace:*",
+    "@ehentai-helper/tsconfig": "workspace:*",
     "tsup": "8.0.2"
   }
 }

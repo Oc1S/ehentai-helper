@@ -19,13 +19,13 @@
   "type": "module",
   "dependencies": {
     "webextension-polyfill": "^0.12.0",
-    "@chrome-extension-boilerplate/shared": "workspace:*",
-    "@chrome-extension-boilerplate/storage": "workspace:*"
+    "@ehentai-helper/shared": "workspace:*",
+    "@ehentai-helper/storage": "workspace:*"
   },
   "devDependencies": {
-    "@chrome-extension-boilerplate/dev-utils": "workspace:*",
-    "@chrome-extension-boilerplate/hmr": "workspace:*",
-    "@chrome-extension-boilerplate/tsconfig": "workspace:*",
+    "@ehentai-helper/dev-utils": "workspace:*",
+    "@ehentai-helper/hmr": "workspace:*",
+    "@ehentai-helper/tsconfig": "workspace:*",
     "@laynezh/vite-plugin-lib-assets": "^0.5.21",
     "@types/ws": "^8.5.10",
     "magic-string": "^0.30.10",

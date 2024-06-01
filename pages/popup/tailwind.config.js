@@ -1,4 +1,4 @@
-const baseConfig = require('@chrome-extension-boilerplate/tailwindcss-config');
+const baseConfig = require('@ehentai-helper/tailwindcss-config');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -7,6 +7,6 @@ module.exports = {
     ...baseConfig.content,
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-    'node_modules/@chrome-extension-boilerplate/**/*.{js,ts,jsx,tsx}',
+    'node_modules/@ehentai-helper/**/*.{js,ts,jsx,tsx}',
   ],
 };

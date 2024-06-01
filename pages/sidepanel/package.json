@@ -1,5 +1,5 @@
 {
-  "name": "@chrome-extension-boilerplate/sidepanel",
+  "name": "@ehentai-helper/sidepanel",
   "version": "0.0.1",
   "description": "chrome extension sidepanel",
   "private": true,
@@ -18,12 +18,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@chrome-extension-boilerplate/shared": "workspace:*",
-    "@chrome-extension-boilerplate/storage": "workspace:*"
+    "@ehentai-helper/shared": "workspace:*",
+    "@ehentai-helper/storage": "workspace:*"
   },
   "devDependencies": {
-    "@chrome-extension-boilerplate/tailwindcss-config": "workspace:*",
-    "@chrome-extension-boilerplate/tsconfig": "workspace:*",
-    "@chrome-extension-boilerplate/hmr": "workspace:*"
+    "@ehentai-helper/tailwindcss-config": "workspace:*",
+    "@ehentai-helper/tsconfig": "workspace:*",
+    "@ehentai-helper/hmr": "workspace:*"
   }
 }

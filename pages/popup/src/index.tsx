@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import '@chrome-extension-boilerplate/shared/styles/global.css';
+import '@ehentai-helper/shared/styles/global.css';
 import './index.css';
 import Popup from '@/Popup';
 

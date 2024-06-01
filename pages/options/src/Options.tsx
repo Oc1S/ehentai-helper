@@ -1,12 +1,13 @@
-import { FC, useState } from 'react';
 import {
+  defaultConfig,
+  PATTERN_INVALID_FILE_PATH_CHAR,
+  useMounted,
   withErrorBoundary,
   withSuspense,
-  useMounted,
-  PATTERN_INVALID_FILE_PATH_CHAR,
-  defaultConfig,
-} from '@chrome-extension-boilerplate/shared';
-import { Button, Checkbox, Radio, RadioGroup, Input } from '@nextui-org/react';
+} from '@ehentai-helper/shared';
+import { Button, Checkbox, Input, Radio, RadioGroup } from '@nextui-org/react';
+import { FC, useState } from 'react';
+
 import { Toast } from './components';
 
 const STATUS_SHOWING_DURATION = 3_000;

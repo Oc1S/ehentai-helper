@@ -1,15 +1,16 @@
 import {
+  defaultConfig,
   EXTENSION_NAME,
   PATTERN_GALLERY_PAGE_URL,
-  defaultConfig,
   useMounted,
   withErrorBoundary,
   withSuspense,
-} from '@chrome-extension-boilerplate/shared';
-import { useRef, useState } from 'react';
-import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
+} from '@ehentai-helper/shared';
 import { Button } from '@nextui-org/react';
 import clsx from 'clsx';
+import { useRef, useState } from 'react';
+
+import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
 
 // Gallery information.
 let galleryFrontPageUrl = '';
@@ -125,12 +126,6 @@ const Popup = () => {
     );
   };
 
-  const keyValuePairToString = (key: string, val: string) => {
-    const separator = '\t';
-    const terminator = '\n';
-    return key + separator + val + terminator;
-  };
-
   /**
    * 获取页码信息
    */
@@ -193,7 +188,7 @@ const Popup = () => {
   };
 
   /**
-   * 提取GalleryInfo
+   * 提取GalleryTags
    */
   const extractGalleryTags = (html: string) => {
     const doc = htmlToDOM(html, '');
@@ -214,32 +209,6 @@ const Popup = () => {
       }
     }
     return tags;
-  };
-
-  const galleryInfoToString = (info: Record<string, any>) => {
-    const str =
-      keyValuePairToString('name:', info.name) +
-      keyValuePairToString('name (Japanese):', info.nameInJapanese) +
-      keyValuePairToString('category:', info.category) +
-      keyValuePairToString('uploader:', info.uploader) +
-      keyValuePairToString('posted:', info.posted) +
-      keyValuePairToString('parent:', info.parent) +
-      keyValuePairToString('visible:', info.visible) +
-      keyValuePairToString('language:', info.language) +
-      keyValuePairToString('original file size (MB):', info.originalFileSizeMB) +
-      keyValuePairToString('pages:', info.numImages) +
-      keyValuePairToString('favorited:', info.favorited) +
-      keyValuePairToString('rating times:', info.ratingTimes) +
-      keyValuePairToString('average score:', info.averageScore);
-    return str;
-  };
-
-  const galleryTagsToString = (tags: Record<string, any>) => {
-    let str = '';
-    for (const i in tags) {
-      str += keyValuePairToString(tags[i].category, tags[i].content);
-    }
-    return str;
   };
 
   const fileNameRef = useRef(1);
@@ -309,10 +278,10 @@ const Popup = () => {
           setStatus('Please do NOT close the extension popup page before ALL download tasks start.');
           downloadImages();
           if (configRef.current.saveGalleryInfo) {
-            generateTxtFile(galleryInfoToString(galleryInfo));
+            generateTxtFile(JSON.stringify(galleryInfo, null, 2));
           }
           if (configRef.current.saveGalleryTags) {
-            generateTxtFile(galleryTagsToString(galleryTags));
+            generateTxtFile(JSON.stringify(galleryTags, null, 2));
           }
         }}>
         Download Gallery

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { BaseStorage } from '@chrome-extension-boilerplate/storage';
+import { BaseStorage } from '@ehentai-helper/storage';
 
 type WrappedPromise = ReturnType<typeof wrapPromise>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +32,7 @@ function wrapPromise<R>(promise: Promise<R>) {
     e => {
       status = 'error';
       result = e;
-    },
+    }
   );
 
   return {
