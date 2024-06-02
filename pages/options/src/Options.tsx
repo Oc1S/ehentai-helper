@@ -1,16 +1,17 @@
 import {
+  Config,
   defaultConfig,
   PATTERN_INVALID_FILE_PATH_CHAR,
   useMounted,
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
-import { Button, Checkbox, Input, Radio, RadioGroup } from '@nextui-org/react';
-import { FC, useState } from 'react';
+import { Button, Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
+import { FC, ReactNode, useState } from 'react';
 
 import { Toast } from './components';
 
-const STATUS_SHOWING_DURATION = 3_000;
+const STATUS_SHOWING_DURATION = 3_0000;
 
 const showDefaultDownloadFolder = () => {
   chrome.downloads.showDefaultFolder();
@@ -43,11 +44,11 @@ const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputEl
 const Options: FC = () => {
   const [status, setStatus] = useState('');
 
-  const [form, setForm] = useState(defaultConfig);
+  const [config, setConfig] = useState<Config>(defaultConfig);
 
   const restoreOptions = () => {
     chrome.storage.sync.get(defaultConfig, items => {
-      setForm(items as typeof form);
+      setConfig(items as typeof config);
     });
   };
 
@@ -57,7 +58,7 @@ const Options: FC = () => {
   };
 
   const saveOptions = () => {
-    const intermediateDownloadPath = processFilePath(form.intermediateDownloadPath);
+    const intermediateDownloadPath = processFilePath(config.intermediateDownloadPath);
 
     if (!intermediateDownloadPath) {
       // process file path.
@@ -66,112 +67,138 @@ const Options: FC = () => {
       );
       return;
     }
-    if (intermediateDownloadPath !== form.intermediateDownloadPath) {
-      setForm({ ...form, intermediateDownloadPath });
+    if (intermediateDownloadPath !== config.intermediateDownloadPath) {
+      setConfig({ ...config, intermediateDownloadPath });
     }
-    chrome.storage.sync.set(form, () => showEphemeralStatus('Options saved.', STATUS_SHOWING_DURATION));
+    chrome.storage.sync.set(config, () => showEphemeralStatus('Options saved.', STATUS_SHOWING_DURATION));
   };
 
   useMounted(() => {
     restoreOptions();
   });
 
+  const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
+    intermediateDownloadPath: {
+      label: (
+        <span title="For security reasons, you can only set a directory inside the default download folder.">
+          Download folder
+        </span>
+      ),
+      content: (
+        <div className="flex items-baseline">
+          <div className="underline" onClick={showDefaultDownloadFolder}>
+            [Default download folder]/
+          </div>
+          <TextInput />
+        </div>
+      ),
+    },
+    saveOriginalImages: {
+      label: 'Save original images',
+      content: (
+        <Checkbox
+          isSelected={config.saveOriginalImages}
+          onChange={e => {
+            setConfig({ ...config, saveOriginalImages: e.target.checked });
+          }}
+        />
+      ),
+    },
+    saveGalleryInfo: {
+      label: 'Save gallery information',
+      content: (
+        <div className="flex gap-4">
+          <Checkbox
+            isSelected={config.saveGalleryInfo}
+            onChange={e => {
+              setConfig({ ...config, saveGalleryInfo: e.target.checked });
+            }}
+          />
+        </div>
+      ),
+    },
+    saveGalleryTags: {
+      label: 'Save gallery tags',
+      content: (
+        <Checkbox
+          isSelected={config.saveGalleryTags}
+          onChange={e => {
+            setConfig({ ...config, saveGalleryTags: e.target.checked });
+          }}
+        />
+      ),
+    },
+    filenameConflictAction: {
+      label: (
+        <Tooltip content="Action when filename conflict" closeDelay={200}>
+          Filename conflict action
+        </Tooltip>
+      ),
+      content: (
+        <RadioGroup
+          orientation="horizontal"
+          value={config.filenameConflictAction}
+          onValueChange={val =>
+            setConfig({
+              ...config,
+              filenameConflictAction: val,
+            })
+          }>
+          <Radio value="uniquify">Uniquify</Radio>
+          <Radio value="overwrite">Overwrite</Radio>
+        </RadioGroup>
+      ),
+    },
+    downloadInterval: {
+      label: (
+        <span title="The interval between each image download. This is to avoid blocking due to high QPS.">
+          Download interval
+        </span>
+      ),
+      content: (
+        <Input
+          type="number"
+          placeholder="300"
+          value={String(config.downloadInterval)}
+          endContent={
+            <div className="pointer-events-none flex items-center">
+              <span className="text-default-400 text-small">ms</span>
+            </div>
+          }
+          className="w-32"
+          onChange={e => {
+            setConfig({ ...config, downloadInterval: +e.target.value });
+          }}
+        />
+      ),
+    },
+    fileNameRule: {
+      label: 'File name rule',
+      content: (
+        <RadioGroup
+          orientation="horizontal"
+          value={config.fileNameRule}
+          onValueChange={val =>
+            setConfig({
+              ...config,
+              fileNameRule: val,
+            })
+          }>
+          <Radio value="[index]">Index</Radio>
+          <Radio value="[name]">Name</Radio>
+        </RadioGroup>
+      ),
+    },
+  };
+
   return (
     <div className="relative flex flex-col gap-4 items-center">
       <Toast visible={!!status}>{status}</Toast>
       {/* table */}
       <div className="flex flex-col bg-content1 rounded-lg p-4 gap-4">
-        <Row
-          label={
-            <span title="For security reasons, you can only set a directory inside the default download folder.">
-              Download folder
-            </span>
-          }
-          content={
-            <div className="flex items-baseline">
-              <div className="underline" onClick={showDefaultDownloadFolder}>
-                [Default download folder]/
-              </div>
-              <TextInput />
-            </div>
-          }
-        />
-
-        <Row
-          label="Save original images"
-          content={
-            <Checkbox
-              isSelected={form.saveOriginalImages}
-              onChange={e => {
-                setForm({ ...form, saveOriginalImages: e.target.checked });
-              }}
-            />
-          }
-        />
-
-        <Row
-          label="Save gallery information"
-          content={
-            <div className="flex gap-4">
-              <Checkbox
-                isSelected={form.saveGalleryInfo}
-                onChange={e => {
-                  setForm({ ...form, saveGalleryInfo: e.target.checked });
-                }}>
-                Info
-              </Checkbox>
-              <Checkbox
-                isSelected={form.saveGalleryTags}
-                onChange={e => {
-                  setForm({ ...form, saveGalleryTags: e.target.checked });
-                }}>
-                Tags
-              </Checkbox>
-            </div>
-          }
-        />
-
-        <Row
-          label="filenameConflictAction"
-          content={
-            <RadioGroup
-              orientation="horizontal"
-              value={form.filenameConflictAction}
-              onValueChange={val =>
-                setForm({
-                  ...form,
-                  filenameConflictAction: val,
-                })
-              }>
-              <Radio value="uniquify">Uniquify</Radio>
-              <Radio value="overwrite">Overwrite</Radio>
-            </RadioGroup>
-          }
-        />
-
-        <Row
-          label={
-            <span title="The interval between each image download. This is to avoid blocking due to high QPS.">
-              Download interval
-            </span>
-          }
-          content={
-            <Input
-              type="number"
-              placeholder="300"
-              value={String(form.downloadInterval)}
-              endContent={
-                <div className="pointer-events-none flex items-center">
-                  <span className="text-default-400 text-small">ms</span>
-                </div>
-              }
-              className="w-32"
-              onChange={e => {
-                setForm({ ...form, downloadInterval: +e.target.value });
-              }}
-            />
-          }
-        />
+        {Object.keys(formItemMap).map(key => (
+          <Row key={key} label={formItemMap[key].label} content={formItemMap[key].content} />
+        ))}
       </div>
       <Button color="primary" className="text-black" onClick={saveOptions}>
         Save

@@ -1,5 +1,5 @@
-import { useSyncExternalStore } from 'react';
 import { BaseStorage } from '@ehentai-helper/storage';
+import { useSyncExternalStore } from 'react';
 
 export function useStorage<
   Storage extends BaseStorage<Data>,

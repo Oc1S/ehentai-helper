@@ -1,5 +1,5 @@
-import { useSyncExternalStore } from 'react';
 import { BaseStorage } from '@ehentai-helper/storage';
+import { useSyncExternalStore } from 'react';
 
 type WrappedPromise = ReturnType<typeof wrapPromise>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

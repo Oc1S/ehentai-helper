@@ -1,6 +1,8 @@
-import { createRoot } from 'react-dom/client';
 import '@ehentai-helper/shared/styles/global.css';
 import './index.css';
+
+import { createRoot } from 'react-dom/client';
+
 import Popup from '@/Popup';
 
 function init() {

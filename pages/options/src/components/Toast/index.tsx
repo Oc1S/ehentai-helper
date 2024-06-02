@@ -1,5 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { FC } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface IToastProps {
   visible: boolean;
@@ -20,7 +20,7 @@ export const Toast: FC<IToastProps> = ({ visible, children }) => {
             y: 0,
             opacity: 0,
           }}
-          className="fixed top-0 p-2 bg-primary rounded-lg text-slate-100">
+          className="fixed top-0 p-2 bg-primary rounded-lg text-slate-300">
           {children}
         </motion.div>
       )}

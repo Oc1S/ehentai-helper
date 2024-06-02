@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
 import { makeEntryPointPlugin, watchRebuildPlugin } from '@ehentai-helper/hmr';
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
 
 const rootDir = resolve(__dirname);
 const libDir = resolve(rootDir, 'lib');

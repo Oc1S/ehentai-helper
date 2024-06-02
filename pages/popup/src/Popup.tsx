@@ -156,10 +156,10 @@ const Popup = () => {
     const doc = htmlToDOM(html, '');
     const info: Record<string, any> = {};
 
-    const name = doc.getElementById('gn')!.textContent;
-    const nameInJapanese = doc.getElementById('gj')!.textContent;
-    const category = (doc.getElementById('gdc')!.childNodes[0].childNodes[0] as any).alt;
-    const uploader = doc.getElementById('gdn')!.childNodes[0].textContent;
+    const name = doc.getElementById('gn')?.textContent;
+    const nameInJapanese = doc.getElementById('gj')?.textContent;
+    const category = (doc.getElementById('gdc')?.childNodes[0].childNodes[0] as any).alt;
+    const uploader = doc.getElementById('gdn')?.childNodes[0].textContent;
     const gdt2ClassElements = doc.getElementsByClassName('gdt2');
     const posted = gdt2ClassElements[0].textContent;
     const parent = gdt2ClassElements[1].textContent;
@@ -168,8 +168,8 @@ const Popup = () => {
     const originalFileSizeMB = gdt2ClassElements[4].textContent;
     const numImages = gdt2ClassElements[5].textContent;
     const favorited = gdt2ClassElements[6].textContent;
-    const ratingTimes = doc.getElementById('rating_count')!.textContent;
-    const averageScore = doc.getElementById('rating_label')!.textContent;
+    const ratingTimes = doc.getElementById('rating_count')?.textContent;
+    const averageScore = doc.getElementById('rating_label')?.textContent;
 
     info.name = name ?? '';
     info.nameInJapanese = nameInJapanese ?? '';
@@ -192,7 +192,8 @@ const Popup = () => {
    */
   const extractGalleryTags = (html: string) => {
     const doc = htmlToDOM(html, '');
-    const taglistElements = doc.getElementById('taglist')!.childNodes[0].childNodes[0].childNodes;
+    const taglistElements = doc.getElementById('taglist')?.childNodes?.[0]?.childNodes?.[0]?.childNodes;
+    if (taglistElements === undefined) return [];
     const tags = new Array(taglistElements.length);
     for (let i = 0; i < taglistElements.length; i++) {
       const tr = taglistElements[i];
@@ -217,6 +218,8 @@ const Popup = () => {
       // On valid page.
       if (isEHentaiUrl(url)) {
         chrome.storage.sync.get(defaultConfig, items => {
+          console.log(items, '@');
+
           configRef.current = items as typeof configRef.current;
           galleryFrontPageUrl = url.substring(0, url.lastIndexOf('/') + 1);
           httpGetAsync(galleryFrontPageUrl, responseText => {
@@ -254,7 +257,11 @@ const Popup = () => {
           const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
           filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
         } else {
-          filename = configRef.current.intermediateDownloadPath + '/' + (filename || fileNameRef.current++);
+          filename =
+            configRef.current.intermediateDownloadPath +
+            '/' +
+            configRef.current.fileNameRule.replace('[index]', String(fileNameRef.current)).replace('[name]', filename);
+          fileNameRef.current++;
         }
         suggest({
           filename: `${filename}`,

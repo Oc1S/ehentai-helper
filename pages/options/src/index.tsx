@@ -1,8 +1,10 @@
-import { createRoot } from 'react-dom/client';
-import '@ehentai-helper/shared/styles/index.css';
+import '@ehentai-helper/shared/styles/global.css';
 import './index.css';
-import Options from '@/Options';
+
 import { NextUIProvider } from '@nextui-org/react';
+import { createRoot } from 'react-dom/client';
+
+import Options from '@/Options';
 
 function init() {
   const appContainer = document.querySelector('#app-container');

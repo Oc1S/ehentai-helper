@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
+import { watchRebuildPlugin } from '@ehentai-helper/hmr';
 import react from '@vitejs/plugin-react-swc';
 import { resolve } from 'path';
-import { watchRebuildPlugin } from '@ehentai-helper/hmr';
+import { defineConfig } from 'vite';
 
 const rootDir = resolve(__dirname);
 const srcDir = resolve(rootDir, 'src');
