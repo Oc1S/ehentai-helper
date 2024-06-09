@@ -1,16 +1,26 @@
 import {
   defaultConfig,
   EXTENSION_NAME,
+  getCurrentTabUrl,
   PATTERN_GALLERY_PAGE_URL,
   useMounted,
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
 import { Button } from '@nextui-org/react';
+import axios from 'axios';
 import clsx from 'clsx';
+import { useForceUpdate } from 'framer-motion';
 import { useRef, useState } from 'react';
 
+import DownloadTable from './components/Table';
 import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
+
+const mockList = Array.from({ length: 1000 }, (_, i) => ({
+  id: i + 1,
+  state: ['in_progress', 'interrupted', 'complete'][~~(Math.random() * 3)],
+  filename: `filename-${i + 1}.png`,
+})) as chrome.downloads.DownloadItem[];
 
 // Gallery information.
 let galleryFrontPageUrl = '';
@@ -21,29 +31,25 @@ let galleryTags: Record<string, any> = {};
 const isEHentaiUrl = (url: string) => {
   return PATTERN_GALLERY_PAGE_URL.test(url);
 };
-
+/**
+ * TODO:
+ * 2. 已完成/未完成
+ * 3. 重试能力
+ * 4. column对齐
+ */
 const Popup = () => {
-  const [status, setStatus] = useState<React.ReactNode>('Initializing...');
+  const [text, setText] = useState<React.ReactNode>('Initializing...');
+  // const [garellaryId, setGarellaryId] = useState(location.pathname);
+
   const [isBtnDisabled, setIsBtnDisabled] = useState(true);
   const [isBtnHidden, setIsBtnHidden] = useState(true);
+  /* alter when mounted */
   const configRef = useRef(defaultConfig);
+  const [downloadList, setDownloadList] = useState<chrome.downloads.DownloadItem[]>(mockList);
+  const imageIdMapRef = useRef(new Map<number, number>());
+  const fileIndexRef = useRef(1);
 
-  const httpGetAsync = async (url: string, callback: (text: string) => void) => {
-    // axios.get(url).then(response => {
-    //   callback(response.data);
-    // })
-    const xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function () {
-      if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-        const responseText = xmlHttp.responseText;
-        callback(responseText);
-      }
-    };
-    xmlHttp.open('GET', url, true);
-    xmlHttp.send(null);
-  };
-
-  const htmlToDOM = (html: string, title: string) => {
+  const htmlStr2DOM = (html: string, title = '') => {
     const doc = document.implementation.createHTMLDocument(title);
     doc.documentElement.innerHTML = html;
     return doc;
@@ -51,7 +57,7 @@ const Popup = () => {
 
   const extractImagePageUrls = (html: string) => {
     const urls = [];
-    const doc = htmlToDOM(html, '');
+    const doc = htmlStr2DOM(html);
     // Normal previews.
     let elements = doc.getElementsByClassName('gdtm');
     for (let index = 0; index < elements.length; index++) {
@@ -66,33 +72,35 @@ const Popup = () => {
   };
 
   /* 获取单张图片 */
-  const processImagePage = (url: string) => {
-    httpGetAsync(url, responseText => {
-      const doc = htmlToDOM(responseText, '');
-      let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
-      if (configRef.current.saveOriginalImages) {
-        const originalImage = (doc.getElementById('i7')?.childNodes[3] as HTMLAnchorElement).href;
-        imageUrl = originalImage ?? imageUrl;
-      }
-      chrome.downloads.download({ url: imageUrl });
+  const processImagePage = async (url: string) => {
+    const res = await axios.get(url);
+    const responseText = res.data;
+    const doc = htmlStr2DOM(responseText);
+    let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
+    if (configRef.current.saveOriginalImages) {
+      const originalImage = (doc.getElementById('i7')?.childNodes[3] as HTMLAnchorElement).href;
+      imageUrl = originalImage ?? imageUrl;
+    }
+    chrome.downloads.download({ url: imageUrl }, id => {
+      imageIdMapRef.current.set(id, fileIndexRef.current);
+      fileIndexRef.current++;
     });
   };
 
   /* 获取gallery整页所有图片 */
-  const processGalleryPage = (url: string) => {
-    httpGetAsync(url, responseText => {
-      const imagePageUrls = extractImagePageUrls(responseText);
-      processImagePage(imagePageUrls[0]); // Start immediately.
-      let imageIndex = 1;
-      const imageInterval = setInterval(() => {
-        if (imageIndex == imagePageUrls.length) {
-          clearInterval(imageInterval);
-          return;
-        }
-        processImagePage(imagePageUrls[imageIndex]);
-        imageIndex++;
-      }, configRef.current.downloadInterval);
-    });
+  const processGalleryPage = async (url: string) => {
+    const { data: responseText } = await axios.get(url);
+    const imagePageUrls = extractImagePageUrls(responseText);
+    processImagePage(imagePageUrls[0]); // Start immediately.
+    let imageIndex = 1;
+    const imageInterval = setInterval(() => {
+      if (imageIndex === imagePageUrls.length) {
+        clearInterval(imageInterval);
+        return;
+      }
+      processImagePage(imagePageUrls[imageIndex]);
+      imageIndex++;
+    }, configRef.current.downloadInterval);
   };
 
   /** 开启下载图片 */
@@ -110,22 +118,6 @@ const Popup = () => {
     }, configRef.current.downloadInterval * galleryPageInfo.numImagesPerPage);
   };
 
-  /** 获取当前tabUrl */
-  const getCurrentTabUrl = (callback: (url: string) => void) => {
-    chrome.tabs.query(
-      {
-        active: true,
-        currentWindow: true,
-      },
-      tabs => {
-        const [tab] = tabs;
-        const { url } = tab;
-        if (!url) return callback('');
-        callback(url);
-      }
-    );
-  };
-
   /**
    * 获取页码信息
    */
@@ -135,7 +127,7 @@ const Popup = () => {
       totalNumImages: 0,
       numPages: 0,
     };
-    const doc = htmlToDOM(html, '');
+    const doc = htmlStr2DOM(html);
     const elements = doc.getElementsByClassName('gpc');
     const pageInfoStr = elements[0].innerHTML;
     const patternImageNumbers = /Showing 1 - (\d+) of (\d*,*\d+) images/;
@@ -153,7 +145,7 @@ const Popup = () => {
    * 提取GalleryInfo
    */
   const extractGalleryInfo = (html: string) => {
-    const doc = htmlToDOM(html, '');
+    const doc = htmlStr2DOM(html);
     const info: Record<string, any> = {};
 
     const name = doc.getElementById('gn')?.textContent;
@@ -191,7 +183,7 @@ const Popup = () => {
    * 提取GalleryTags
    */
   const extractGalleryTags = (html: string) => {
-    const doc = htmlToDOM(html, '');
+    const doc = htmlStr2DOM(html);
     const taglistElements = doc.getElementById('taglist')?.childNodes?.[0]?.childNodes?.[0]?.childNodes;
     if (taglistElements === undefined) return [];
     const tags = new Array(taglistElements.length);
@@ -212,69 +204,84 @@ const Popup = () => {
     return tags;
   };
 
-  const fileNameRef = useRef(1);
+  // Save to the corresponding folder and rename files.
+  const handleDeterminingFilename: Parameters<typeof chrome.downloads.onDeterminingFilename.addListener>[0] = (
+    downloadItem,
+    suggest
+  ) => {
+    if (downloadItem.byExtensionName !== EXTENSION_NAME) return;
+    const { id } = downloadItem;
+    let { filename } = downloadItem;
+    const name = filename.substring(0, filename.lastIndexOf('.') + 1);
+    const fileType = filename.substring(filename.lastIndexOf('.') + 1);
+    // Metadata.
+    if (fileType === 'txt') {
+      const { url } = downloadItem;
+      // 'name' is the first key of info file.
+      const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
+      filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
+    } else {
+      filename = `${configRef.current.intermediateDownloadPath}/${configRef.current.fileNameRule.replace('[index]', String(imageIdMapRef.current.get(id))).replace('[name]', name)}.${fileType}`;
+    }
+    suggest({
+      filename: `${filename}`,
+      conflictAction: configRef.current.filenameConflictAction,
+    });
+  };
+
+  const handleDownloadCreated: Parameters<typeof chrome.downloads.onCreated.addListener>[0] = downloadItem => {
+    setDownloadList(prev => [...prev, downloadItem]);
+  };
+
+  const [forceUpdate] = useForceUpdate();
+  const handleDownloadChanged: Parameters<typeof chrome.downloads.onChanged.addListener>[0] = downloadDelta => {
+    if (downloadDelta.state) {
+      forceUpdate();
+    }
+  };
+
   useMounted(() => {
-    getCurrentTabUrl(url => {
+    (async () => {
+      const url = await getCurrentTabUrl().catch(() => '');
       // On valid page.
       if (isEHentaiUrl(url)) {
-        chrome.storage.sync.get(defaultConfig, items => {
-          console.log(items, '@');
-
+        chrome.storage.sync.get(defaultConfig, async items => {
           configRef.current = items as typeof configRef.current;
           galleryFrontPageUrl = url.substring(0, url.lastIndexOf('/') + 1);
-          httpGetAsync(galleryFrontPageUrl, responseText => {
-            galleryPageInfo = extractNumGalleryPages(responseText);
-            galleryInfo = extractGalleryInfo(responseText);
-            galleryTags = extractGalleryTags(responseText);
-            configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
-            setIsBtnDisabled(false);
-            setIsBtnHidden(false);
-            setStatus('Ready to download.');
-          });
+          const { data: responseText } = await axios.get(galleryFrontPageUrl);
+          galleryPageInfo = extractNumGalleryPages(responseText);
+          galleryInfo = extractGalleryInfo(responseText);
+          galleryTags = extractGalleryTags(responseText);
+          configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
+          setIsBtnDisabled(false);
+          setIsBtnHidden(false);
+          setText('Ready to download.');
         });
-        // Not on valid page.
-      } else {
+      }
+      // Not on valid page.
+      else {
         setIsBtnDisabled(true);
         setIsBtnHidden(true);
-        setStatus(
-          <>
-            Cannot work on the current page. <br />
-            Please go to a E-Hentai / ExHentai gallery page.
-          </>
-        );
+        setText(<>🚧Please go to a E-Hentai / ExHentai gallery page.</>);
       }
-    });
+    })();
 
-    // Save to the corresponding folder and rename files.
-    chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-      if (downloadItem.byExtensionName === EXTENSION_NAME) {
-        let filename = downloadItem.filename;
-        const fileType = filename.substring(filename.lastIndexOf('.') + 1);
-        // Metadata.
-        if (fileType === 'txt') {
-          const { url } = downloadItem;
-          // 'name' is the first key of info file.
-          const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
-          filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
-        } else {
-          filename =
-            configRef.current.intermediateDownloadPath +
-            '/' +
-            configRef.current.fileNameRule.replace('[index]', String(fileNameRef.current)).replace('[name]', filename);
-          fileNameRef.current++;
-        }
-        suggest({
-          filename: `${filename}`,
-          conflictAction: configRef.current.filenameConflictAction,
-        });
-      }
-    });
+    chrome.downloads.onCreated.addListener(handleDownloadCreated);
+    chrome.downloads.onChanged.addListener(handleDownloadChanged);
+    chrome.downloads.onDeterminingFilename.addListener(handleDeterminingFilename);
+    return () => {
+      chrome.downloads.onCreated.removeListener(handleDownloadCreated);
+      chrome.downloads.onChanged.removeListener(handleDownloadChanged);
+      chrome.downloads.onDeterminingFilename.removeListener(handleDeterminingFilename);
+    };
   });
 
   return (
-    <div className="flex items-center flex-col">
-      <h2 className="fixed top-4 text-xl text-primary">{EXTENSION_NAME}</h2>
-      <div className="-mt-4">{status}</div>
+    <div className="flex h-full w-full flex-col items-center gap-2 p-2">
+      {/* <h2 className="text-primary text-xl">{EXTENSION_NAME}</h2> */}
+      <div>{text}</div>
+
+      <DownloadTable downloadList={downloadList} />
       <Button
         color="primary"
         disabled={isBtnDisabled}
@@ -282,7 +289,7 @@ const Popup = () => {
         className={clsx('fixed bottom-4 mt-4', isBtnHidden && 'hidden')}
         onClick={() => {
           setIsBtnDisabled(true);
-          setStatus('Please do NOT close the extension popup page before ALL download tasks start.');
+          setText(<>🤗Please do NOT close the extension popup page before ALL download tasks start.</>);
           downloadImages();
           if (configRef.current.saveGalleryInfo) {
             generateTxtFile(JSON.stringify(galleryInfo, null, 2));

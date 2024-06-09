@@ -52,7 +52,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.0",
     "postcss": "^8.4.38",
     "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.5.11",
+    "prettier-plugin-tailwindcss": "^0.6.1",
     "rimraf": "^5.0.7",
     "tailwindcss": "^3.4.3",
     "tslib": "^2.6.2",
