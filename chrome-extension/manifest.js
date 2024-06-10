@@ -3,10 +3,13 @@ import fs from 'node:fs';
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 
 const isFirefox = process.env.__FIREFOX__ === 'true';
-/**
- * After changing, please reload the extension at `chrome://extensions`
- * @type {chrome.runtime.ManifestV3}
- */
+
+const features = {
+  background: false,
+  content: false,
+  sidePanel: false,
+};
+
 const sidePanelConfig = {
   side_panel: {
     default_path: 'sidepanel/index.html',
@@ -14,11 +17,10 @@ const sidePanelConfig = {
   permissions: !isFirefox ? ['sidePanel'] : [],
 };
 
-const features = {
-  background: false,
-  content: false,
-};
-
+/**
+ * After changing, please reload the extension at `chrome://extensions`
+ * @type {chrome.runtime.ManifestV3}
+ */
 const manifest = Object.assign(
   {
     manifest_version: 3,
@@ -29,13 +31,17 @@ const manifest = Object.assign(
      */
     name: 'E-Hentai Helper',
     version: packageJson.version,
-    description: '__MSG_extensionDescription__',
-    permissions: ['storage', 'tabs', 'downloads', 'activeTab'].concat(sidePanelConfig.permissions),
+    description: 'ehentai helper',
+    permissions: ['storage', 'tabs', 'downloads', 'activeTab'].concat(
+      features.sidePanel ? sidePanelConfig.permissions : []
+    ),
     options_page: 'options/index.html',
-    background: features.background && {
-      service_worker: 'background.iife.js',
-      type: 'module',
-    },
+    background: features.background
+      ? {
+          service_worker: 'background.iife.js',
+          type: 'module',
+        }
+      : undefined,
     action: {
       default_popup: 'popup/index.html',
       default_icon: 'icon-34.png',
@@ -66,7 +72,7 @@ const manifest = Object.assign(
       },
     ],
   },
-  !isFirefox && { side_panel: { ...sidePanelConfig.side_panel } }
+  !isFirefox && features.sidePanel && { side_panel: sidePanelConfig.side_panel }
 );
 
 export default manifest;

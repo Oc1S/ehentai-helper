@@ -36,9 +36,9 @@ const columns = [
   {
     key: 'filename',
   },
-  {
-    key: 'operation',
-  },
+  // {
+  //   key: 'operation',
+  // },
 ];
 const stateMap: Record<DownloadItem['state'], React.ReactNode> = {
   in_progress: <>🙈Downloading</>,
@@ -53,6 +53,7 @@ const statusColorMap: Record<DownloadItem['state'], ChipProps['color']> = {
 
 const DownloadTable: FC<{
   downloadList: DownloadItem[];
+  imageIdMap: Map<number, number>;
 }> = ({ downloadList }) => {
   const [page, setPage] = useState(1);
 
@@ -84,7 +85,7 @@ const DownloadTable: FC<{
   const filteredList = useMemo(() => {
     const list = filterValue ? downloadList.filter(item => item.filename.includes(filterValue)) : downloadList;
     return statusFilter === 'all' ? list : list.filter(item => statusFilter.has(item.state));
-  }, [filterValue, statusFilter]);
+  }, [filterValue, statusFilter, downloadList]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -161,7 +162,16 @@ const DownloadTable: FC<{
                     </TableCell>
                   );
                 if (key === 'operation') {
-                  return <TableCell>{item[key]}</TableCell>;
+                  const { state } = item;
+                  if (state !== 'complete') {
+                    return (
+                      <TableCell>
+                        {/* TODO */}
+                        <Button>Redownload</Button>
+                      </TableCell>
+                    );
+                  }
+                  return <></>;
                 }
                 return <TableCell>{item[key]}</TableCell>;
               }}

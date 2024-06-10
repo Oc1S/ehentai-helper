@@ -1,7 +1,7 @@
 {
   "name": "@ehentai-helper/shared",
   "version": "0.0.1",
-  "description": "chrome extension shared code",
+  "description": "shared code",
   "private": true,
   "sideEffects": false,
   "files": [

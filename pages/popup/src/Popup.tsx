@@ -2,52 +2,41 @@ import {
   defaultConfig,
   EXTENSION_NAME,
   getCurrentTabUrl,
-  PATTERN_GALLERY_PAGE_URL,
+  isEHentaiUrl,
   useMounted,
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
-import { Button } from '@nextui-org/react';
+import { Button, Link } from '@nextui-org/react';
 import axios from 'axios';
 import clsx from 'clsx';
-import { useForceUpdate } from 'framer-motion';
 import { useRef, useState } from 'react';
 
 import DownloadTable from './components/Table';
+// import mockList from './mock/downloadList';
 import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
 
-const mockList = Array.from({ length: 1000 }, (_, i) => ({
-  id: i + 1,
-  state: ['in_progress', 'interrupted', 'complete'][~~(Math.random() * 3)],
-  filename: `filename-${i + 1}.png`,
-})) as chrome.downloads.DownloadItem[];
-
 // Gallery information.
-let galleryFrontPageUrl = '';
 let galleryPageInfo: Record<string, any> = {};
 let galleryInfo: Record<string, any> = {};
 let galleryTags: Record<string, any> = {};
 
-const isEHentaiUrl = (url: string) => {
-  return PATTERN_GALLERY_PAGE_URL.test(url);
-};
 /**
  * TODO:
  * 2. 已完成/未完成
  * 3. 重试能力
- * 4. column对齐
  */
 const Popup = () => {
   const [text, setText] = useState<React.ReactNode>('Initializing...');
-  // const [garellaryId, setGarellaryId] = useState(location.pathname);
+  // const [galleryId, setGalleryId] = useState(location.pathname);
+  const galleryFrontPageUrl = useRef('');
 
   const [isBtnDisabled, setIsBtnDisabled] = useState(true);
   const [isBtnHidden, setIsBtnHidden] = useState(true);
   /* alter when mounted */
   const configRef = useRef(defaultConfig);
-  const [downloadList, setDownloadList] = useState<chrome.downloads.DownloadItem[]>(mockList);
+  const [downloadList, setDownloadList] = useState<chrome.downloads.DownloadItem[]>([]);
   const imageIdMapRef = useRef(new Map<number, number>());
-  const fileIndexRef = useRef(1);
 
   const htmlStr2DOM = (html: string, title = '') => {
     const doc = document.implementation.createHTMLDocument(title);
@@ -72,7 +61,7 @@ const Popup = () => {
   };
 
   /* 获取单张图片 */
-  const processImagePage = async (url: string) => {
+  const processImagePage = async (url: string, pageIndex: number, imageIndex: number) => {
     const res = await axios.get(url);
     const responseText = res.data;
     const doc = htmlStr2DOM(responseText);
@@ -82,30 +71,30 @@ const Popup = () => {
       imageUrl = originalImage ?? imageUrl;
     }
     chrome.downloads.download({ url: imageUrl }, id => {
-      imageIdMapRef.current.set(id, fileIndexRef.current);
-      fileIndexRef.current++;
+      imageIdMapRef.current.set(id, pageIndex * galleryPageInfo.numImagesPerPage + imageIndex + 1);
     });
   };
 
   /* 获取gallery整页所有图片 */
-  const processGalleryPage = async (url: string) => {
+  const processGalleryPage = async (url: string, pageIndex: number) => {
     const { data: responseText } = await axios.get(url);
     const imagePageUrls = extractImagePageUrls(responseText);
-    processImagePage(imagePageUrls[0]); // Start immediately.
+    processImagePage(imagePageUrls[0], pageIndex, 0); // Start immediately.
     let imageIndex = 1;
     const imageInterval = setInterval(() => {
       if (imageIndex === imagePageUrls.length) {
         clearInterval(imageInterval);
         return;
       }
-      processImagePage(imagePageUrls[imageIndex]);
+      processImagePage(imagePageUrls[imageIndex], pageIndex, imageIndex);
       imageIndex++;
     }, configRef.current.downloadInterval);
+    return imagePageUrls.length;
   };
 
   /** 开启下载图片 */
-  const downloadImages = () => {
-    processGalleryPage(galleryFrontPageUrl); // Start immediately.
+  const downloadAllImages = () => {
+    processGalleryPage(galleryFrontPageUrl.current, 0); // Start immediately.
     let pageIndex = 1;
     // 下载该页图片后，继续下载下一页
     const pageInterval = setInterval(() => {
@@ -113,7 +102,7 @@ const Popup = () => {
         clearInterval(pageInterval);
         return;
       }
-      processGalleryPage(galleryFrontPageUrl + '?p=' + pageIndex);
+      processGalleryPage(galleryFrontPageUrl.current + '?p=' + pageIndex, pageIndex);
       pageIndex++;
     }, configRef.current.downloadInterval * galleryPageInfo.numImagesPerPage);
   };
@@ -230,13 +219,21 @@ const Popup = () => {
   };
 
   const handleDownloadCreated: Parameters<typeof chrome.downloads.onCreated.addListener>[0] = downloadItem => {
-    setDownloadList(prev => [...prev, downloadItem]);
+    setDownloadList(prev => {
+      return [...prev, downloadItem];
+    });
   };
 
-  const [forceUpdate] = useForceUpdate();
   const handleDownloadChanged: Parameters<typeof chrome.downloads.onChanged.addListener>[0] = downloadDelta => {
-    if (downloadDelta.state) {
-      forceUpdate();
+    const { id, state } = downloadDelta;
+    const newVal = {};
+    for (const key in downloadDelta) {
+      if (typeof downloadDelta[key] === 'object') {
+        newVal[key] = downloadDelta[key].current;
+      }
+    }
+    if (state) {
+      setDownloadList(prev => prev.map(item => (item.id === id ? { ...item, ...newVal } : item)));
     }
   };
 
@@ -247,22 +244,34 @@ const Popup = () => {
       if (isEHentaiUrl(url)) {
         chrome.storage.sync.get(defaultConfig, async items => {
           configRef.current = items as typeof configRef.current;
-          galleryFrontPageUrl = url.substring(0, url.lastIndexOf('/') + 1);
-          const { data: responseText } = await axios.get(galleryFrontPageUrl);
+          galleryFrontPageUrl.current = url.substring(0, url.lastIndexOf('/') + 1);
+          const { data: responseText } = await axios.get(galleryFrontPageUrl.current);
           galleryPageInfo = extractNumGalleryPages(responseText);
           galleryInfo = extractGalleryInfo(responseText);
           galleryTags = extractGalleryTags(responseText);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setIsBtnDisabled(false);
           setIsBtnHidden(false);
-          setText('Ready to download.');
+          setText('Ready to download');
         });
       }
       // Not on valid page.
       else {
         setIsBtnDisabled(true);
         setIsBtnHidden(true);
-        setText(<>🚧Please go to a E-Hentai / ExHentai gallery page.</>);
+        setText(
+          <>
+            🚧Please go to a
+            <Link href="https://e-hentai.org/" isExternal className="px-1">
+              E-Hentai
+            </Link>
+            /
+            <Link href="https://exhentai.org/" isExternal className="px-1">
+              ExHentai
+            </Link>
+            gallery page.
+          </>
+        );
       }
     })();
 
@@ -277,29 +286,32 @@ const Popup = () => {
   });
 
   return (
-    <div className="flex h-full w-full flex-col items-center gap-2 p-2">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
       {/* <h2 className="text-primary text-xl">{EXTENSION_NAME}</h2> */}
       <div>{text}</div>
 
-      <DownloadTable downloadList={downloadList} />
-      <Button
-        color="primary"
-        disabled={isBtnDisabled}
-        hidden={isBtnHidden}
-        className={clsx('fixed bottom-4 mt-4', isBtnHidden && 'hidden')}
-        onClick={() => {
-          setIsBtnDisabled(true);
-          setText(<>🤗Please do NOT close the extension popup page before ALL download tasks start.</>);
-          downloadImages();
-          if (configRef.current.saveGalleryInfo) {
-            generateTxtFile(JSON.stringify(galleryInfo, null, 2));
-          }
-          if (configRef.current.saveGalleryTags) {
-            generateTxtFile(JSON.stringify(galleryTags, null, 2));
-          }
-        }}>
-        Download Gallery
-      </Button>
+      {downloadList.length > 0 ? (
+        <DownloadTable downloadList={downloadList} imageIdMap={imageIdMapRef.current} />
+      ) : (
+        <Button
+          color="primary"
+          disabled={isBtnDisabled}
+          hidden={isBtnHidden}
+          className={clsx('mt-4', isBtnHidden && 'hidden')}
+          onClick={() => {
+            setIsBtnDisabled(true);
+            setText(<>🤗Please do NOT close the extension popup page before ALL download tasks start</>);
+            downloadAllImages();
+            if (configRef.current.saveGalleryInfo) {
+              generateTxtFile(JSON.stringify(galleryInfo, null, 2));
+            }
+            if (configRef.current.saveGalleryTags) {
+              generateTxtFile(JSON.stringify(galleryTags, null, 2));
+            }
+          }}>
+          Download Gallery
+        </Button>
+      )}
     </div>
   );
 };
