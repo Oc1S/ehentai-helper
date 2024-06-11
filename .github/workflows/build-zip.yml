@@ -13,21 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version-file: ".nvmrc"
+          bun-version: latest
 
       - uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm build
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/bun.lockb') }}
+          
+      - run: bun install
+      - run: bun run build
 
       - uses: actions/upload-artifact@v3
         with:
