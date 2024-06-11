@@ -13,18 +13,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          bun-version: latest
+          node-version-file: ".nvmrc"
 
       - uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.OS }}-build-${{ hashFiles('**/bun.lockb') }}
-          
-      - run: bun install
-      - run: bun run build
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm install
+
+      - run: pnpm build
 
       - uses: actions/upload-artifact@v3
         with:
