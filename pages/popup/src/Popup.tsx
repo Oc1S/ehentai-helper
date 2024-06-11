@@ -3,6 +3,7 @@ import {
   EXTENSION_NAME,
   getCurrentTabUrl,
   isEHentaiUrl,
+  isObject,
   useMounted,
   withErrorBoundary,
   withSuspense,
@@ -13,7 +14,6 @@ import clsx from 'clsx';
 import { useRef, useState } from 'react';
 
 import DownloadTable from './components/Table';
-// import mockList from './mock/downloadList';
 import { generateTxtFile, removeInvalidCharFromFilename } from './utils';
 
 // Gallery information.
@@ -28,7 +28,6 @@ let galleryTags: Record<string, any> = {};
  */
 const Popup = () => {
   const [text, setText] = useState<React.ReactNode>('Initializing...');
-  // const [galleryId, setGalleryId] = useState(location.pathname);
   const galleryFrontPageUrl = useRef('');
 
   const [isBtnDisabled, setIsBtnDisabled] = useState(true);
@@ -225,16 +224,14 @@ const Popup = () => {
   };
 
   const handleDownloadChanged: Parameters<typeof chrome.downloads.onChanged.addListener>[0] = downloadDelta => {
-    const { id, state } = downloadDelta;
+    const { id } = downloadDelta;
     const newVal = {};
     for (const key in downloadDelta) {
-      if (typeof downloadDelta[key] === 'object') {
+      if (isObject(downloadDelta[key])) {
         newVal[key] = downloadDelta[key].current;
       }
     }
-    if (state) {
-      setDownloadList(prev => prev.map(item => (item.id === id ? { ...item, ...newVal } : item)));
-    }
+    setDownloadList(prev => prev.map(item => (item.id === id ? { ...item, ...newVal } : item)));
   };
 
   useMounted(() => {

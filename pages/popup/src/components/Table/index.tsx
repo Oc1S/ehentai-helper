@@ -83,7 +83,18 @@ const DownloadTable: FC<{
     { id: 'interrupted', label: 'Interrupted' },
   ];
   const filteredList = useMemo(() => {
-    const list = filterValue ? downloadList.filter(item => item.filename.includes(filterValue)) : downloadList;
+    const pathFormattedList = downloadList.map(item => {
+      const localPathArr = item.filename.replace(/\\/g, '/').split('/');
+      console.log('item@', item, localPathArr);
+      const filename = localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
+      return {
+        ...item,
+        filename,
+      };
+    });
+    const list = filterValue
+      ? pathFormattedList.filter(item => item.filename.includes(filterValue))
+      : pathFormattedList;
     return statusFilter === 'all' ? list : list.filter(item => statusFilter.has(item.state));
   }, [filterValue, statusFilter, downloadList]);
 

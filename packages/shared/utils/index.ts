@@ -1,4 +1,3 @@
-import { PATTERN_GALLERY_PAGE_URL } from '@/constant';
 /** chrome插件 - 获取当前tabUrl */
 export const getCurrentTabUrl = () =>
   new Promise<string>((resolve, reject) => {
@@ -16,6 +15,4 @@ export const getCurrentTabUrl = () =>
     );
   });
 
-export const isEHentaiUrl = (url: string) => {
-  return PATTERN_GALLERY_PAGE_URL.test(url);
-};
+export * from './helper';
