@@ -10,7 +10,6 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
     'plugin:import/recommended',
-    // 'plugin:jsx-a11y/recommended',
     'prettier',
   ],
   parser: '@typescript-eslint/parser',
@@ -21,7 +20,7 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', '@typescript-eslint', 'react-hooks', 'import', 'jsx-a11y', 'prettier', 'simple-import-sort'],
+  plugins: ['react', '@typescript-eslint', 'react-hooks', 'import', 'prettier', 'simple-import-sort'],
   settings: {
     react: {
       version: 'detect',
