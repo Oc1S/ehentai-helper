@@ -5,7 +5,9 @@ import {
   isEHentaiGalleryUrl,
   isEHentaiPageUrl,
   isObject,
+  useCreation,
   useMounted,
+  useStateRef,
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
@@ -15,7 +17,9 @@ import clsx from 'clsx';
 import { useRef, useState } from 'react';
 
 import DownloadTable from './components/Table';
+import { DownloadContext } from './Context';
 import { useDownload } from './hooks';
+// import mockLost from './mock/downloadList';
 import {
   extractGalleryInfo,
   extractGalleryTags,
@@ -47,14 +51,14 @@ const Popup = () => {
   const configRef = useRef(defaultConfig);
 
   const [downloadList, setDownloadList] = useState<chrome.downloads.DownloadItem[]>([]);
-  const imageIdMapRef = useRef(new Map<number, number>());
-  const [galleryPageInfo, setGalleryPageInfo] = useState({
-    numImagesPerPage: 0,
-    totalNumImages: 0,
+  const imageIdMap = useCreation(() => new Map<number, number>());
+  const [galleryPageInfo, setGalleryPageInfo, galleryPageInfoRef] = useStateRef({
+    imagesPerPage: 0,
     numPages: 0,
+    totalImages: 0,
   });
+  const { totalImages } = galleryPageInfo;
   const finishedList = downloadList.filter(item => item.state === 'complete');
-  const { totalNumImages } = galleryPageInfo;
 
   const extractImagePageUrls = (html: string) => {
     const urls = [];
@@ -83,7 +87,7 @@ const Popup = () => {
       imageUrl = originalImage ?? imageUrl;
     }
     chrome.downloads.download({ url: imageUrl }, id => {
-      imageIdMapRef.current.set(id, pageIndex * galleryPageInfo.numImagesPerPage + imageIndex + 1);
+      imageIdMap.set(id, pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1);
     });
   };
 
@@ -116,28 +120,27 @@ const Popup = () => {
       }
       processGalleryPage(galleryFrontPageUrl.current + '?p=' + pageIndex, pageIndex);
       pageIndex++;
-    }, configRef.current.downloadInterval * galleryPageInfo.numImagesPerPage);
+    }, configRef.current.downloadInterval * galleryPageInfo.imagesPerPage);
   };
 
   /**
    * 获取页码信息
    */
   const extractNumGalleryPages = (html: string) => {
+    const doc = htmlStr2DOM(html);
+    const pageInfoStr = doc.querySelector('gpc')?.innerHTML || '';
+    const res = /Showing 1 - (\d+) of (\d*,*\d+) images/.exec(pageInfoStr);
+    if (!res) return;
     const pageInfo = {
-      numImagesPerPage: 0,
-      totalNumImages: 0,
+      imagesPerPage: 0,
+      totalImages: 0,
       numPages: 0,
     };
-    const doc = htmlStr2DOM(html);
-    const elements = doc.getElementsByClassName('gpc');
-    const pageInfoStr = elements[0].innerHTML;
-    const patternImageNumbers = /Showing 1 - (\d+) of (\d*,*\d+) images/;
-    const res = patternImageNumbers.exec(pageInfoStr);
-    if (!res) return;
-    pageInfo.numImagesPerPage = +res[1];
-    pageInfo.totalNumImages = +res[2].replace(',', '');
-    if (pageInfo.numImagesPerPage && pageInfo.totalNumImages) {
-      pageInfo.numPages = Math.ceil(pageInfo.totalNumImages / pageInfo.numImagesPerPage);
+    pageInfo.imagesPerPage = +res[1];
+    // format 1,100 etc.
+    pageInfo.totalImages = +res[2].replace(',', '');
+    if (pageInfo.imagesPerPage && pageInfo.totalImages) {
+      pageInfo.numPages = Math.ceil(pageInfo.totalImages / pageInfo.imagesPerPage);
     }
     setGalleryPageInfo(pageInfo);
   };
@@ -176,7 +179,10 @@ const Popup = () => {
       const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
       filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
     } else {
-      filename = `${configRef.current.intermediateDownloadPath}/${configRef.current.fileNameRule.replace('[index]', String(imageIdMapRef.current.get(id))).replace('[name]', name)}.${fileType}`;
+      filename = `${configRef.current.intermediateDownloadPath}/${configRef.current.fileNameRule
+        .replace('[index]', String(imageIdMap.get(id)))
+        .replace('[name]', name)
+        .replace('[total]', `${galleryPageInfoRef.current.totalImages}`)}.${fileType}`;
     }
     suggest({
       filename: `${filename}`,
@@ -194,7 +200,9 @@ const Popup = () => {
     switch (status) {
       default:
       case StatusEnum.Loading:
-        return <Spinner size="md" color="secondary" />;
+        return (
+          <Spinner size="md" color="secondary" className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+        );
       case StatusEnum.OtherPage:
         return (
           <>
@@ -230,11 +238,11 @@ const Popup = () => {
         )}
         <div className="flex flex-col items-center justify-center">
           <div>Total Page</div>
-          <div>{totalNumImages}</div>
+          <div>{totalImages}</div>
         </div>
       </div>
 
-      {finishedList.length > 0 && finishedList.length === totalNumImages && <div>Congrats! Download completed.</div>}
+      {finishedList.length > 0 && finishedList.length === totalImages && <div>Congrats! Download completed.</div>}
     </>
   );
 
@@ -274,40 +282,49 @@ const Popup = () => {
   });
 
   return (
-    <Card className="h-full w-full" radius="none">
-      <CardBody className="items-center">
-        <Tabs color="secondary">
-          <Tab key="info" title="Info">
-            <div className="flex flex-col items-center justify-center gap-4 p-2">
-              <div>{renderStatus()}</div>
-              {progress}
-              <div className="flex flex-col items-center">
-                <Button
-                  color="primary"
-                  hidden={isBtnVisible}
-                  className={clsx('mt-4', isBtnVisible && 'hidden')}
-                  onClick={() => {
-                    setStatus(StatusEnum.Downloading);
-                    downloadAllImages();
-                    if (configRef.current.saveGalleryInfo) {
-                      generateTxtFile(JSON.stringify(galleryInfo, null, 2));
-                    }
-                    if (configRef.current.saveGalleryTags) {
-                      generateTxtFile(JSON.stringify(galleryTags, null, 2));
-                    }
-                    setIsBtnVisible(false);
-                  }}>
-                  Download Gallery
-                </Button>
+    <DownloadContext.Provider
+      value={{
+        downloadList,
+        imageIdMap,
+        setDownloadList,
+      }}>
+      <Card className="h-full w-full" radius="none">
+        <CardBody className="items-center">
+          <Tabs color="secondary">
+            <Tab key="info" title="Info">
+              <div className="flex flex-col items-center justify-center gap-4 p-2">
+                <div>{renderStatus()}</div>
+                {progress}
+                {[StatusEnum.BeforeDownload].includes(status) && (
+                  <div className="flex flex-col items-center">
+                    <Button
+                      color="primary"
+                      hidden={isBtnVisible}
+                      className={clsx('mt-4')}
+                      onClick={() => {
+                        setStatus(StatusEnum.Downloading);
+                        downloadAllImages();
+                        if (configRef.current.saveGalleryInfo) {
+                          generateTxtFile(JSON.stringify(galleryInfo, null, 2));
+                        }
+                        if (configRef.current.saveGalleryTags) {
+                          generateTxtFile(JSON.stringify(galleryTags, null, 2));
+                        }
+                        setIsBtnVisible(false);
+                      }}>
+                      Download Gallery
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
-          </Tab>
-          <Tab key="downloadList" title="DownloadList">
-            <DownloadTable downloadList={downloadList} imageIdMap={imageIdMapRef.current} />
-          </Tab>
-        </Tabs>
-      </CardBody>
-    </Card>
+            </Tab>
+            <Tab key="downloadList" title="DownloadList">
+              <DownloadTable />
+            </Tab>
+          </Tabs>
+        </CardBody>
+      </Card>
+    </DownloadContext.Provider>
   );
 };
 

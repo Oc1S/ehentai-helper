@@ -1,5 +1,7 @@
+import { useCreation } from '@ehentai-helper/shared';
 import {
   Button,
+  ButtonProps,
   Chip,
   ChipProps,
   Dropdown,
@@ -17,7 +19,10 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
-import { FC, useMemo, useState } from 'react';
+import { useForceUpdate } from 'framer-motion';
+import { FC, useContext, useMemo, useState } from 'react';
+
+import { DownloadContext } from '@/Context';
 
 import { ChevronDownIcon } from './ChevronDownIcon';
 import { SearchIcon } from './SearchIcon';
@@ -25,6 +30,15 @@ import { SearchIcon } from './SearchIcon';
 const pageSize = 10;
 
 type DownloadItem = chrome.downloads.DownloadItem;
+type DownloadState = DownloadItem['state'];
+
+const CellButton = ({ children, ...rest }: ButtonProps) => {
+  return (
+    <Button size="sm" {...rest}>
+      {children}
+    </Button>
+  );
+};
 
 const columns = [
   {
@@ -36,25 +50,23 @@ const columns = [
   {
     key: 'filename',
   },
-  // {
-  //   key: 'operation',
-  // },
+  {
+    key: 'operation',
+  },
 ];
-const stateMap: Record<DownloadItem['state'], React.ReactNode> = {
+const stateMap: Record<DownloadState, React.ReactNode> = {
   in_progress: <>🙈Downloading</>,
   interrupted: <>❌Interrupted</>,
   complete: <>🌈Complete</>,
 };
-const statusColorMap: Record<DownloadItem['state'], ChipProps['color']> = {
+const statusColorMap: Record<DownloadState, ChipProps['color']> = {
   complete: 'success',
   in_progress: 'warning',
   interrupted: 'danger',
 };
 
-const DownloadTable: FC<{
-  downloadList: DownloadItem[];
-  imageIdMap: Map<number, number>;
-}> = ({ downloadList }) => {
+const DownloadTable: FC = () => {
+  const { imageIdMap, downloadList, setDownloadList } = useContext(DownloadContext);
   const [page, setPage] = useState(1);
 
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
@@ -83,20 +95,85 @@ const DownloadTable: FC<{
     { id: 'interrupted', label: 'Interrupted' },
   ];
   const filteredList = useMemo(() => {
-    const pathFormattedList = downloadList.map(item => {
+    let list = downloadList.map(item => {
       const localPathArr = item.filename.replace(/\\/g, '/').split('/');
-      console.log('item@', item, localPathArr);
       const filename = localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
       return {
         ...item,
         filename,
       };
     });
-    const list = filterValue
-      ? pathFormattedList.filter(item => item.filename.includes(filterValue))
-      : pathFormattedList;
-    return statusFilter === 'all' ? list : list.filter(item => statusFilter.has(item.state));
+    console.log('list@');
+    /* search input filter */
+    list = filterValue ? list.filter(item => item.filename.includes(filterValue)) : list;
+    /* status filter */
+    list = statusFilter === 'all' ? list : list.filter(item => statusFilter.has(item.state));
+    return list;
   }, [filterValue, statusFilter, downloadList]);
+
+  const [update] = useForceUpdate();
+  const pausedIdSet = useCreation(() => new Set<number>());
+  const renderCell = (item: DownloadItem, key: string) => {
+    const { state, id, url } = item;
+    const paused = pausedIdSet.has(id);
+    const PauseButton = (
+      <CellButton
+        onClick={() => {
+          paused
+            ? chrome.downloads.resume(id, () => {
+                pausedIdSet.delete(id);
+              })
+            : chrome.downloads.pause(id, () => {
+                pausedIdSet.add(id);
+              });
+          update();
+        }}>
+        {paused ? 'Resume' : 'Pause'}
+      </CellButton>
+    );
+    const RestartButton = (
+      <CellButton
+        onClick={() => {
+          chrome.downloads.cancel(id, () => {
+            const number = imageIdMap.get(id)!;
+            setDownloadList(list => {
+              const newList = [...list];
+              const index = newList.findIndex(item => item.id === id);
+              newList.splice(index, 1);
+              return newList;
+            });
+            chrome.downloads.download({ url }, newId => {
+              imageIdMap.delete(id);
+              imageIdMap.set(newId, number);
+            });
+          });
+        }}>
+        Restart
+      </CellButton>
+    );
+    const operationMap = {
+      interrupted: () => RestartButton,
+      in_progress: () => (
+        <div className="flex gap-2">
+          {PauseButton}
+          {RestartButton}
+        </div>
+      ),
+      complete: () => <></>,
+    };
+    switch (key) {
+      case 'state':
+        return (
+          <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">
+            {stateMap[item.state]}
+          </Chip>
+        );
+      case 'operation':
+        return operationMap[state]();
+      default:
+        return item[key];
+    }
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -133,7 +210,6 @@ const DownloadTable: FC<{
       </div>
       <Table
         className="w-[680px]"
-        aria-label="table"
         isHeaderSticky
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
@@ -151,43 +227,19 @@ const DownloadTable: FC<{
           </div>
         }
         classNames={{
-          wrapper: 'h-[445px]',
+          wrapper: 'h-[440px]',
         }}>
         <TableHeader columns={columns}>
-          {column => (
-            <TableColumn key={column.key} width={200}>
-              {column.key.toUpperCase()}
-            </TableColumn>
-          )}
+          {({ key }) => {
+            return (
+              <TableColumn key={key} width={key === 'id' ? 100 : 200}>
+                {key.toUpperCase()}
+              </TableColumn>
+            );
+          }}
         </TableHeader>
         <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
-          {item => (
-            <TableRow key={item.id}>
-              {key => {
-                if (key === 'state')
-                  return (
-                    <TableCell>
-                      <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">
-                        {stateMap[item.state]}
-                      </Chip>
-                    </TableCell>
-                  );
-                if (key === 'operation') {
-                  const { state } = item;
-                  if (state !== 'complete') {
-                    return (
-                      <TableCell>
-                        {/* TODO */}
-                        <Button>Redownload</Button>
-                      </TableCell>
-                    );
-                  }
-                  return <></>;
-                }
-                return <TableCell>{item[key]}</TableCell>;
-              }}
-            </TableRow>
-          )}
+          {item => <TableRow key={item.id}>{key => <TableCell>{renderCell(item, key as string)}</TableCell>}</TableRow>}
         </TableBody>
       </Table>
     </div>
