@@ -151,7 +151,7 @@ const DownloadTable: FC<{
           </div>
         }
         classNames={{
-          wrapper: 'min-h-[200px] max-h-[470px]',
+          wrapper: 'h-[445px]',
         }}>
         <TableHeader columns={columns}>
           {column => (

@@ -12,5 +12,13 @@ A Chrome Ehentai Helper Plugin.
 3. 勾选 `开发者模式`
 4. 点击 `加载已解压的扩展程序`，选择本扩展所在目录
 
+## TODO
+✅Total Page
+Page Range
+✅Sussess Progress
+Error Retry
+Auto Height
+
+
 > Inspired by [EHentaiChromeExtension
 ](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)

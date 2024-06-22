@@ -9,3 +9,7 @@ export const generateTxtFile = (text: string) => {
     url: 'data:text;charset=utf-8,' + encodeURI(text),
   });
 };
+
+export * from './extractGalleryInfo';
+export * from './extractGalleryTags';
+export * from './htmlStr2Dom';
