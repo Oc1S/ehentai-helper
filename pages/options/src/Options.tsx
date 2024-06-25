@@ -38,7 +38,7 @@ const Row = ({ label, content }: Record<'label' | 'content', React.ReactNode>) =
 };
 
 const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input type="text" className={`border-b border-primary bg-transparent text-primary ${className}`} {...rest} />
+  <input type="text" className={`border-primary text-primary border-b bg-transparent ${className}`} {...rest} />
 );
 
 const Options: FC = () => {
@@ -186,16 +186,17 @@ const Options: FC = () => {
           }>
           <Radio value="[index]">Index</Radio>
           <Radio value="[name]">Name</Radio>
+          <Radio value="[index]_[total]">Index_Total</Radio>
         </RadioGroup>
       ),
     },
   };
 
   return (
-    <div className="relative flex flex-col gap-4 items-center">
+    <div className="relative flex flex-col items-center gap-4">
       <Toast visible={!!status}>{status}</Toast>
       {/* table */}
-      <div className="flex flex-col bg-content1 rounded-lg p-4 gap-4">
+      <div className="bg-content1 flex flex-col gap-4 rounded-lg p-4">
         {Object.keys(formItemMap).map(key => (
           <Row key={key} label={formItemMap[key].label} content={formItemMap[key].content} />
         ))}

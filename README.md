@@ -16,8 +16,7 @@ A Chrome Ehentai Helper Plugin.
 ✅Total Page
 Page Range
 ✅Sussess Progress
-Error Retry
-Auto Height
+✅Error Retry
 
 
 > Inspired by [EHentaiChromeExtension

@@ -11,11 +11,12 @@ import {
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
-import { Button, Card, CardBody, Link, Spinner, Tab, Tabs } from '@nextui-org/react';
+import { Button, Card, CardBody, Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
 import axios from 'axios';
 import clsx from 'clsx';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { PageSelector } from './components';
 import DownloadTable from './components/Table';
 import { DownloadContext } from './Context';
 import { useDownload } from './hooks';
@@ -36,8 +37,8 @@ enum StatusEnum {
   Loading,
   OtherPage,
   EHentaiOther,
-  BeforeDownload,
   Fail,
+  BeforeDownload,
   Downloading,
   DownLoadSuccess,
 }
@@ -57,6 +58,7 @@ const Popup = () => {
     numPages: 0,
     totalImages: 0,
   });
+
   const { totalImages } = galleryPageInfo;
   const finishedList = downloadList.filter(item => item.state === 'complete');
 
@@ -76,24 +78,46 @@ const Popup = () => {
     return urls;
   };
 
+  const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
+  useEffect(() => {
+    setRange([1, galleryPageInfo.totalImages]);
+  }, [galleryInfo]);
+
+  const [startIndex, endIndex] = range;
+  const [start, end] = useMemo(() => {
+    const start = {
+      indexOfPage: (startIndex % galleryPageInfo.imagesPerPage) - 1,
+      page: ~~(startIndex / galleryPageInfo.imagesPerPage),
+    };
+    const end = {
+      indexOfPage: (endIndex % galleryPageInfo.imagesPerPage) - 1,
+      page: ~~(endIndex / galleryPageInfo.imagesPerPage),
+    };
+    return [start, end];
+  }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
+
   /* 获取单张图片 */
   const processImagePage = async (url: string, pageIndex: number, imageIndex: number) => {
+    const currentIndex = pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1;
+    if (currentIndex < startIndex || currentIndex > endIndex) return;
     const res = await axios.get(url);
     const responseText = res.data;
     const doc = htmlStr2DOM(responseText);
     let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
     if (configRef.current.saveOriginalImages) {
-      const originalImage = (doc.getElementById('i7')?.childNodes[3] as HTMLAnchorElement).href;
+      const originalImage = (doc.getElementById('i7')?.childNodes?.[3] as HTMLAnchorElement)?.href;
       imageUrl = originalImage ?? imageUrl;
     }
     chrome.downloads.download({ url: imageUrl }, id => {
-      imageIdMap.set(id, pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1);
+      imageIdMap.set(id, currentIndex);
     });
   };
 
   /* 获取gallery整页所有图片 */
-  const processGalleryPage = async (url: string, pageIndex: number) => {
-    const { data: responseText } = await axios.get(url);
+  const processGalleryPage = async (pageIndex: number) => {
+    if (pageIndex < start.page || pageIndex > end.page) return;
+    const pageUrl = `${galleryFrontPageUrl.current}?p=${pageIndex}`;
+    const { data: responseText } = await axios.get(pageUrl);
     const imagePageUrls = extractImagePageUrls(responseText);
     processImagePage(imagePageUrls[0], pageIndex, 0); // Start immediately.
     let imageIndex = 1;
@@ -110,15 +134,15 @@ const Popup = () => {
 
   /** 开启下载图片 */
   const downloadAllImages = () => {
-    processGalleryPage(galleryFrontPageUrl.current, 0); // Start immediately.
-    let pageIndex = 1;
-    // 下载该页图片后，继续下载下一页
+    let pageIndex = start.page;
+    processGalleryPage(pageIndex); // Start immediately.
+    pageIndex++;
     const pageInterval = setInterval(() => {
       if (pageIndex === galleryPageInfo.numPages) {
         clearInterval(pageInterval);
         return;
       }
-      processGalleryPage(galleryFrontPageUrl.current + '?p=' + pageIndex, pageIndex);
+      processGalleryPage(pageIndex);
       pageIndex++;
     }, configRef.current.downloadInterval * galleryPageInfo.imagesPerPage);
   };
@@ -126,9 +150,9 @@ const Popup = () => {
   /**
    * 获取页码信息
    */
-  const extractNumGalleryPages = (html: string) => {
+  const extractGalleryPageInfo = (html: string) => {
     const doc = htmlStr2DOM(html);
-    const pageInfoStr = doc.querySelector('gpc')?.innerHTML || '';
+    const pageInfoStr = doc.querySelector('.gpc')?.innerHTML || '';
     const res = /Showing 1 - (\d+) of (\d*,*\d+) images/.exec(pageInfoStr);
     if (!res) return;
     const pageInfo = {
@@ -162,6 +186,12 @@ const Popup = () => {
     setDownloadList(prev => prev.map(item => (item.id === id ? { ...item, ...newVal } : item)));
   };
 
+  useEffect(() => {
+    if (status === StatusEnum.Downloading && galleryPageInfoRef.current.totalImages === finishedList.length) {
+      setStatus(StatusEnum.DownLoadSuccess);
+    }
+  }, [status, downloadList]);
+
   // Save to the corresponding folder and rename files.
   const handleDeterminingFilename: Parameters<typeof chrome.downloads.onDeterminingFilename.addListener>[0] = (
     downloadItem,
@@ -170,6 +200,7 @@ const Popup = () => {
     if (downloadItem.byExtensionName !== EXTENSION_NAME) return;
     const { id } = downloadItem;
     let { filename } = downloadItem;
+    const { intermediateDownloadPath, fileNameRule, filenameConflictAction: conflictAction } = configRef.current;
     const name = filename.substring(0, filename.lastIndexOf('.') + 1);
     const fileType = filename.substring(filename.lastIndexOf('.') + 1);
     // Metadata.
@@ -177,16 +208,16 @@ const Popup = () => {
       const { url } = downloadItem;
       // 'name' is the first key of info file.
       const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
-      filename = configRef.current.intermediateDownloadPath + '/' + isInfoFile ? 'info.txt' : 'tags.txt';
+      filename = `${intermediateDownloadPath}/${isInfoFile ? 'info.txt' : 'tags.txt'}`;
     } else {
-      filename = `${configRef.current.intermediateDownloadPath}/${configRef.current.fileNameRule
+      filename = `${intermediateDownloadPath}/${fileNameRule
         .replace('[index]', String(imageIdMap.get(id)))
         .replace('[name]', name)
         .replace('[total]', `${galleryPageInfoRef.current.totalImages}`)}.${fileType}`;
     }
     suggest({
-      filename: `${filename}`,
-      conflictAction: configRef.current.filenameConflictAction,
+      filename,
+      conflictAction,
     });
   };
 
@@ -222,27 +253,30 @@ const Popup = () => {
       case StatusEnum.Downloading:
         return <>🤗Please do NOT close the extension popup page before ALL download tasks start.</>;
       case StatusEnum.DownLoadSuccess:
-        return 'Download success';
+        return <div>Congrats! Download completed.</div>;
       case StatusEnum.Fail:
         return 'Failed to fetch data from the server, please retry later.';
     }
   };
   const progress = (
     <>
-      <div className="flex">
-        {finishedList.length > 0 && (
-          <div className="flex flex-col items-center justify-center">
-            <div>Finished /</div>
-            <div>{finishedList.length} /</div>
+      <div className="flex flex-col items-center gap-1">
+        {status >= StatusEnum.BeforeDownload && (
+          <div className="flex items-center">
+            <div>Total Page:</div>
+            <div>{totalImages}</div>
           </div>
         )}
-        <div className="flex flex-col items-center justify-center">
-          <div>Total Page</div>
-          <div>{totalImages}</div>
-        </div>
+        {finishedList.length > 0 && (
+          <Progress
+            aria-label="Loading..."
+            value={finishedList.length}
+            minValue={0}
+            maxValue={endIndex - startIndex + 1}
+            className="w-[200px]"
+          />
+        )}
       </div>
-
-      {finishedList.length > 0 && finishedList.length === totalImages && <div>Congrats! Download completed.</div>}
     </>
   );
 
@@ -254,16 +288,16 @@ const Popup = () => {
         chrome.storage.sync.get(defaultConfig, async items => {
           configRef.current = items as typeof configRef.current;
           galleryFrontPageUrl.current = url.substring(0, url.lastIndexOf('/') + 1);
-          const { data: responseText } = await axios.get(galleryFrontPageUrl.current).catch(() => ({
+          const { data: htmlStr } = await axios.get(galleryFrontPageUrl.current).catch(() => ({
             data: '',
           }));
-          if (!responseText) {
+          if (!htmlStr) {
             setStatus(StatusEnum.Fail);
             return;
           }
-          extractNumGalleryPages(responseText);
-          galleryInfo = extractGalleryInfo(responseText);
-          galleryTags = extractGalleryTags(responseText);
+          extractGalleryPageInfo(htmlStr);
+          galleryInfo = extractGalleryInfo(htmlStr);
+          galleryTags = extractGalleryTags(htmlStr);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setStatus(StatusEnum.BeforeDownload);
           setIsBtnVisible(true);
@@ -295,8 +329,12 @@ const Popup = () => {
               <div className="flex flex-col items-center justify-center gap-4 p-2">
                 <div>{renderStatus()}</div>
                 {progress}
+
                 {[StatusEnum.BeforeDownload].includes(status) && (
-                  <div className="flex flex-col items-center">
+                  <div className="fixed bottom-40 flex flex-col items-center">
+                    {range[1] > 0 && (
+                      <PageSelector range={range} maxValue={totalImages} onChangeEnd={setRange as any} />
+                    )}
                     <Button
                       color="primary"
                       hidden={isBtnVisible}
