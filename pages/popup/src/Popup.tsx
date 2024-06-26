@@ -332,9 +332,7 @@ const Popup = () => {
 
                 {[StatusEnum.BeforeDownload].includes(status) && (
                   <div className="fixed bottom-40 flex flex-col items-center">
-                    {range[1] > 0 && (
-                      <PageSelector range={range} maxValue={totalImages} onChangeEnd={setRange as any} />
-                    )}
+                    {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
                     <Button
                       color="primary"
                       hidden={isBtnVisible}
