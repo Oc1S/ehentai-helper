@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets';
-import makeManifestPlugin from './utils/plugins/make-manifest-plugin';
 import { watchRebuildPlugin } from '@ehentai-helper/hmr';
+import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets';
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
+
+import makeManifestPlugin from './utils/plugins/make-manifest-plugin';
 
 const rootDir = resolve(__dirname);
 const libDir = resolve(rootDir, 'lib');

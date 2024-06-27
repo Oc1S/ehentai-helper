@@ -27,7 +27,6 @@ export function makeEntryPointPlugin(): PluginOption {
               const replacedSource = String(module.source).replaceAll(originalFileName, newFileName);
               module.source = '';
               fs.writeFileSync(path.resolve(outputDir, newFileName), replacedSource);
-              break;
             }
             break;
           case 'chunk': {

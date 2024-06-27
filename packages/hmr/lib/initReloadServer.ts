@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { WebSocket, WebSocketServer } from 'ws';
+
 import { LOCAL_RELOAD_SOCKET_PORT, LOCAL_RELOAD_SOCKET_URL } from './constant';
 import MessageInterpreter from './interpreter';
 
@@ -26,7 +27,7 @@ function initReloadServer() {
         }
         if (message.type === 'build_complete') {
           clientsThatNeedToUpdate.forEach((ws: WebSocket) =>
-            ws.send(MessageInterpreter.send({ type: 'do_update', id: message.id })),
+            ws.send(MessageInterpreter.send({ type: 'do_update', id: message.id }))
           );
         }
       });

@@ -1,9 +1,10 @@
-import type { PluginOption } from 'vite';
-import { WebSocket } from 'ws';
-import MessageInterpreter from '../interpreter';
-import { LOCAL_RELOAD_SOCKET_URL } from '../constant';
 import * as fs from 'fs';
 import path from 'path';
+import type { PluginOption } from 'vite';
+import { WebSocket } from 'ws';
+
+import { LOCAL_RELOAD_SOCKET_URL } from '../constant';
+import MessageInterpreter from '../interpreter';
 
 type PluginConfig = {
   onStart?: () => void;
