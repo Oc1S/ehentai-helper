@@ -1,23 +1,33 @@
+<h4 align="right"><strong>English</strong> | <a href="https://github.com/tw93/Pake/blob/master/README_CN.md">简体中文</a></h4>
 <div align="center">
 <h1> Ehentai Download Helper</h1>
 </div>
 
 A Chrome Ehentai Helper Plugin.
 
-## 安装
+✨If this extension proves beneficial to you, Your Star will be appreciated🤗.
 
-以Google浏览器为例
-1. 前往 [Release 页面](../../releases)下载 zip 文件并解压
-2. 打开 Chrome 扩展程序管理器 `chrome://extensions`
-3. 勾选 `开发者模式`
-4. 点击 `加载已解压的扩展程序`，选择本扩展所在目录
+## Install
+Take Google Chrome as an example:
 
-## TODO
-✅Total Page
-Page Range
-✅Sussess Progress
-✅Error Retry
+1. Go to the [Release Page](../../releases) to download the zip file and extract it.
+2. Open the [Chrome Extensions Manager](chrome://extensions) 
+3. Check the `Developer mode` button.
+4. Click on `Load unpacked`, then select the directory where this extension is located.
+5. Go to an Ehentai Gallery，click the extension icon
+6. ✨Start Downloading!
 
+## Features
++ Download the entire gallery with one click, without consuming credits or GP, and no need to log in to Ehentai.
++ Freely select the range of images to download.
++ Extract and save gallery information and tag list.
++ Choose download file naming rules, such as naming by sequence or by the original image name.
++ Monitor download progress in real time, with the ability to retry if image download fails.
 
-> Inspired by [EHentaiChromeExtension
+## Preview
+![Download.png](https://s2.loli.net/2024/07/07/X1JjBsFDzk8pZTg.png)
+![Process.png](https://s2.loli.net/2024/07/07/4lw8aZO3isjhrcb.png)
+
+> This extension is inspired by [EHentaiChromeExtension
 ](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)
+
