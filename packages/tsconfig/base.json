@@ -8,7 +8,7 @@
     "downlevelIteration": true,
     "isolatedModules": true,
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
@@ -20,10 +20,6 @@
     "suppressImplicitAnyIndexErrors": true,
     "jsx": "react-jsx",
     "ignoreDeprecations": "5.0",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"]
   }
 }
-

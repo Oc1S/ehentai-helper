@@ -63,7 +63,7 @@ const Popup = () => {
   const finishedList = downloadList.filter(item => item.state === 'complete');
 
   const extractImagePageUrls = (html: string) => {
-    const urls = [];
+    const urls: string[] = [];
     const doc = htmlStr2DOM(html);
     // Normal previews.
     let elements = doc.getElementsByClassName('gdtm');
@@ -253,7 +253,18 @@ const Popup = () => {
       case StatusEnum.Downloading:
         return <>🤗Please do NOT close the extension popup page before ALL download tasks start.</>;
       case StatusEnum.DownLoadSuccess:
-        return <div>Congrats! Download completed.</div>;
+        return (
+          <div>
+            <div>Congrats! Download completed.</div>
+            <div>
+              If this extension proves beneficial to you, please give me a star at
+              <Link href="https://github.com/Oc1S/ehentai-helper" isExternal>
+                Github
+              </Link>
+              🤗
+            </div>
+          </div>
+        );
       case StatusEnum.Fail:
         return 'Failed to fetch data from the server, please retry later.';
     }
@@ -331,7 +342,7 @@ const Popup = () => {
                 {progress}
 
                 {[StatusEnum.BeforeDownload].includes(status) && (
-                  <div className="fixed bottom-40 flex flex-col items-center">
+                  <div className="fixed bottom-48 flex flex-col items-center">
                     {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
                     <Button
                       color="primary"
@@ -348,7 +359,7 @@ const Popup = () => {
                         }
                         setIsBtnVisible(false);
                       }}>
-                      Download Gallery
+                      Download
                     </Button>
                   </div>
                 )}

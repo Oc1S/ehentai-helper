@@ -5,7 +5,6 @@ function addRefresh() {
   let pendingReload = false;
 
   initClient({
-    // eslint-disable-next-line
     // @ts-ignore
     id: __HMR_ID,
     onUpdate: () => {

@@ -36,7 +36,6 @@ function initReloadServer() {
     ping();
   } catch {
     console.error(`[HMR] Failed to start server at ${LOCAL_RELOAD_SOCKET_URL}`);
-    console.error('PLEASE MAKE SURE YOU ARE RUNNING `pnpm dev-server`');
   }
 }
 
