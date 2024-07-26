@@ -1,4 +1,4 @@
-<h4 align="right"><strong>English</strong> | <a href="https://github.com/tw93/Pake/blob/master/README_CN.md">简体中文</a></h4>
+<h4 align="right"><strong>English</strong> | <a href="./README_CN.md">简体中文</a></h4>
 <div align="center">
 <h1> Ehentai Download Helper</h1>
 </div>
