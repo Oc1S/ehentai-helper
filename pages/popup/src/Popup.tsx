@@ -62,22 +62,6 @@ const Popup = () => {
   const { totalImages } = galleryPageInfo;
   const finishedList = downloadList.filter(item => item.state === 'complete');
 
-  const extractImagePageUrls = (html: string) => {
-    const urls: string[] = [];
-    const doc = htmlStr2DOM(html);
-    // Normal previews.
-    let elements = doc.getElementsByClassName('gdtm');
-    for (let index = 0; index < elements.length; index++) {
-      urls.push((elements[index].childNodes[0].childNodes[0] as HTMLAnchorElement).href);
-    }
-    // Large previews.
-    elements = doc.getElementsByClassName('gdtl');
-    for (let index = 0; index < elements.length; index++) {
-      urls.push((elements[index].childNodes[0] as HTMLAnchorElement).href);
-    }
-    return urls;
-  };
-
   const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
   useEffect(() => {
     setRange([1, galleryPageInfo.totalImages]);
@@ -96,24 +80,7 @@ const Popup = () => {
     return [start, end];
   }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
 
-  /* 获取单张图片 */
-  const processImagePage = async (url: string, pageIndex: number, imageIndex: number) => {
-    const currentIndex = pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1;
-    if (currentIndex < startIndex || currentIndex > endIndex) return;
-    const res = await axios.get(url);
-    const responseText = res.data;
-    const doc = htmlStr2DOM(responseText);
-    let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
-    if (configRef.current.saveOriginalImages) {
-      const originalImage = (doc.getElementById('i7')?.childNodes?.[3] as HTMLAnchorElement)?.href;
-      imageUrl = originalImage ?? imageUrl;
-    }
-    chrome.downloads.download({ url: imageUrl }, id => {
-      imageIdMap.set(id, currentIndex);
-    });
-  };
-
-  /* 获取gallery整页所有图片 */
+  /* 1.获取gallery整页所有图片 */
   const processGalleryPage = async (pageIndex: number) => {
     if (pageIndex < start.page || pageIndex > end.page) return;
     const pageUrl = `${galleryFrontPageUrl.current}?p=${pageIndex}`;
@@ -130,6 +97,29 @@ const Popup = () => {
       imageIndex++;
     }, configRef.current.downloadInterval);
     return imagePageUrls.length;
+  };
+
+  /* 2.get image page urls */
+  const extractImagePageUrls = (html: string) => {
+    const doc = htmlStr2DOM(html);
+    return Array.from(doc.getElementById('gdt')?.childNodes || []).map(n => (n as HTMLAnchorElement).href);
+  };
+
+  /* 3.获取单张图片 */
+  const processImagePage = async (url: string, pageIndex: number, imageIndex: number) => {
+    const currentIndex = pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1;
+    if (currentIndex < startIndex || currentIndex > endIndex) return;
+    const res = await axios.get(url);
+    const responseText = res.data;
+    const doc = htmlStr2DOM(responseText);
+    let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
+    if (configRef.current.saveOriginalImages) {
+      const originalImage = (doc.getElementById('i7')?.childNodes?.[3] as HTMLAnchorElement)?.href;
+      imageUrl = originalImage ?? imageUrl;
+    }
+    chrome.downloads.download({ url: imageUrl }, id => {
+      imageIdMap.set(id, currentIndex);
+    });
   };
 
   /** 开启下载图片 */
@@ -257,7 +247,7 @@ const Popup = () => {
           <div>
             <div>Congrats! Download completed.</div>
             <div>
-              If this extension proves beneficial to you, please give me a star at
+              If this extension proves beneficial to you, please give me a star at{' '}
               <Link href="https://github.com/Oc1S/ehentai-helper" isExternal>
                 Github
               </Link>
