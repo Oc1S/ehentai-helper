@@ -7,8 +7,7 @@
 }
 
 :root {
-  /* --color-primary: #09b6a2; */
-  --color-primary: #44bd87;
+  --color-primary: #09b6a2;
 }
 
 body {
@@ -20,5 +19,5 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  @apply flex flex-col justify-center items-center;
+  @apply flex flex-col items-center justify-center;
 }

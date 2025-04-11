@@ -1,5 +1,5 @@
-import '@ehentai-helper/shared/styles/global.css';
 import './index.css';
+import '@ehentai-helper/shared/styles/global.css';
 
 import { createRoot } from 'react-dom/client';
 
@@ -11,7 +11,6 @@ function init() {
     throw new Error('Can not find #app-container');
   }
   const root = createRoot(appContainer);
-
   root.render(<Popup />);
 }
 

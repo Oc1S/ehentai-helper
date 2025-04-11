@@ -7,7 +7,7 @@ import {
   withSuspense,
 } from '@ehentai-helper/shared';
 import { Button, Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
-import { FC, ReactNode, useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 
 import { Toast } from './components';
 

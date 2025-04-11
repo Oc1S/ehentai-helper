@@ -29,6 +29,7 @@ module.exports = {
   rules: {
     'simple-import-sort/imports': 'warn',
     'simple-import-sort/exports': 'warn',
+    'import/named': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
     'prefer-const': 'off',
     'react/react-in-jsx-scope': 'off',

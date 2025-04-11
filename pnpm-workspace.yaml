@@ -1,4 +1,8 @@
 packages:
-  - "chrome-extension"
-  - "pages/*"
-  - "packages/*"
+  - chrome-extension
+  - pages/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild

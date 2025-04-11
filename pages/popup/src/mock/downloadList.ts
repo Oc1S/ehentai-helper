@@ -1,4 +1,6 @@
-const downloadList: chrome.downloads.DownloadItem[] = [
+export const testPage = 'https://e-hentai.org/g/3307057/1e3ccc99db/';
+
+export const downloadList: chrome.downloads.DownloadItem[] = [
   {
     bytesReceived: 0,
     canResume: false,

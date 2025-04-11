@@ -11,12 +11,25 @@ import {
   withErrorBoundary,
   withSuspense,
 } from '@ehentai-helper/shared';
-import { Button, Card, CardBody, Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
+import {
+  Button,
+  ButtonProps,
+  Card,
+  CardBody,
+  Chip,
+  Link,
+  LinkProps,
+  Progress,
+  Spinner,
+  Tab,
+  Tabs,
+} from '@nextui-org/react';
 import axios from 'axios';
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { PageSelector } from './components';
+import { Noise } from './components/noise';
 import DownloadTable from './components/Table';
 import { DownloadContext } from './Context';
 import { useDownload } from './hooks';
@@ -34,17 +47,17 @@ let galleryInfo: Record<string, any> = {};
 let galleryTags: Record<string, any> = {};
 
 enum StatusEnum {
-  Loading,
-  OtherPage,
-  EHentaiOther,
-  Fail,
-  BeforeDownload,
-  Downloading,
-  DownLoadSuccess,
+  Loading = 0,
+  OtherPage = 1,
+  EHentaiOther = 2,
+  Fail = 3,
+  BeforeDownload = 4,
+  Downloading = 5,
+  DownLoadSuccess = 6,
 }
 
 const Popup = () => {
-  const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
+  const [status, setStatus] = useState<StatusEnum>(StatusEnum.BeforeDownload);
   const galleryFrontPageUrl = useRef('');
 
   const [isBtnVisible, setIsBtnVisible] = useState(false);
@@ -183,7 +196,7 @@ const Popup = () => {
   }, [status, downloadList]);
 
   // Save to the corresponding folder and rename files.
-  const handleDeterminingFilename: Parameters<typeof chrome.downloads.onDeterminingFilename.addListener>[0] = (
+  const handleDeterminFilename: Parameters<typeof chrome.downloads.onDeterminingFilename.addListener>[0] = (
     downloadItem,
     suggest
   ) => {
@@ -214,8 +227,31 @@ const Popup = () => {
   useDownload({
     onDownloadCreated: handleDownloadCreated,
     onDownloadChanged: handleDownloadChanged,
-    onDeterminingFilename: handleDeterminingFilename,
+    onDeterminingFilename: handleDeterminFilename,
   });
+
+  const renderGotoEHentai = () => {
+    const buttonProps = {
+      size: 'sm',
+      as: Link,
+      isExternal: true,
+      variant: 'flat',
+      className: 'mx-1 bg-indigo-500/20 hover:bg-indigo-500/50 transition-all mt-1',
+    } satisfies LinkProps & ButtonProps;
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        Go to a
+        <Button {...buttonProps} href="https://e-hentai.org/">
+          E-Hentai
+        </Button>
+        or
+        <Button {...buttonProps} href="https://exhentai.org/">
+          ExHentai
+        </Button>
+        gallery page to start downloading.
+      </div>
+    );
+  };
 
   const renderStatus = () => {
     switch (status) {
@@ -225,21 +261,13 @@ const Popup = () => {
           <Spinner size="md" color="secondary" className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
         );
       case StatusEnum.OtherPage:
-        return (
-          <>
-            🚧Please go to a
-            <Link href="https://e-hentai.org/" isExternal className="px-1">
-              E-Hentai
-            </Link>
-            /
-            <Link href="https://exhentai.org/" isExternal className="px-1">
-              ExHentai
-            </Link>
-            gallery page.
-          </>
-        );
+        return renderGotoEHentai();
       case StatusEnum.BeforeDownload:
-        return 'Ready to download';
+        return (
+          <Chip variant="flat" className="bg-indigo-500/20">
+            Ready to download
+          </Chip>
+        );
       case StatusEnum.Downloading:
         return <>🤗Please do NOT close the extension popup page before ALL download tasks start.</>;
       case StatusEnum.DownLoadSuccess:
@@ -259,13 +287,23 @@ const Popup = () => {
         return 'Failed to fetch data from the server, please retry later.';
     }
   };
+
   const progress = (
     <>
       <div className="flex flex-col items-center gap-1">
         {status >= StatusEnum.BeforeDownload && (
-          <div className="flex items-center">
-            <div>Total Page:</div>
-            <div>{totalImages}</div>
+          <div className="space-y-1">
+            <div className="flex items-center">
+              <div>Gallery Total Page:{'\t'}</div>
+              <div className="text-yellow-100">{}</div>
+            </div>
+
+            <div className="flex items-center">
+              <div>Download page count:{'\t'}</div>
+              <div className="text-yellow-100">
+                {range[1] - range[0] + 1} / {totalImages}
+              </div>
+            </div>
           </div>
         )}
         {finishedList.length > 0 && (
@@ -335,10 +373,9 @@ const Popup = () => {
                   <div className="fixed bottom-48 flex flex-col items-center">
                     {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
                     <Button
-                      color="primary"
                       hidden={isBtnVisible}
                       className={clsx('mt-4')}
-                      onClick={() => {
+                      onPress={() => {
                         setStatus(StatusEnum.Downloading);
                         downloadAllImages();
                         if (configRef.current.saveGalleryInfo) {
@@ -361,6 +398,7 @@ const Popup = () => {
           </Tabs>
         </CardBody>
       </Card>
+      <Noise />
     </DownloadContext.Provider>
   );
 };

@@ -1,5 +1,4 @@
 import { Input, Slider, SliderProps } from '@nextui-org/react';
-import clsx from 'clsx';
 import { FC } from 'react';
 
 type PageSelectorProps = {
@@ -10,7 +9,7 @@ type PageSelectorProps = {
 export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange, ...rest }) => {
   return (
     <Slider
-      label="Page Range"
+      label={<span className="whitespace-nowrap">Page Range:</span>}
       renderValue={() => {
         return (
           <div className="flex items-center gap-0.5">
@@ -48,22 +47,21 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       value={range}
       classNames={{
         base: 'w-60 gap-3',
-        filler: 'bg-gradient-to-r from-secondary to-primary h-4',
+        filler: ' h-4',
         track: 'border-x-4 h-4',
       }}
       onChange={val => {
         setRange(val as [number, number]);
       }}
       maxValue={maxValue}
-      renderThumb={({ index, ...props }) => (
+      renderThumb={({ ...props }) => (
         <div
           {...props}
-          className="bg-background border-small border-default-400/50 shadow-medium group top-1/2 cursor-grab rounded-full p-0.5 data-[dragging=true]:cursor-grabbing">
+          className="border-small border-default-400/50 shadow-medium group top-1/2 cursor-grab rounded-full p-0.5 data-[dragging=true]:cursor-grabbing">
           <span
-            className={clsx(
-              'shadow-small bg-primary block h-4 w-4 rounded-full transition-transform group-data-[dragging=true]:scale-95',
-              index === 0 && 'bg-secondary'
-            )}
+            className={
+              'shadow-small bg-default block h-4 w-4 rounded-full transition-transform group-data-[dragging=true]:scale-95'
+            }
           />
         </div>
       )}
