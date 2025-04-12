@@ -53,14 +53,14 @@ enum StatusEnum {
   Fail = 3,
   BeforeDownload = 4,
   Downloading = 5,
-  DownLoadSuccess = 6,
+  DownloadSuccess = 6,
 }
 
 const Popup = () => {
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.BeforeDownload);
   const galleryFrontPageUrl = useRef('');
 
-  const [isBtnVisible, setIsBtnVisible] = useState(false);
+  // const [isBtnVisible, setIsBtnVisible] = useState(false);
   /* alter when mounted */
   const configRef = useRef(defaultConfig);
 
@@ -92,6 +92,7 @@ const Popup = () => {
     };
     return [start, end];
   }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
+  const downloadTargetCount = range[1] - range[0] + 1;
 
   /* 1.获取gallery整页所有图片 */
   const processGalleryPage = async (pageIndex: number) => {
@@ -190,8 +191,8 @@ const Popup = () => {
   };
 
   useEffect(() => {
-    if (status === StatusEnum.Downloading && galleryPageInfoRef.current.totalImages === finishedList.length) {
-      setStatus(StatusEnum.DownLoadSuccess);
+    if (status === StatusEnum.Downloading && downloadTargetCount === finishedList.length) {
+      setStatus(StatusEnum.DownloadSuccess);
     }
   }, [status, downloadList]);
 
@@ -269,13 +270,17 @@ const Popup = () => {
           </Chip>
         );
       case StatusEnum.Downloading:
-        return <>🤗Please do NOT close the extension popup page before ALL download tasks start.</>;
-      case StatusEnum.DownLoadSuccess:
+        return (
+          <Chip variant="flat" className="bg-indigo-500/20">
+            😘Do NOT close this popup page before ALL download tasks start.
+          </Chip>
+        );
+      case StatusEnum.DownloadSuccess:
         return (
           <div>
             <div>Congrats! Download completed.</div>
             <div>
-              If this extension proves beneficial to you, please give me a star at{' '}
+              If you find this extension helpful, you can give me a star at{' '}
               <Link href="https://github.com/Oc1S/ehentai-helper" isExternal>
                 Github
               </Link>
@@ -289,27 +294,21 @@ const Popup = () => {
   };
 
   const progress = (
-    <>
-      <div className="flex flex-col items-center gap-1">
-        {status >= StatusEnum.BeforeDownload && (
-          <div className="flex items-center">
-            <div>Download page count:{'\t'}</div>
-            <div className="text-yellow-100">
-              {range[1] - range[0] + 1} / {totalImages}
-            </div>
-          </div>
-        )}
-        {finishedList.length > 0 && (
-          <Progress
-            aria-label="Loading..."
-            value={finishedList.length}
-            minValue={0}
-            maxValue={endIndex - startIndex + 1}
-            className="w-[200px]"
-          />
-        )}
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center">
+        <div className="mr-2">Progress:</div>
+        <div className="text-yellow-100">
+          {finishedList.length} / {downloadTargetCount}
+        </div>
       </div>
-    </>
+      <Progress
+        aria-label="Loading..."
+        value={finishedList.length}
+        minValue={0}
+        maxValue={endIndex - startIndex + 1}
+        className="w-[200px]"
+      />
+    </div>
   );
 
   useMounted(() => {
@@ -332,7 +331,7 @@ const Popup = () => {
           galleryTags = extractGalleryTags(htmlStr);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setStatus(StatusEnum.BeforeDownload);
-          setIsBtnVisible(true);
+          // setIsBtnVisible(true);
         });
         return;
       }
@@ -343,7 +342,7 @@ const Popup = () => {
       }
       // Not on valid page.
       setStatus(StatusEnum.OtherPage);
-      setIsBtnVisible(false);
+      // setIsBtnVisible(false);
     })();
   });
 
@@ -356,17 +355,28 @@ const Popup = () => {
       }}>
       <Card className="h-full w-full" radius="none">
         <CardBody className="items-center">
-          <Tabs color="secondary">
+          <Tabs color="primary">
             <Tab key="info" title="Info">
-              <div className="flex flex-col items-center justify-center gap-4 p-2">
-                <div>{renderStatus()}</div>
-                {progress}
+              <div className="flex flex-col items-center justify-center gap-6 p-2">
+                <div className="mb-12">{renderStatus()}</div>
+
+                {status >= StatusEnum.Downloading && progress}
 
                 {[StatusEnum.BeforeDownload].includes(status) && (
-                  <div className="fixed bottom-48 flex flex-col items-center">
+                  <div className="flex flex-col items-center gap-4">
+                    {!!totalImages && (
+                      <div className="flex items-center">
+                        <div className="mr-2">Download page count:</div>
+                        <div className="text-yellow-100">
+                          {downloadTargetCount} / {totalImages}
+                        </div>
+                      </div>
+                    )}
+
                     {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
+
                     <Button
-                      hidden={isBtnVisible}
+                      // hidden={isBtnVisible}
                       className={clsx(
                         'mt-4 transform rounded border border-gray-700 bg-gray-900/90 px-4 py-2 font-bold text-gray-300 shadow-md shadow-gray-700/30 transition-all duration-300 hover:text-white'
                       )}
@@ -379,7 +389,7 @@ const Popup = () => {
                         if (configRef.current.saveGalleryTags) {
                           generateTxtFile(JSON.stringify(galleryTags, null, 2));
                         }
-                        setIsBtnVisible(false);
+                        // setIsBtnVisible(false);
                       }}>
                       Download
                     </Button>
