@@ -292,17 +292,10 @@ const Popup = () => {
     <>
       <div className="flex flex-col items-center gap-1">
         {status >= StatusEnum.BeforeDownload && (
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <div>Gallery Total Page:{'\t'}</div>
-              <div className="text-yellow-100">{}</div>
-            </div>
-
-            <div className="flex items-center">
-              <div>Download page count:{'\t'}</div>
-              <div className="text-yellow-100">
-                {range[1] - range[0] + 1} / {totalImages}
-              </div>
+          <div className="flex items-center">
+            <div>Download page count:{'\t'}</div>
+            <div className="text-yellow-100">
+              {range[1] - range[0] + 1} / {totalImages}
             </div>
           </div>
         )}
@@ -374,7 +367,9 @@ const Popup = () => {
                     {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
                     <Button
                       hidden={isBtnVisible}
-                      className={clsx('mt-4')}
+                      className={clsx(
+                        'mt-4 transform rounded border border-gray-700 bg-gray-900/90 px-4 py-2 font-bold text-gray-300 shadow-md shadow-gray-700/30 transition-all duration-300 hover:text-white'
+                      )}
                       onPress={() => {
                         setStatus(StatusEnum.Downloading);
                         downloadAllImages();

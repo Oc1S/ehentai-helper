@@ -11,7 +11,7 @@ import React, { FC, ReactNode, useState } from 'react';
 
 import { Toast } from './components';
 
-const STATUS_SHOWING_DURATION = 3_0000;
+const STATUS_SHOWING_DURATION = 3_000;
 
 const showDefaultDownloadFolder = () => {
   chrome.downloads.showDefaultFolder();
@@ -31,18 +31,18 @@ const processFilePath = (path: string) => {
 const Row = ({ label, content }: Record<'label' | 'content', React.ReactNode>) => {
   return (
     <div className="flex items-center">
-      <div className="w-[200px]">{label}</div>
+      <div className="flex w-[200px]">{label}:</div>
       <div className="w-[600px]">{content}</div>
     </div>
   );
 };
 
 const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input type="text" className={`border-primary text-primary border-b bg-transparent ${className}`} {...rest} />
+  <input type="text" className={`border-primary border-b bg-transparent text-gray-100 ${className}`} {...rest} />
 );
 
 const Options: FC = () => {
-  const [status, setStatus] = useState('');
+  const [toastInfo, setToastInfo] = useState('');
 
   const [config, setConfig] = useState<Config>(defaultConfig);
 
@@ -52,9 +52,9 @@ const Options: FC = () => {
     });
   };
 
-  const showEphemeralStatus = (text: string, duration: number) => {
-    setStatus(text);
-    setTimeout(() => setStatus(''), duration);
+  const showToast = (text: string, duration: number) => {
+    setToastInfo(text);
+    setTimeout(() => setToastInfo(''), duration);
   };
 
   const saveOptions = () => {
@@ -62,7 +62,7 @@ const Options: FC = () => {
 
     if (!intermediateDownloadPath) {
       // process file path.
-      setStatus(
+      setToastInfo(
         'Failed to save options. ' + 'File path should not contain the following characters ' + ': * ? " < > |'
       );
       return;
@@ -70,7 +70,7 @@ const Options: FC = () => {
     if (intermediateDownloadPath !== config.intermediateDownloadPath) {
       setConfig({ ...config, intermediateDownloadPath });
     }
-    chrome.storage.sync.set(config, () => showEphemeralStatus('Options saved.', STATUS_SHOWING_DURATION));
+    chrome.storage.sync.set(config, () => showToast('Saved', STATUS_SHOWING_DURATION));
   };
 
   useMounted(() => {
@@ -89,7 +89,10 @@ const Options: FC = () => {
           <div className="underline" onClick={showDefaultDownloadFolder}>
             [Default download folder]/
           </div>
-          <TextInput />
+          <TextInput
+            value={config.intermediateDownloadPath}
+            onChange={e => setConfig({ ...config, intermediateDownloadPath: e.target.value })}
+          />
         </div>
       ),
     },
@@ -194,14 +197,14 @@ const Options: FC = () => {
 
   return (
     <div className="relative flex flex-col items-center gap-4">
-      <Toast visible={!!status}>{status}</Toast>
+      <Toast visible={!!toastInfo}>{toastInfo}</Toast>
       {/* table */}
       <div className="bg-content1 flex flex-col gap-4 rounded-lg p-4">
         {Object.keys(formItemMap).map(key => (
           <Row key={key} label={formItemMap[key].label} content={formItemMap[key].content} />
         ))}
       </div>
-      <Button color="primary" className="text-black" onClick={saveOptions}>
+      <Button color="primary" className="text-black" onPress={saveOptions}>
         Save
       </Button>
     </div>

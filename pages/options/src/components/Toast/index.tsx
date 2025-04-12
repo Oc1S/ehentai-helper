@@ -20,7 +20,7 @@ export const Toast: FC<IToastProps> = ({ visible, children }) => {
             y: 0,
             opacity: 0,
           }}
-          className="fixed top-0 p-2 bg-primary rounded-lg text-slate-300">
+          className="bg-primary text-primary-foreground fixed top-0 flex justify-center rounded-xl p-2 px-4">
           {children}
         </motion.div>
       )}
