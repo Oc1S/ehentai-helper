@@ -13,12 +13,12 @@ import {
 } from '@ehentai-helper/shared';
 import {
   Button,
-  ButtonProps,
+  type ButtonProps,
   Card,
   CardBody,
   Chip,
   Link,
-  LinkProps,
+  type LinkProps,
   Progress,
   Spinner,
   Tab,
@@ -57,7 +57,7 @@ enum StatusEnum {
 }
 
 const Popup = () => {
-  const [status, setStatus] = useState<StatusEnum>(StatusEnum.BeforeDownload);
+  const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
   const galleryFrontPageUrl = useRef('');
 
   // const [isBtnVisible, setIsBtnVisible] = useState(false);
@@ -347,64 +347,66 @@ const Popup = () => {
   });
 
   return (
-    <DownloadContext.Provider
-      value={{
-        downloadList,
-        imageIdMap,
-        setDownloadList,
-      }}>
-      <Card className="h-full w-full" radius="none">
-        <CardBody className="items-center">
-          <Tabs color="primary">
-            <Tab key="info" title="Info">
-              <div className="flex flex-col items-center justify-center gap-6 p-2">
-                <div className="mb-12">{renderStatus()}</div>
-
-                {status >= StatusEnum.Downloading && progress}
-
-                {[StatusEnum.BeforeDownload].includes(status) && (
-                  <div className="flex flex-col items-center gap-4">
-                    {!!totalImages && (
-                      <div className="flex items-center">
-                        <div className="mr-2">Download page count:</div>
-                        <div className="text-yellow-100">
-                          {downloadTargetCount} / {totalImages}
-                        </div>
-                      </div>
-                    )}
-
-                    {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
-
-                    <Button
-                      // hidden={isBtnVisible}
-                      className={clsx(
-                        'mt-4 transform rounded border border-gray-700 bg-gray-900/90 px-4 py-2 font-bold text-gray-300 shadow-md shadow-gray-700/30 transition-all duration-300 hover:text-white'
-                      )}
-                      onPress={() => {
-                        setStatus(StatusEnum.Downloading);
-                        downloadAllImages();
-                        if (configRef.current.saveGalleryInfo) {
-                          generateTxtFile(JSON.stringify(galleryInfo, null, 2));
-                        }
-                        if (configRef.current.saveGalleryTags) {
-                          generateTxtFile(JSON.stringify(galleryTags, null, 2));
-                        }
-                        // setIsBtnVisible(false);
-                      }}>
-                      Download
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Tab>
-            <Tab key="downloadList" title="DownloadList">
-              <DownloadTable />
-            </Tab>
-          </Tabs>
-        </CardBody>
-      </Card>
+    <>
       <Noise />
-    </DownloadContext.Provider>
+      <DownloadContext.Provider
+        value={{
+          downloadList,
+          imageIdMap,
+          setDownloadList,
+        }}>
+        <Card className="h-full w-full" radius="none">
+          <CardBody className="items-center">
+            <Tabs color="default">
+              <Tab key="info" title="Info">
+                <div className="flex flex-col items-center justify-center gap-6 p-2">
+                  <div className="mb-12">{renderStatus()}</div>
+
+                  {status >= StatusEnum.Downloading && progress}
+
+                  {[StatusEnum.BeforeDownload].includes(status) && (
+                    <div className="flex flex-col items-center gap-4">
+                      {!!totalImages && (
+                        <div className="flex items-center">
+                          <div className="mr-2">Download page count:</div>
+                          <div className="text-yellow-100">
+                            {downloadTargetCount} / {totalImages}
+                          </div>
+                        </div>
+                      )}
+
+                      {range[1] > 0 && <PageSelector range={range} setRange={setRange} maxValue={totalImages} />}
+
+                      <Button
+                        // hidden={isBtnVisible}
+                        className={clsx(
+                          'mt-4 transform rounded border border-gray-700 bg-gray-900/90 px-4 py-2 font-bold text-gray-300 shadow-md shadow-gray-700/30 transition-all duration-300 hover:text-white'
+                        )}
+                        onPress={() => {
+                          setStatus(StatusEnum.Downloading);
+                          downloadAllImages();
+                          if (configRef.current.saveGalleryInfo) {
+                            generateTxtFile(JSON.stringify(galleryInfo, null, 2));
+                          }
+                          if (configRef.current.saveGalleryTags) {
+                            generateTxtFile(JSON.stringify(galleryTags, null, 2));
+                          }
+                          // setIsBtnVisible(false);
+                        }}>
+                        Download
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Tab>
+              <Tab key="downloadList" title="DownloadList">
+                <DownloadTable />
+              </Tab>
+            </Tabs>
+          </CardBody>
+        </Card>
+      </DownloadContext.Provider>
+    </>
   );
 };
 
