@@ -17,16 +17,24 @@ Google 浏览器（同样适用于 Edge 浏览器等使用Chromium内核的浏�
 5. 进入一个Ehentai Gallery，点击扩展icon
 6. ✨开始下载!
 
-## 预览示例
-![Download.png](https://s2.loli.net/2024/07/07/X1JjBsFDzk8pZTg.png)
-![Process.png](https://s2.loli.net/2024/07/07/4lw8aZO3isjhrcb.png)
-
 ## 支持的能力
 + 一键下载整个画廊 (Gallery)，不消耗 credit 或 GP，不需要登录 Ehentai
 + 自由选择需要下载的图片范围
 + 提取并保存画廊信息和 tag 列表
 + 可选择下载文件命名规则，如根据序列命名、根据图片原始名称命名
 + 实时监控下载进度，图片下载失败可重试
+
+## 预览示例
+##### 下载配置
+![before download.png](https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png)
+##### 下载中
+![downloading.png](https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png)
+##### 下载完成
+![downloaded.png](https://s2.loli.net/2025/05/18/wKUhBmuro7RLkz9.png)
+##### 下载管理
+![download management.png](https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png)
+
+
 
 > This extension is inspired by [EHentaiChromeExtension
 ](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)

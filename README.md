@@ -25,8 +25,14 @@ Take Google Chrome as an example:
 + Monitor download progress in real time, with the ability to retry if image download fails.
 
 ## Preview
-![Download.png](https://s2.loli.net/2024/07/07/X1JjBsFDzk8pZTg.png)
-![Process.png](https://s2.loli.net/2024/07/07/4lw8aZO3isjhrcb.png)
+##### Before download
+![before download.png](https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png)
+##### Downloading
+![downloading.png](https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png)
+##### Downloaded
+![downloaded.png](https://s2.loli.net/2025/05/18/wKUhBmuro7RLkz9.png)
+##### Download Management
+![download management.png](https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png)
 
 > This extension is inspired by [EHentaiChromeExtension
 ](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)
