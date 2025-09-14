@@ -27,7 +27,12 @@ module.exports = {
     },
   },
   rules: {
-    'simple-import-sort/imports': 'warn',
+    'simple-import-sort/imports': [
+      'warn',
+      {
+        groups: [['^\\u0000'], ['^node:'], ['^react', '^@?\\w'], ['^'], ['^\\.']],
+      },
+    ],
     'simple-import-sort/exports': 'warn',
     'import/named': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',

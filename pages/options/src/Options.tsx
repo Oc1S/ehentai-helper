@@ -187,9 +187,9 @@ const Options: FC = () => {
               fileNameRule: val,
             })
           }>
-          <Radio value="[index]">Index</Radio>
-          <Radio value="[name]">Name</Radio>
-          <Radio value="[index]_[total]">Index_Total</Radio>
+          <Radio value="[index]">{'[Index]'}</Radio>
+          <Radio value="[name]">{'[Name]'}</Radio>
+          <Radio value="[index]_[total]">{'[Index]_[Total]'}</Radio>
         </RadioGroup>
       ),
     },

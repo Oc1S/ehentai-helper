@@ -19,11 +19,12 @@
   },
   "dependencies": {
     "@ehentai-helper/shared": "workspace:*",
-    "@ehentai-helper/storage": "workspace:*"
+    "@ehentai-helper/storage": "workspace:*",
+    "jotai": "^2.14.0"
   },
   "devDependencies": {
+    "@ehentai-helper/hmr": "workspace:*",
     "@ehentai-helper/tailwindcss-config": "workspace:*",
-    "@ehentai-helper/tsconfig": "workspace:*",
-    "@ehentai-helper/hmr": "workspace:*"
+    "@ehentai-helper/tsconfig": "workspace:*"
   }
 }

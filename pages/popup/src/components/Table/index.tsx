@@ -103,7 +103,6 @@ const DownloadTable: FC = () => {
         filename,
       };
     });
-    console.log('list@');
     /* search input filter */
     list = filterValue ? list.filter(item => item.filename.includes(filterValue)) : list;
     /* status filter */
