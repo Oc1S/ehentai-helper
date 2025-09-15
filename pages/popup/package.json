@@ -20,6 +20,7 @@
   "dependencies": {
     "@ehentai-helper/shared": "workspace:*",
     "@ehentai-helper/storage": "workspace:*",
+    "@tanstack/react-query": "^5.87.4",
     "jotai": "^2.14.0"
   },
   "devDependencies": {

@@ -4,12 +4,11 @@ export const removeInvalidCharFromFilename = (filename: string) => {
   return filename.replace(PATTERN_INVALID_FILENAME_CHAR, ' ').replace(/\s+$/, '');
 };
 
-export const generateTxtFile = (text: string) => {
+export const downloadAsTxtFile = (text: string) => {
   chrome.downloads.download({
     url: 'data:text;charset=utf-8,' + encodeURI(text),
   });
 };
 
-export * from './extractGalleryInfo';
-export * from './extractGalleryTags';
+export * from './extractor';
 export * from './htmlStr2Dom';
