@@ -1,3 +1,4 @@
+import React, { FC, ReactNode, useState } from 'react';
 import {
   Config,
   defaultConfig,
@@ -7,7 +8,6 @@ import {
   withSuspense,
 } from '@ehentai-helper/shared';
 import { Button, Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
-import React, { FC, ReactNode, useState } from 'react';
 
 import { Toast } from './components';
 
@@ -118,17 +118,6 @@ const Options: FC = () => {
             }}
           />
         </div>
-      ),
-    },
-    saveGalleryTags: {
-      label: 'Save gallery tags',
-      content: (
-        <Checkbox
-          isSelected={config.saveGalleryTags}
-          onChange={e => {
-            setConfig({ ...config, saveGalleryTags: e.target.checked });
-          }}
-        />
       ),
     },
     filenameConflictAction: {

@@ -1,3 +1,4 @@
+import { FC, useMemo, useState } from 'react';
 import { useCreation } from '@ehentai-helper/shared';
 import {
   Button,
@@ -20,10 +21,9 @@ import {
   TableRow,
 } from '@nextui-org/react';
 import { useForceUpdate } from 'framer-motion';
-import { FC, useContext, useMemo, useState } from 'react';
+import { useAtom } from 'jotai';
 
-import { DownloadContext } from '@/Context';
-
+import { downloadListAtom, imageIdMap } from '../download';
 import { ChevronDownIcon } from './ChevronDownIcon';
 import { SearchIcon } from './SearchIcon';
 
@@ -55,9 +55,9 @@ const columns = [
   },
 ];
 const stateMap: Record<DownloadState, React.ReactNode> = {
-  in_progress: <>🙈Downloading</>,
-  interrupted: <>❌Interrupted</>,
-  complete: <>🌈Complete</>,
+  in_progress: <>🙈 Downloading</>,
+  interrupted: <>❌ Interrupted</>,
+  complete: <>🌈 Complete</>,
 };
 const statusColorMap: Record<DownloadState, ChipProps['color']> = {
   complete: 'success',
@@ -66,7 +66,7 @@ const statusColorMap: Record<DownloadState, ChipProps['color']> = {
 };
 
 const DownloadTable: FC = () => {
-  const { imageIdMap, downloadList, setDownloadList } = useContext(DownloadContext);
+  const [downloadList, setDownloadList] = useAtom(downloadListAtom);
   const [page, setPage] = useState(1);
 
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
@@ -218,7 +218,7 @@ const DownloadTable: FC = () => {
               isCompact
               showControls
               showShadow
-              color="secondary"
+              color="default"
               total={Math.ceil(filteredList.length / pageSize)}
               page={page}
               onChange={setPage}

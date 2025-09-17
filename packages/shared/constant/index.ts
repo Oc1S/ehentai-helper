@@ -9,7 +9,6 @@ export const defaultConfig = {
   intermediateDownloadPath: 'e-hentai helper/',
   saveOriginalImages: false,
   saveGalleryInfo: false,
-  saveGalleryTags: false,
   filenameConflictAction: 'uniquify',
   downloadInterval: 300,
   /**

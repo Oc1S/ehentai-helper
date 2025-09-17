@@ -11,7 +11,7 @@ const Popup = () => {
       <Noise />
       <Card className="h-full w-full" radius="none">
         <CardBody className="items-center">
-          <Tabs color="default">
+          <Tabs destroyInactiveTabPanel={false} color="default">
             <Tab key="info" title="Info">
               <Download />
             </Tab>

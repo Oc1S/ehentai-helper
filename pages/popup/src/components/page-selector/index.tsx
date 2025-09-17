@@ -1,5 +1,5 @@
-import { Input, Slider, SliderProps } from '@nextui-org/react';
 import { FC } from 'react';
+import { Input, Slider, SliderProps } from '@nextui-org/react';
 
 type PageSelectorProps = {
   range: [number, number];
