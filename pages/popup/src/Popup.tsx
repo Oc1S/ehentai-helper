@@ -2,6 +2,7 @@ import { withErrorBoundary, withSuspense } from '@ehentai-helper/shared';
 import { Card, CardBody, Tab, Tabs } from '@nextui-org/react';
 
 import { Download } from './components/download';
+import History from './components/history';
 import { Noise } from './components/noise';
 import DownloadTable from './components/Table';
 
@@ -17,6 +18,9 @@ const Popup = () => {
             </Tab>
             <Tab key="downloadList" title="DownloadList">
               <DownloadTable />
+            </Tab>
+            <Tab key="history" title="History">
+              <History />
             </Tab>
           </Tabs>
         </CardBody>

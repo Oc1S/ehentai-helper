@@ -24,8 +24,8 @@ import { useForceUpdate } from 'framer-motion';
 import { useAtom } from 'jotai';
 
 import { downloadListAtom, imageIdMap } from '../download';
-import { ChevronDownIcon } from './ChevronDownIcon';
-import { SearchIcon } from './SearchIcon';
+import { ChevronDownIcon } from '../icons/chevron-down-icon';
+import { SearchIcon } from '../icons/search-icon';
 
 const pageSize = 10;
 

@@ -1,4 +1,5 @@
-import { createStorage, StorageType, type BaseStorage, SessionAccessLevel } from './base';
+import { type BaseStorage, createStorage, SessionAccessLevel, StorageType } from './base';
 import { exampleThemeStorage } from './exampleThemeStorage';
+export * from './downloadHistory';
 
-export { exampleThemeStorage, createStorage, StorageType, SessionAccessLevel, BaseStorage };
+export { BaseStorage, createStorage, exampleThemeStorage, SessionAccessLevel, StorageType };

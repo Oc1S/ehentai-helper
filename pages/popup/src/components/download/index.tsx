@@ -9,8 +9,10 @@ import {
   useMounted,
   useStateRef,
 } from '@ehentai-helper/shared';
+import { downloadHistoryStorage } from '@ehentai-helper/storage';
 import { Button, type ButtonProps, Link, type LinkProps, Progress, Spinner } from '@nextui-org/react';
 import axios from 'axios';
+import { produce } from 'immer';
 import { atom, useAtom } from 'jotai';
 
 import { useDownload } from '@/hooks';
@@ -21,6 +23,7 @@ import {
   extractGalleryTags,
   htmlStr2DOM,
   removeInvalidCharFromFilename,
+  splitFilename,
 } from '@/utils';
 
 import { PageSelector } from '../page-selector';
@@ -118,8 +121,14 @@ export const Download = () => {
       let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
       // original
       if (configRef.current.saveOriginalImages) {
-        const originalImage = (doc.getElementById('i7')?.childNodes?.[3] as HTMLAnchorElement)?.href;
-        imageUrl = originalImage ?? imageUrl;
+        try {
+          const originalImage = (doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement).getElementsByTagName(
+            'a'
+          )[0].href;
+          imageUrl = originalImage || imageUrl;
+        } catch (e) {
+          console.log('get original image failed@', e);
+        }
       }
       chrome.downloads.download({ url: imageUrl }, id => {
         imageIdMap.set(id, currentIndex);
@@ -266,6 +275,10 @@ export const Download = () => {
   };
 
   const handleDownloadCreated: Parameters<typeof chrome.downloads.onCreated.addListener>[0] = downloadItem => {
+    const [, fileType] = splitFilename(downloadItem.filename);
+    if (fileType === 'json') {
+      return;
+    }
     setDownloadList(prev => {
       return [...prev, downloadItem];
     });
@@ -274,12 +287,22 @@ export const Download = () => {
   const handleDownloadChanged: Parameters<typeof chrome.downloads.onChanged.addListener>[0] = downloadDelta => {
     const { id } = downloadDelta;
     const newVal = {};
+    /* patch item from downloadDelta */
     for (const key in downloadDelta) {
       if (isObject(downloadDelta[key])) {
         newVal[key] = downloadDelta[key].current;
       }
     }
-    setDownloadList(prev => prev.map(item => (item.id === id ? { ...item, ...newVal } : item)));
+    const itemIndex = imageIdMap.get(id);
+    if (itemIndex) {
+      setDownloadList(
+        produce(draft => {
+          if (draft[itemIndex]) {
+            draft[itemIndex] = { ...draft[itemIndex], ...newVal };
+          }
+        })
+      );
+    }
   };
 
   // Save to the corresponding folder and rename files.
@@ -289,22 +312,20 @@ export const Download = () => {
   ) => {
     if (downloadItem.byExtensionName !== EXTENSION_NAME) return;
     const { id } = downloadItem;
-    let { filename } = downloadItem;
     const { intermediateDownloadPath, fileNameRule, filenameConflictAction: conflictAction } = configRef.current;
-    const name = filename.substring(0, filename.lastIndexOf('.') + 1);
-    const fileType = filename.substring(filename.lastIndexOf('.') + 1);
+
+    let { filename } = downloadItem;
+    const [name, fileType] = splitFilename(filename);
     // Metadata.
-    if (fileType === 'txt') {
-      const { url } = downloadItem;
-      // 'name' is the first key of info file.
-      const isInfoFile = url.substring(url.indexOf(',') + 1).startsWith('name');
-      filename = `${intermediateDownloadPath}/${isInfoFile ? 'info.txt' : 'tags.txt'}`;
+    if (['txt', 'json'].includes(fileType)) {
+      return;
     } else {
       filename = `${intermediateDownloadPath}/${fileNameRule
         .replace('[index]', String(imageIdMap.get(id)))
         .replace('[name]', name)
         .replace('[total]', `${galleryPageInfoRef.current.totalImages}`)}.${fileType}`;
     }
+
     suggest({
       filename,
       conflictAction,
@@ -442,13 +463,21 @@ export const Download = () => {
               <Button
                 size="lg"
                 className="h-12 w-full border border-slate-600 bg-slate-800 font-medium text-slate-100 shadow-sm transition-all duration-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white hover:shadow-md"
-                onPress={() => {
+                onPress={async () => {
+                  try {
+                    await downloadHistoryStorage.add({
+                      url: galleryFrontPageUrl.current,
+                      name: galleryInfo.name,
+                      range,
+                    });
+                  } catch (e) {
+                    console.error('add download history failed@', e);
+                  }
                   setStatus(StatusEnum.Downloading);
                   downloadJob.downloadAllImages();
                   if (configRef.current.saveGalleryInfo) {
-                    downloadAsTxtFile(
-                      JSON.stringify(galleryInfo, null, 2) + '\n' + JSON.stringify(galleryTags, null, 2)
-                    );
+                    galleryInfo.category = galleryTags;
+                    downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
                   }
                 }}>
                 <svg
