@@ -293,16 +293,12 @@ export const Download = () => {
         newVal[key] = downloadDelta[key].current;
       }
     }
-    const itemIndex = imageIdMap.get(id);
-    if (itemIndex) {
-      setDownloadList(
-        produce(draft => {
-          if (draft[itemIndex]) {
-            draft[itemIndex] = { ...draft[itemIndex], ...newVal };
-          }
-        })
-      );
-    }
+    setDownloadList(
+      produce(draft => {
+        const targetIndex = draft.findIndex(item => item.id === id);
+        draft[targetIndex] = { ...draft[targetIndex], ...newVal };
+      })
+    );
   };
 
   // Save to the corresponding folder and rename files.
@@ -318,7 +314,7 @@ export const Download = () => {
     const [name, fileType] = splitFilename(filename);
     // Metadata.
     if (['txt', 'json'].includes(fileType)) {
-      return;
+      filename = `${intermediateDownloadPath}/info.json`;
     } else {
       filename = `${intermediateDownloadPath}/${fileNameRule
         .replace('[index]', String(imageIdMap.get(id)))

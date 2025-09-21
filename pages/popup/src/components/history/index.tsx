@@ -37,7 +37,7 @@ const History: FC = () => {
   }, [data, keyword]);
 
   return (
-    <div className="flex w-[680px] flex-col gap-3">
+    <div className="flex w-[640px] flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Input
@@ -50,17 +50,17 @@ const History: FC = () => {
             className="w-64"
           />
           <div className="text-sm text-gray-400">
-            Records：{filteredData.length}/{data.length}
+            Records：{filteredData.length} / {data.length}
           </div>
         </div>
         <Button size="sm" color="danger" variant="flat" onPress={() => downloadHistoryStorage.clear()}>
-          清空
+          Clear All
         </Button>
       </div>
       <Table aria-label="download history">
         <TableHeader columns={columns}>
           {col => (
-            <TableColumn key={col.key} width={col.key === 'name' ? 260 : 120}>
+            <TableColumn key={col.key} width={col.key === 'name' ? 260 : 100}>
               {col.label}
             </TableColumn>
           )}
@@ -70,7 +70,7 @@ const History: FC = () => {
           {item => (
             <TableRow key={item.timestamp}>
               <TableCell title={item.name}>
-                <Link href={item.url} isExternal className="text-primary-400 underline underline-offset-2">
+                <Link href={item.url} isExternal className="text-primary-400 text-sm underline underline-offset-2">
                   {item.name}
                 </Link>
               </TableCell>
@@ -80,7 +80,7 @@ const History: FC = () => {
               <TableCell>{formatTime(item.timestamp)}</TableCell>
               <TableCell>
                 <Button size="sm" variant="flat" onPress={() => downloadHistoryStorage.remove(item.timestamp)}>
-                  删除
+                  Delete
                 </Button>
               </TableCell>
             </TableRow>

@@ -7,7 +7,6 @@ export const removeInvalidCharFromFilename = (filename: string) => {
 export const downloadAsTxtFile = (text: string) => {
   chrome.downloads.download({
     url: 'data:text;charset=utf-8,' + encodeURI(text),
-    filename: 'info.json',
   });
 };
 
