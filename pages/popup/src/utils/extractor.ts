@@ -1,26 +1,51 @@
-import { htmlStr2DOM } from './htmlStr2Dom';
+import { getDocument } from './htmlStr2Dom';
+
+const getTextContent = (node: Node | null | undefined): string => {
+  return node?.textContent || '';
+};
+
+interface GalleryTag {
+  category: string;
+  content: string;
+}
+
+export interface GalleryInfo {
+  name: string;
+  nameInJapanese: string;
+  category: string;
+  uploader: string;
+  posted: string;
+  parent: string;
+  visible: string;
+  language: string;
+  originalFileSizeMB: number;
+  numImages: number;
+  favorited: number;
+  ratingTimes: number;
+  averageScore: number;
+  tags: GalleryTag[];
+}
 
 /**
  * 提取GalleryInfo
  */
-export const extractGalleryInfo = (html: string) => {
-  const doc = htmlStr2DOM(html);
-  const extractTextContent = (node: Node | null | undefined) => {
-    return node?.textContent || '';
-  };
-  const name = extractTextContent(doc.getElementById('gn'));
-  const nameInJapanese = extractTextContent(doc.getElementById('gj'));
+export const extractGalleryInfo = (htmlOrDoc: string | Document): GalleryInfo => {
+  const doc = getDocument(htmlOrDoc);
+
+  const name = getTextContent(doc.getElementById('gn'));
+  const nameInJapanese = getTextContent(doc.getElementById('gj'));
   const category = (doc.getElementById('gdc')?.childNodes?.[0].childNodes?.[0] as any)?.alt || '';
-  const uploader = extractTextContent(doc.getElementById('gdn')?.childNodes[0]);
+  const uploader = getTextContent(doc.getElementById('gdn')?.childNodes[0]);
 
   const gdt2ClassElements = doc.getElementsByClassName('gdt2') || [];
   const [posted, parent, visible, language, originalFileSizeMB, numImages, favorited] =
-    Array.from(gdt2ClassElements).map(extractTextContent);
+    Array.from(gdt2ClassElements).map(getTextContent);
 
-  const ratingTimes = extractTextContent(doc.getElementById('rating_count'));
-  const averageScore = extractTextContent(doc.getElementById('rating_label'));
+  const ratingTimes = getTextContent(doc.getElementById('rating_count'));
+  const averageScore = getTextContent(doc.getElementById('rating_label'));
+  const tags = extractGalleryTags(doc);
 
-  const info: Record<string, any> = {
+  const info: GalleryInfo = {
     name,
     nameInJapanese,
     category,
@@ -34,6 +59,7 @@ export const extractGalleryInfo = (html: string) => {
     favorited: favorited ? parseInt(favorited.replace(/(\d+) times/, '$1')) : 0,
     ratingTimes: ratingTimes ? parseInt(ratingTimes) : 0,
     averageScore: averageScore ? parseFloat(averageScore.replace(/Average: (\S+)/, '$1')) : 0.0,
+    tags,
   };
   return info;
 };
@@ -41,8 +67,8 @@ export const extractGalleryInfo = (html: string) => {
 /**
  * 提取GalleryTags
  */
-export const extractGalleryTags = (html: string) => {
-  const doc = htmlStr2DOM(html);
+const extractGalleryTags = (htmlOrDoc: string | Document): GalleryTag[] => {
+  const doc = getDocument(htmlOrDoc);
   const taglistElements = doc.getElementById('taglist')?.childNodes?.[0]?.childNodes?.[0]?.childNodes;
   if (taglistElements === undefined) return [];
   const tags = new Array(taglistElements.length);
@@ -66,8 +92,10 @@ export const extractGalleryTags = (html: string) => {
 /**
  * 获取页码信息
  */
-export const extractGalleryPageInfo = (html: string): Record<'imagesPerPage' | 'totalImages' | 'numPages', number> => {
-  const doc = htmlStr2DOM(html);
+export const extractGalleryPageInfo = (
+  htmlOrDoc: string | Document
+): Record<'imagesPerPage' | 'totalImages' | 'numPages', number> => {
+  const doc = getDocument(htmlOrDoc);
   const pageInfoStr = doc.querySelector('.gpc')?.innerHTML || '';
   const res = /Showing 1 - (\d+) of (\d*,*\d+) images/.exec(pageInfoStr);
   const pageInfo = {

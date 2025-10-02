@@ -20,14 +20,25 @@ import {
   downloadAsTxtFile,
   extractGalleryInfo,
   extractGalleryPageInfo,
-  extractGalleryTags,
   htmlStr2DOM,
   removeInvalidCharFromFilename,
   splitFilename,
 } from '@/utils';
 
+import { DownloadIcon } from '../icons';
 import { PageSelector } from '../page-selector';
 
+/**
+ * 表示下载过程中的各种状态。
+ * @enum {number}
+ * @property {number} Loading - 初始加载状态，正在检查当前页面。
+ * @property {number} OtherPage - 当前标签页不是 E-Hentai 相关页面。
+ * @property {number} EHentaiOther - 当前标签页是 E-Hentai 页面，但不是画廊页面。
+ * @property {number} Fail - 获取画廊信息失败或发生错误。
+ * @property {number} BeforeDownload - 画廊信息已加载，等待用户开始下载。
+ * @property {number} Downloading - 文件正在下载中。
+ * @property {number} DownloadSuccess - 所有选定的文件已成功下载。
+ */
 enum StatusEnum {
   Loading = 0,
   OtherPage = 1,
@@ -401,7 +412,6 @@ export const Download = () => {
           const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
           setGalleryPageInfo(pageInfo);
           galleryInfo = extractGalleryInfo(galleryHtmlStr);
-          galleryTags = extractGalleryTags(galleryHtmlStr);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setStatus(StatusEnum.BeforeDownload);
         });
@@ -416,6 +426,24 @@ export const Download = () => {
       setStatus(StatusEnum.OtherPage);
     })();
   });
+
+  const handleClickDownload = async () => {
+    try {
+      await downloadHistoryStorage.add({
+        url: galleryFrontPageUrl.current,
+        name: galleryInfo.name,
+        range,
+      });
+    } catch (e) {
+      console.error('add download history failed@', e);
+    }
+    setStatus(StatusEnum.Downloading);
+    downloadJob.downloadAllImages();
+    if (configRef.current.saveGalleryInfo) {
+      galleryInfo.category = galleryTags;
+      downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
+    }
+  };
 
   return (
     <div className="mx-auto flex h-[480px] w-full flex-col justify-center gap-8">
@@ -459,37 +487,8 @@ export const Download = () => {
               <Button
                 size="lg"
                 className="h-12 w-full border border-slate-600 bg-slate-800 font-medium text-slate-100 shadow-sm transition-all duration-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white hover:shadow-md"
-                onPress={async () => {
-                  try {
-                    await downloadHistoryStorage.add({
-                      url: galleryFrontPageUrl.current,
-                      name: galleryInfo.name,
-                      range,
-                    });
-                  } catch (e) {
-                    console.error('add download history failed@', e);
-                  }
-                  setStatus(StatusEnum.Downloading);
-                  downloadJob.downloadAllImages();
-                  if (configRef.current.saveGalleryInfo) {
-                    galleryInfo.category = galleryTags;
-                    downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
-                  }
-                }}>
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mt-1 h-4 w-4">
-                  <path d="M12 13v8l-4-4" />
-                  <path d="m12 21 4-4" />
-                  <path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284" />
-                </svg>
+                onPress={handleClickDownload}>
+                <DownloadIcon />
                 Download
               </Button>
             </div>
