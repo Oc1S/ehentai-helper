@@ -1,35 +1,16 @@
+import { getCurrentTabUrl } from '@ehentai-helper/shared';
+import { GalleryInfo, GalleryTag } from '@ehentai-helper/storage';
+
 import { getDocument } from './htmlStr2Dom';
 
 const getTextContent = (node: Node | null | undefined): string => {
   return node?.textContent || '';
 };
 
-interface GalleryTag {
-  category: string;
-  content: string;
-}
-
-export interface GalleryInfo {
-  name: string;
-  nameInJapanese: string;
-  category: string;
-  uploader: string;
-  posted: string;
-  parent: string;
-  visible: string;
-  language: string;
-  originalFileSizeMB: number;
-  numImages: number;
-  favorited: number;
-  ratingTimes: number;
-  averageScore: number;
-  tags: GalleryTag[];
-}
-
 /**
  * 提取GalleryInfo
  */
-export const extractGalleryInfo = (htmlOrDoc: string | Document): GalleryInfo => {
+export const extractGalleryInfo = async (htmlOrDoc: string | Document): Promise<GalleryInfo> => {
   const doc = getDocument(htmlOrDoc);
 
   const name = getTextContent(doc.getElementById('gn'));
@@ -44,8 +25,11 @@ export const extractGalleryInfo = (htmlOrDoc: string | Document): GalleryInfo =>
   const ratingTimes = getTextContent(doc.getElementById('rating_count'));
   const averageScore = getTextContent(doc.getElementById('rating_label'));
   const tags = extractGalleryTags(doc);
+  const url = await getCurrentTabUrl().catch(() => '');
+  const id = url.split('/').pop() || '';
 
   const info: GalleryInfo = {
+    id,
     name,
     nameInJapanese,
     category,

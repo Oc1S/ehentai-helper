@@ -5,6 +5,7 @@ export type DownloadHistoryItem = {
   name: string;
   range: [number, number];
   timestamp: number;
+  info: GalleryInfo;
 };
 
 type HistoryStorage = BaseStorage<DownloadHistoryItem[]> & {
@@ -12,6 +13,29 @@ type HistoryStorage = BaseStorage<DownloadHistoryItem[]> & {
   clear: () => Promise<void>;
   remove: (timestamp: number) => Promise<void>;
 };
+
+export interface GalleryTag {
+  category: string;
+  content: string;
+}
+
+export interface GalleryInfo {
+  id: string;
+  name: string;
+  nameInJapanese: string;
+  category: string;
+  uploader: string;
+  posted: string;
+  parent: string;
+  visible: string;
+  language: string;
+  originalFileSizeMB: number;
+  numImages: number;
+  favorited: number;
+  ratingTimes: number;
+  averageScore: number;
+  tags: GalleryTag[];
+}
 
 const storage = createStorage<DownloadHistoryItem[]>('download-history', [], {
   storageType: StorageType.Local,

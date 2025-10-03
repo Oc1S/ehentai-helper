@@ -61,7 +61,7 @@
     "typescript": "5.2.2",
     "vite": "^5.2.11"
   },
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@10.18.0+sha256.3967a3efe2909df305fec4b833a304dfca17c380b6bb77672f4dac4f2cdd3788",
   "engines": {
     "node": ">=18.12.0"
   },

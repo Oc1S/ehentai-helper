@@ -8,8 +8,9 @@ import {
   isObject,
   useMounted,
   useStateRef,
+  useStorageSuspense,
 } from '@ehentai-helper/shared';
-import { downloadHistoryStorage } from '@ehentai-helper/storage';
+import { downloadHistoryStorage, GalleryInfo } from '@ehentai-helper/storage';
 import { Button, type ButtonProps, Link, type LinkProps, Progress, Spinner } from '@nextui-org/react';
 import axios from 'axios';
 import { produce } from 'immer';
@@ -50,8 +51,7 @@ enum StatusEnum {
 }
 
 // Gallery information.
-let galleryInfo: Record<string, any> = {};
-let galleryTags: Record<string, any> = {};
+let galleryInfo: GalleryInfo;
 
 /* id => index */
 export const imageIdMap = new Map<number, number>();
@@ -95,6 +95,9 @@ export const Download = () => {
     return [start, end];
   }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
   const downloadCount = range[1] - range[0] + 1;
+
+  const list = useStorageSuspense(downloadHistoryStorage) || [];
+  console.log(list, 'list');
 
   const downloadJob = {
     /* 1.获取gallery整页所有图片 */
@@ -411,7 +414,7 @@ export const Download = () => {
           }
           const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
           setGalleryPageInfo(pageInfo);
-          galleryInfo = extractGalleryInfo(galleryHtmlStr);
+          galleryInfo = await extractGalleryInfo(galleryHtmlStr);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setStatus(StatusEnum.BeforeDownload);
         });
@@ -433,6 +436,7 @@ export const Download = () => {
         url: galleryFrontPageUrl.current,
         name: galleryInfo.name,
         range,
+        info: galleryInfo,
       });
     } catch (e) {
       console.error('add download history failed@', e);
@@ -440,7 +444,6 @@ export const Download = () => {
     setStatus(StatusEnum.Downloading);
     downloadJob.downloadAllImages();
     if (configRef.current.saveGalleryInfo) {
-      galleryInfo.category = galleryTags;
       downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
     }
   };
