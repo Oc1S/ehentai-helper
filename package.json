@@ -30,7 +30,8 @@
     "immer": "^10.1.3",
     "lodash": "^4.17.21",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

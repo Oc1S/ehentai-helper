@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import React, { FC } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface IToastProps {
   visible: boolean;

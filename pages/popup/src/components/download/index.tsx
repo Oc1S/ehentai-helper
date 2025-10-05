@@ -28,6 +28,7 @@ import {
 
 import { DownloadIcon } from '../icons';
 import { PageSelector } from '../page-selector';
+import { DownloadSettings } from './settings';
 
 /**
  * 表示下载过程中的各种状态。
@@ -49,6 +50,8 @@ enum StatusEnum {
   Downloading = 5,
   DownloadSuccess = 6,
 }
+
+const textMime = 'text/plain';
 
 // Gallery information.
 let galleryInfo: GalleryInfo;
@@ -97,7 +100,6 @@ export const Download = () => {
   const downloadCount = range[1] - range[0] + 1;
 
   const list = useStorageSuspense(downloadHistoryStorage) || [];
-  console.log(list, 'list');
 
   const downloadJob = {
     /* 1.获取gallery整页所有图片 */
@@ -289,8 +291,7 @@ export const Download = () => {
   };
 
   const handleDownloadCreated: Parameters<typeof chrome.downloads.onCreated.addListener>[0] = downloadItem => {
-    const [, fileType] = splitFilename(downloadItem.filename);
-    if (fileType === 'json') {
+    if (downloadItem.mime === textMime) {
       return;
     }
     setDownloadList(prev => {
@@ -327,8 +328,8 @@ export const Download = () => {
     let { filename } = downloadItem;
     const [name, fileType] = splitFilename(filename);
     // Metadata.
-    if (['txt', 'json'].includes(fileType)) {
-      filename = `${intermediateDownloadPath}/info.json`;
+    if (downloadItem.mime === textMime) {
+      filename = `${intermediateDownloadPath}/info.txt`;
     } else {
       filename = `${intermediateDownloadPath}/${fileNameRule
         .replace('[index]', String(imageIdMap.get(id)))
@@ -449,7 +450,12 @@ export const Download = () => {
   };
 
   return (
-    <div className="mx-auto flex h-[480px] w-full flex-col justify-center gap-8">
+    <div className="relative mx-auto flex h-[480px] w-full flex-col justify-center gap-8">
+      {/* Settings Button */}
+      <div className="absolute right-4 top-4">
+        <DownloadSettings />
+      </div>
+
       {/* Header Area */}
       <div className="-mt-16 flex flex-col items-center justify-center">{renders.status()}</div>
 

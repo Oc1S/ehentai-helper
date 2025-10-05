@@ -1,6 +1,5 @@
 import type { ComponentType, ErrorInfo, ReactElement } from 'react';
 import { Component } from 'react';
-
 class ErrorBoundary extends Component<
   {
     children: ReactElement;
@@ -24,14 +23,13 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return this.props.fallback;
     }
-
     return this.props.children;
   }
 }
 
 export function withErrorBoundary<T extends Record<string, unknown>>(
   Component: ComponentType<T>,
-  ErrorComponent: ReactElement,
+  ErrorComponent: ReactElement
 ) {
   return function WithErrorBoundary(props: T) {
     return (

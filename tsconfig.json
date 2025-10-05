@@ -1,0 +1,9 @@
+{
+  "extends": "./packages/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "types": ["chrome"]
+  },
+  "include": ["packages", "pages"]
+}
