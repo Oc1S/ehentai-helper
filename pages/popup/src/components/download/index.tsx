@@ -8,7 +8,6 @@ import {
   isObject,
   useMounted,
   useStateRef,
-  useStorageSuspense,
 } from '@ehentai-helper/shared';
 import { downloadHistoryStorage, GalleryInfo } from '@ehentai-helper/storage';
 import { Button, type ButtonProps, Link, type LinkProps, Progress, Spinner } from '@nextui-org/react';
@@ -98,8 +97,6 @@ export const Download = () => {
     return [start, end];
   }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
   const downloadCount = range[1] - range[0] + 1;
-
-  const list = useStorageSuspense(downloadHistoryStorage) || [];
 
   const downloadJob = {
     /* 1.获取gallery整页所有图片 */

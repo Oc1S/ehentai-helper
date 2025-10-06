@@ -1,8 +1,7 @@
 import React, { FC, ReactNode, useState } from 'react';
+import { Config, defaultConfig, PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '@ehentai-helper/shared';
 import { Button, Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 import { toast } from 'sonner';
-
-import { Config, defaultConfig, PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '../index';
 
 const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {

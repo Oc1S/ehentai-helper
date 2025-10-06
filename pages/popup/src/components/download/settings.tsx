@@ -1,26 +1,9 @@
 import { useState } from 'react';
-import {
-  Config,
-  defaultConfig,
-  PATTERN_INVALID_FILE_PATH_CHAR,
-  useMounted,
-  useStorageSuspense,
-} from '@ehentai-helper/shared';
-import {
-  Button,
-  Checkbox,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Radio,
-  RadioGroup,
-  Tooltip,
-  useDisclosure,
-} from '@nextui-org/react';
+import { Config, defaultConfig, PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '@ehentai-helper/shared';
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react';
 import { toast } from 'sonner';
+
+import { Settings } from '../settings';
 
 interface DownloadSettingsProps {
   trigger?: React.ReactNode;
@@ -40,7 +23,6 @@ const validateFilePath = (path: string) => {
 export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [config, setConfig] = useState<Config>(defaultConfig);
-  const [saveStatus, setSaveStatus] = useState<string>('');
 
   useMounted(() => {
     chrome.storage.sync.get(defaultConfig, items => {
@@ -53,7 +35,6 @@ export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
 
     if (!intermediateDownloadPath) {
       toast.error('File path should not contain: * ? " < > |');
-      setTimeout(() => setSaveStatus(''), 3000);
       return;
     }
 
@@ -62,10 +43,6 @@ export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
     chrome.storage.sync.set(updatedConfig, () => {
       toast.success('Settings saved successfully!');
     });
-  };
-
-  const showDefaultDownloadFolder = () => {
-    chrome.downloads.showDefaultFolder();
   };
 
   return (
@@ -89,7 +66,9 @@ export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
           {onClose => (
             <>
               <ModalHeader className="flex flex-col gap-1">Download Settings</ModalHeader>
-              <ModalBody className="space-y-6"></ModalBody>
+              <ModalBody className="space-y-6">
+                <Settings />
+              </ModalBody>
               <ModalFooter className="gap-3">
                 <Button
                   variant="light"

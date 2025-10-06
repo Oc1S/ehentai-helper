@@ -1,15 +1,15 @@
-import { withErrorBoundary, withSuspense } from '@ehentai-helper/shared';
 import { Card, CardBody, Tab, Tabs } from '@nextui-org/react';
 import { Toaster } from 'sonner';
 
 import { Download } from './components/download';
 import History from './components/history';
 import { Noise } from './components/noise';
+import { Page } from './components/page';
 import DownloadTable from './components/Table';
 
 const Popup = () => {
   return (
-    <>
+    <Page>
       <Noise />
       <Toaster />
       <Card className="h-full w-full" radius="none">
@@ -27,11 +27,8 @@ const Popup = () => {
           </Tabs>
         </CardBody>
       </Card>
-    </>
+    </Page>
   );
 };
 
-export default withErrorBoundary(
-  withSuspense(Popup, <div>Loading ...</div>),
-  <div className="flex h-screen items-center justify-center">Something went wrong...</div>
-);
+export default Popup;

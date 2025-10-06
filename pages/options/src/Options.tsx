@@ -1,16 +1,12 @@
-import { Settings, withErrorBoundary, withSuspense } from '@ehentai-helper/shared';
-import { Toaster } from 'sonner';
+import { Page } from './components/page';
+import { Settings } from './components/settings';
 
 const OptionsPage = () => {
   return (
-    <>
-      <Toaster />
+    <Page>
       <Settings />
-    </>
+    </Page>
   );
 };
 
-export default withErrorBoundary(
-  withSuspense(OptionsPage, <div> Loading ... </div>),
-  <div> Something went wrong </div>
-);
+export default OptionsPage;

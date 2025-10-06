@@ -1,8 +1,8 @@
 import '@ehentai-helper/shared/styles/global.css';
 import './index.css';
 
-import { NextUIProvider } from '@nextui-org/react';
 import { createRoot } from 'react-dom/client';
+import { NextUIProvider } from '@nextui-org/react';
 
 import Options from '@/Options';
 
