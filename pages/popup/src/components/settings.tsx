@@ -18,7 +18,7 @@ const Row = ({ label, content }: Record<'label' | 'content', React.ReactNode>) =
   return (
     <div className="flex items-center">
       <div className="flex w-[200px]">{label}:</div>
-      <div className="w-[600px]">{content}</div>
+      <div className="w-[400px]">{content}</div>
     </div>
   );
 };
@@ -34,21 +34,6 @@ export const Settings: FC = () => {
     chrome.storage.sync.get(defaultConfig, items => {
       setConfig(items as Config);
     });
-  };
-
-  const saveOptions = () => {
-    const intermediateDownloadPath = validateFilePath(config.intermediateDownloadPath);
-
-    if (!intermediateDownloadPath) {
-      toast.error(
-        'Failed to save options. ' + 'File path should not contain the following characters ' + ': * ? " < > |'
-      );
-      return;
-    }
-    if (intermediateDownloadPath !== config.intermediateDownloadPath) {
-      setConfig({ ...config, intermediateDownloadPath });
-    }
-    chrome.storage.sync.set(config, () => toast.success('Saved'));
   };
 
   useMounted(() => {
@@ -174,9 +159,9 @@ export const Settings: FC = () => {
           <Row key={key} label={formItemMap[key].label} content={formItemMap[key].content} />
         ))}
       </div>
-      <Button color="primary" variant="flat" className="bg-primary-700/40" onPress={saveOptions}>
+      {/* <Button color="primary" variant="flat" className="bg-primary-700/40" onPress={saveOptions}>
         Save
-      </Button>
+      </Button> */}
     </div>
   );
 };

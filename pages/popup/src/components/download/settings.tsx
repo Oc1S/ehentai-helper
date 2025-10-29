@@ -9,7 +9,7 @@ interface DownloadSettingsProps {
   trigger?: React.ReactNode;
 }
 
-const validateFilePath = (path: string) => {
+const formatDownloadDir = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
   }
@@ -21,7 +21,7 @@ const validateFilePath = (path: string) => {
 };
 
 export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
   const [config, setConfig] = useState<Config>(defaultConfig);
 
   useMounted(() => {
@@ -31,7 +31,7 @@ export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
   });
 
   const handleSave = () => {
-    const intermediateDownloadPath = validateFilePath(config.intermediateDownloadPath);
+    const intermediateDownloadPath = formatDownloadDir(config.intermediateDownloadPath);
 
     if (!intermediateDownloadPath) {
       toast.error('File path should not contain: * ? " < > |');
@@ -40,8 +40,10 @@ export const DownloadSettings = ({ trigger }: DownloadSettingsProps) => {
 
     const updatedConfig = { ...config, intermediateDownloadPath };
     setConfig(updatedConfig);
+
     chrome.storage.sync.set(updatedConfig, () => {
       toast.success('Settings saved successfully!');
+      onClose();
     });
   };
 

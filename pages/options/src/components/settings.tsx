@@ -174,7 +174,7 @@ export const Settings: FC = () => {
           <Row key={key} label={formItemMap[key].label} content={formItemMap[key].content} />
         ))}
       </div>
-      <Button color="primary" variant="flat" className="bg-primary-700/40" onPress={saveOptions}>
+      <Button color="primary" onPress={saveOptions}>
         Save
       </Button>
     </div>
