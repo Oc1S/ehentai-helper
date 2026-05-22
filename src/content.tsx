@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 export const config = {
-  matches: ['https://*/*']
+  matches: ['https://*/*'],
 };
 
 export default function Content() {

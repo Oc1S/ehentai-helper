@@ -12,7 +12,7 @@ export const OptionsPage = () => {
   const [config, setConfig] = useState<Config>(defaultConfig);
 
   useMounted(() => {
-    configStorage.get().then(items => {
+    configStorage.get().then((items) => {
       setConfig(items as Config);
     });
   });

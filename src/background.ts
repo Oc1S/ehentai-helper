@@ -16,9 +16,9 @@ let currentDownloadContext: {
 } | null = null;
 
 const patchDownloadList = async (patch: chrome.downloads.DownloadItem) => {
-  await downloadListStorage.set(list => {
+  await downloadListStorage.set((list) => {
     const next = [...(Array.isArray(list) ? list : [])];
-    const index = next.findIndex(item => item.id === patch.id);
+    const index = next.findIndex((item) => item.id === patch.id);
     if (index === -1) {
       next.push(patch);
       return next;
@@ -29,14 +29,14 @@ const patchDownloadList = async (patch: chrome.downloads.DownloadItem) => {
 };
 
 const registerListeners = () => {
-  chrome.downloads.onCreated.addListener(downloadItem => {
+  chrome.downloads.onCreated.addListener((downloadItem) => {
     if (downloadItem.mime === textMime) {
       return;
     }
     void patchDownloadList(downloadItem);
   });
 
-  chrome.downloads.onChanged.addListener(downloadDelta => {
+  chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
     const next: Record<string, unknown> = {};
     for (const key in downloadDelta) {
@@ -46,7 +46,7 @@ const registerListeners = () => {
     }
     void patchDownloadList({
       id,
-      ...next
+      ...next,
     } as chrome.downloads.DownloadItem);
   });
 
@@ -57,7 +57,10 @@ const registerListeners = () => {
       const indexMap = await downloadIndexMapStorage.get();
       const { fileNameRule, filenameConflictAction: conflictAction } = currentConfig;
       const entry = indexMap[String(downloadItem.id)];
-      const downloadPath = entry?.downloadPath || currentDownloadContext?.downloadPath || currentConfig.intermediateDownloadPath;
+      const downloadPath =
+        entry?.downloadPath ||
+        currentDownloadContext?.downloadPath ||
+        currentConfig.intermediateDownloadPath;
 
       let { filename } = downloadItem;
       const [name, fileType] = splitFilename(filename);
@@ -67,12 +70,15 @@ const registerListeners = () => {
         filename = `${downloadPath}/${fileNameRule
           .replace('[index]', String(entry?.index ?? ''))
           .replace('[name]', name)
-          .replace('[total]', String(entry?.total ?? currentDownloadContext?.total ?? ''))}.${fileType}`;
+          .replace(
+            '[total]',
+            String(entry?.total ?? currentDownloadContext?.total ?? '')
+          )}.${fileType}`;
       }
 
       suggest({
         filename,
-        conflictAction
+        conflictAction,
       });
     })();
     return true;
@@ -84,13 +90,13 @@ const registerListeners = () => {
     }
 
     if (message.type === 'register-download-index') {
-      void downloadIndexMapStorage.set(map => ({
+      void downloadIndexMapStorage.set((map) => ({
         ...(map || {}),
         [String(message.id)]: {
           index: message.index,
           total: message.total,
-          downloadPath: message.downloadPath
-        }
+          downloadPath: message.downloadPath,
+        },
       }));
       sendResponse({ ok: true });
       return true;
@@ -99,7 +105,7 @@ const registerListeners = () => {
     if (message.type === 'set-download-context') {
       currentDownloadContext = {
         downloadPath: message.downloadPath,
-        total: message.total
+        total: message.total,
       };
       sendResponse({ ok: true });
       return true;
@@ -121,7 +127,7 @@ void (async () => {
   await Promise.all([downloadIndexMapStorage.get(), downloadListStorage.get().catch(() => [])]);
   await syncDownloadList().catch(() => undefined);
   configStorage.subscribe(() => {
-    void configStorage.get().then(config => {
+    void configStorage.get().then((config) => {
       currentConfig = config;
     });
   });

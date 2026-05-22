@@ -14,11 +14,12 @@ const SidePanelLayout = () => {
       <div
         className="flex h-screen w-full flex-col items-center justify-center gap-4"
         style={{
-          backgroundColor: theme === 'light' ? '#eee' : '#222'
-        }}>
+          backgroundColor: theme === 'light' ? '#eee' : '#222',
+        }}
+      >
         <img src={chrome.runtime.getURL('icon.png')} className="h-24 w-24" alt="logo" />
         <Button onPress={exampleThemeStorage.toggle}>Toggle theme</Button>
-        <Button variant="flat" onPress={() => setTick(t => t + 1)}>
+        <Button variant="flat" onPress={() => setTick((t) => t + 1)}>
           Refresh
         </Button>
       </div>
@@ -26,4 +27,7 @@ const SidePanelLayout = () => {
   );
 };
 
-export const SidePanelPage = withErrorBoundary(withSuspense(SidePanelLayout, <div> Loading ... </div>), <div> Error Occur </div>);
+export const SidePanelPage = withErrorBoundary(
+  withSuspense(SidePanelLayout, <div> Loading ... </div>),
+  <div> Error Occur </div>
+);

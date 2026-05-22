@@ -39,19 +39,21 @@ export interface GalleryInfo {
 
 const storage = createStorage<DownloadHistoryItem[]>('download-history', [], {
   storageType: StorageType.Local,
-  liveUpdate: true
+  liveUpdate: true,
 });
 
 export const downloadHistoryStorage: HistoryStorage = {
   ...storage,
-  add: async item => {
+  add: async (item) => {
     const entry = { ...item, timestamp: Date.now() };
-    await storage.set(list => [entry, ...(Array.isArray(list) ? list : [])].slice(0, 200));
+    await storage.set((list) => [entry, ...(Array.isArray(list) ? list : [])].slice(0, 200));
   },
   clear: async () => {
     await storage.set([]);
   },
-  remove: async timestamp => {
-    await storage.set(list => (Array.isArray(list) ? list.filter(i => i.timestamp !== timestamp) : []));
-  }
+  remove: async (timestamp) => {
+    await storage.set((list) =>
+      Array.isArray(list) ? list.filter((i) => i.timestamp !== timestamp) : []
+    );
+  },
 };

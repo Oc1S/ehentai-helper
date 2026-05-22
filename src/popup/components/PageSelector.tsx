@@ -16,7 +16,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
           value={String(range[0])}
           max={range[1]}
           size="sm"
-          onChange={e => {
+          onChange={(e) => {
             const { value } = e.target;
             range[0] = Number(value);
             setRange([...range]);
@@ -29,7 +29,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
           value={String(range[1])}
           max={maxValue}
           size="sm"
-          onChange={e => {
+          onChange={(e) => {
             const { value } = e.target;
             range[1] = Number(value);
             setRange([...range]);
@@ -49,17 +49,18 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       classNames={{
         base: 'w-60 gap-3',
         filler: 'bg-gradient-to-r from-slate-700 to-slate-500',
-        track: 'h-6'
+        track: 'h-6',
       }}
       renderValue={renderValue}
-      onChange={val => {
+      onChange={(val) => {
         setRange(val as [number, number]);
       }}
       renderThumb={({ index, ...props }) => (
         <div
           {...props}
-          className={`shadow-medium group top-1/2 flex h-6 w-6 cursor-grab items-center justify-center rounded-full data-[dragging=true]:cursor-grabbing ${index === 0 ? 'bg-slate-700' : 'bg-slate-500'}`}>
-          <span className="shadow-small block h-3/4 w-3/4 rounded-full bg-white/80 transition-transform group-data-[dragging=true]:scale-95" />
+          className={`group top-1/2 flex h-6 w-6 cursor-grab items-center justify-center rounded-full shadow-medium data-[dragging=true]:cursor-grabbing ${index === 0 ? 'bg-slate-700' : 'bg-slate-500'}`}
+        >
+          <span className="block h-3/4 w-3/4 rounded-full bg-white/80 shadow-small transition-transform group-data-[dragging=true]:scale-95" />
         </div>
       )}
       {...rest}

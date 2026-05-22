@@ -19,5 +19,5 @@ export const defaultConfig: Config = {
   saveGalleryInfo: false,
   filenameConflictAction: 'uniquify',
   downloadInterval: 300,
-  fileNameRule: '[index]'
+  fileNameRule: '[index]',
 };

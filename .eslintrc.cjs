@@ -20,7 +20,14 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', '@typescript-eslint', 'react-hooks', 'import', 'prettier', 'simple-import-sort'],
+  plugins: [
+    'react',
+    '@typescript-eslint',
+    'react-hooks',
+    'import',
+    'prettier',
+    'simple-import-sort',
+  ],
   settings: {
     react: {
       version: 'detect',

@@ -6,7 +6,11 @@ export type DownloadIndexEntry = {
   downloadPath?: string;
 };
 
-export const downloadIndexMapStorage = createStorage<Record<string, DownloadIndexEntry>>('download-index-map', {}, {
-  storageType: StorageType.Local,
-  liveUpdate: true
-});
+export const downloadIndexMapStorage = createStorage<Record<string, DownloadIndexEntry>>(
+  'download-index-map',
+  {},
+  {
+    storageType: StorageType.Local,
+    liveUpdate: true,
+  }
+);

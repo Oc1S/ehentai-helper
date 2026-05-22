@@ -24,7 +24,11 @@ const Row = ({ label, content }: Record<'label' | 'content', ReactNode>) => {
 };
 
 const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input type="text" className={`border-primary border-b bg-transparent text-gray-100 ${className}`} {...rest} />
+  <input
+    type="text"
+    className={`border-b border-primary bg-transparent text-gray-100 ${className}`}
+    {...rest}
+  />
 );
 
 export const Settings: FC<{
@@ -44,26 +48,27 @@ export const Settings: FC<{
             className="underline"
             onClick={() => {
               chrome.downloads.showDefaultFolder();
-            }}>
+            }}
+          >
             [Default download folder]/
           </div>
           <TextInput
             value={config.intermediateDownloadPath}
-            onChange={e => setConfig({ ...config, intermediateDownloadPath: e.target.value })}
+            onChange={(e) => setConfig({ ...config, intermediateDownloadPath: e.target.value })}
           />
         </div>
-      )
+      ),
     },
     saveOriginalImages: {
       label: 'Save original images',
       content: (
         <Checkbox
           isSelected={config.saveOriginalImages}
-          onChange={e => {
+          onChange={(e) => {
             setConfig({ ...config, saveOriginalImages: e.target.checked });
           }}
         />
-      )
+      ),
     },
     saveGalleryInfo: {
       label: 'Save gallery information',
@@ -71,12 +76,12 @@ export const Settings: FC<{
         <div className="flex gap-4">
           <Checkbox
             isSelected={config.saveGalleryInfo}
-            onChange={e => {
+            onChange={(e) => {
               setConfig({ ...config, saveGalleryInfo: e.target.checked });
             }}
           />
         </div>
-      )
+      ),
     },
     filenameConflictAction: {
       label: (
@@ -88,16 +93,17 @@ export const Settings: FC<{
         <RadioGroup
           orientation="horizontal"
           value={config.filenameConflictAction}
-          onValueChange={val =>
+          onValueChange={(val) =>
             setConfig({
               ...config,
-              filenameConflictAction: val
+              filenameConflictAction: val,
             })
-          }>
+          }
+        >
           <Radio value="uniquify">Uniquify</Radio>
           <Radio value="overwrite">Overwrite</Radio>
         </RadioGroup>
-      )
+      ),
     },
     downloadInterval: {
       label: (
@@ -112,15 +118,15 @@ export const Settings: FC<{
           value={String(config.downloadInterval)}
           endContent={
             <div className="pointer-events-none flex items-center">
-              <span className="text-default-400 text-small">ms</span>
+              <span className="text-small text-default-400">ms</span>
             </div>
           }
           className="w-32"
-          onChange={e => {
+          onChange={(e) => {
             setConfig({ ...config, downloadInterval: +e.target.value });
           }}
         />
-      )
+      ),
     },
     fileNameRule: {
       label: 'File name rule',
@@ -128,25 +134,30 @@ export const Settings: FC<{
         <RadioGroup
           orientation="horizontal"
           value={config.fileNameRule}
-          onValueChange={val =>
+          onValueChange={(val) =>
             setConfig({
               ...config,
-              fileNameRule: val
+              fileNameRule: val,
             })
-          }>
+          }
+        >
           <Radio value="[index]">{'[Index]'}</Radio>
           <Radio value="[name]">{'[Name]'}</Radio>
           <Radio value="[index]_[total]">{'[Index]_[Total]'}</Radio>
         </RadioGroup>
-      )
-    }
+      ),
+    },
   };
 
   return (
     <div className="relative flex flex-col items-center gap-4">
-      <div className="bg-content1 flex flex-col gap-4 rounded-lg p-4">
-        {Object.keys(formItemMap).map(key => (
-          <Row key={key} label={formItemMap[key as keyof Config].label} content={formItemMap[key as keyof Config].content} />
+      <div className="flex flex-col gap-4 rounded-lg bg-content1 p-4">
+        {Object.keys(formItemMap).map((key) => (
+          <Row
+            key={key}
+            label={formItemMap[key as keyof Config].label}
+            content={formItemMap[key as keyof Config].content}
+          />
         ))}
       </div>
     </div>

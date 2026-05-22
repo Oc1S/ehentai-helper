@@ -1,4 +1,8 @@
-import { PATTERN_EHENTAI_PAGE_URL, PATTERN_GALLERY_PAGE_URL, PATTERN_IMAGE_PAGE_URL } from './constant';
+import {
+  PATTERN_EHENTAI_PAGE_URL,
+  PATTERN_GALLERY_PAGE_URL,
+  PATTERN_IMAGE_PAGE_URL,
+} from './constant';
 
 export const isObject = (value: unknown): value is Record<string, unknown> => {
   return Object.prototype.toString.call(value) === '[object Object]';
@@ -21,9 +25,9 @@ export const getCurrentTabUrl = () =>
     chrome.tabs.query(
       {
         active: true,
-        currentWindow: true
+        currentWindow: true,
       },
-      tabs => {
+      (tabs) => {
         const [tab] = tabs;
         const { url } = tab;
         if (!url) return reject(new Error('Active tab url not found'));

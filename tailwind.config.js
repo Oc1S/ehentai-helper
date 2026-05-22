@@ -2,7 +2,10 @@ const { nextui } = require('@nextui-org/react');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{js,ts,jsx,tsx}', '../node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}'],
+  content: [
+    './src/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
+  ],
   darkMode: 'class',
   theme: {
     extend: {
@@ -19,7 +22,7 @@ module.exports = {
           800: '#065F46',
           900: '#064E3B',
           DEFAULT: '#09B6A2',
-          foreground: '#1a1a1a'
+          foreground: '#1a1a1a',
         },
         primaryBlue: {
           50: '#F0F9FF',
@@ -33,10 +36,10 @@ module.exports = {
           800: '#075985',
           900: '#0C4A6E',
           DEFAULT: '#0EA5E9',
-          foreground: '#1a1a1a'
-        }
-      }
-    }
+          foreground: '#1a1a1a',
+        },
+      },
+    },
   },
-  plugins: [nextui()]
+  plugins: [nextui()],
 };

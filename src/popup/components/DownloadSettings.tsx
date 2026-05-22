@@ -1,4 +1,12 @@
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react';
+import {
+  Button,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from '@nextui-org/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -22,7 +30,7 @@ export const DownloadSettings = () => {
   const [config, setConfig] = useState<Config>(defaultConfig);
 
   useMounted(() => {
-    configStorage.get().then(items => {
+    configStorage.get().then((items) => {
       setConfig(items as Config);
     });
   });
@@ -50,13 +58,14 @@ export const DownloadSettings = () => {
         size="sm"
         variant="flat"
         className="border border-slate-600/30 bg-slate-800/60 text-slate-200 shadow-lg backdrop-blur-sm transition-all duration-200 hover:border-slate-500/50 hover:bg-slate-700/80 hover:shadow-xl"
-        onPress={onOpen}>
+        onPress={onOpen}
+      >
         Settings
       </Button>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside">
         <ModalContent>
-          {onClose => (
+          {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">Download Settings</ModalHeader>
               <ModalBody className="space-y-6">

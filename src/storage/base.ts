@@ -2,12 +2,12 @@ export enum StorageType {
   Local = 'local',
   Sync = 'sync',
   Managed = 'managed',
-  Session = 'session'
+  Session = 'session',
 }
 
 export enum SessionAccessLevel {
   ExtensionPagesOnly = 'TRUSTED_CONTEXTS',
-  ExtensionPagesAndContentScripts = 'TRUSTED_AND_UNTRUSTED_CONTEXTS'
+  ExtensionPagesAndContentScripts = 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
 }
 
 type ValueOrUpdate<D> = D | ((prev: D) => Promise<D> | D);
@@ -51,17 +51,23 @@ let globalSessionAccessLevelFlag: StorageConfig['sessionAccessForContentScripts'
 
 function checkStoragePermission(storageType: StorageType): void {
   if (chrome.storage[storageType] === undefined) {
-    throw new Error(`Check your storage permission in manifest.json: ${storageType} is not defined`);
+    throw new Error(
+      `Check your storage permission in manifest.json: ${storageType} is not defined`
+    );
   }
 }
 
-export function createStorage<D = string>(key: string, fallback: D, config?: StorageConfig<D>): BaseStorage<D> {
+export function createStorage<D = string>(
+  key: string,
+  fallback: D,
+  config?: StorageConfig<D>
+): BaseStorage<D> {
   let cache: D | null = null;
   let listeners: Array<() => void> = [];
   const storageType = config?.storageType ?? StorageType.Local;
   const liveUpdate = config?.liveUpdate ?? false;
   const serialize = config?.serialization?.serialize ?? ((v: D) => v);
-  const deserialize = config?.serialization?.deserialize ?? (v => v as D);
+  const deserialize = config?.serialization?.deserialize ?? ((v) => v as D);
 
   if (
     globalSessionAccessLevelFlag === false &&
@@ -71,11 +77,13 @@ export function createStorage<D = string>(key: string, fallback: D, config?: Sto
     checkStoragePermission(storageType);
     chrome.storage[storageType]
       .setAccessLevel({
-        accessLevel: SessionAccessLevel.ExtensionPagesAndContentScripts
+        accessLevel: SessionAccessLevel.ExtensionPagesAndContentScripts,
       })
-      .catch(error => {
+      .catch((error) => {
         console.warn(error);
-        console.warn('Please call setAccessLevel into different context, like a background script.');
+        console.warn(
+          'Please call setAccessLevel into different context, like a background script.'
+        );
       });
     globalSessionAccessLevelFlag = true;
   }
@@ -87,7 +95,7 @@ export function createStorage<D = string>(key: string, fallback: D, config?: Sto
   };
 
   const _emitChange = () => {
-    listeners.forEach(listener => listener());
+    listeners.forEach((listener) => listener());
   };
 
   const set = async (valueOrUpdate: ValueOrUpdate<D>) => {
@@ -99,7 +107,7 @@ export function createStorage<D = string>(key: string, fallback: D, config?: Sto
   const subscribe = (listener: () => void) => {
     listeners = [...listeners, listener];
     return () => {
-      listeners = listeners.filter(l => l !== listener);
+      listeners = listeners.filter((l) => l !== listener);
     };
   };
 
@@ -107,12 +115,14 @@ export function createStorage<D = string>(key: string, fallback: D, config?: Sto
     return cache;
   };
 
-  _getDataFromStorage().then(data => {
+  _getDataFromStorage().then((data) => {
     cache = data;
     _emitChange();
   });
 
-  async function _updateFromStorageOnChanged(changes: { [key: string]: chrome.storage.StorageChange }) {
+  async function _updateFromStorageOnChanged(changes: {
+    [key: string]: chrome.storage.StorageChange;
+  }) {
     if (changes[key] === undefined) return;
 
     const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue);
@@ -132,6 +142,6 @@ export function createStorage<D = string>(key: string, fallback: D, config?: Sto
     get: _getDataFromStorage,
     set,
     getSnapshot,
-    subscribe
+    subscribe,
   };
 }

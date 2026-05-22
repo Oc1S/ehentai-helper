@@ -16,7 +16,7 @@ import {
   TableCell,
   TableColumn,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@nextui-org/react';
 import { type ReactNode, FC, useEffect, useMemo, useState } from 'react';
 
@@ -37,23 +37,18 @@ const CellButton = ({ children, ...rest }: ButtonProps) => (
   </Button>
 );
 
-const columns = [
-  { key: 'id' },
-  { key: 'state' },
-  { key: 'filename' },
-  { key: 'operation' }
-];
+const columns = [{ key: 'id' }, { key: 'state' }, { key: 'filename' }, { key: 'operation' }];
 
 const stateMap: Record<DownloadState, ReactNode> = {
   in_progress: <>Downloading</>,
   interrupted: <>Interrupted</>,
-  complete: <>Complete</>
+  complete: <>Complete</>,
 };
 
 const statusColorMap: Record<DownloadState, ChipProps['color']> = {
   complete: 'success',
   in_progress: 'warning',
-  interrupted: 'danger'
+  interrupted: 'danger',
 };
 
 export const DownloadTable: FC = () => {
@@ -63,7 +58,7 @@ export const DownloadTable: FC = () => {
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: 'id',
-    direction: 'ascending'
+    direction: 'ascending',
   });
   const [filterValue, setFilterValue] = useState('');
   const [statusFilter, setStatusFilter] = useState<Selection>('all');
@@ -75,20 +70,21 @@ export const DownloadTable: FC = () => {
   const stateSelections: { label: string; id: DownloadItem['state'] }[] = [
     { id: 'complete', label: 'Complete' },
     { id: 'in_progress', label: 'InProgress' },
-    { id: 'interrupted', label: 'Interrupted' }
+    { id: 'interrupted', label: 'Interrupted' },
   ];
 
   const filteredList = useMemo(() => {
-    let next = downloadList.map(item => {
+    let next = downloadList.map((item) => {
       const localPathArr = item.filename.replace(/\\/g, '/').split('/');
-      const filename = localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
+      const filename =
+        localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
       return {
         ...item,
-        filename
+        filename,
       };
     });
-    next = filterValue ? next.filter(item => item.filename.includes(filterValue)) : next;
-    next = statusFilter === 'all' ? next : next.filter(item => statusFilter.has(item.state));
+    next = filterValue ? next.filter((item) => item.filename.includes(filterValue)) : next;
+    next = statusFilter === 'all' ? next : next.filter((item) => statusFilter.has(item.state));
     return next;
   }, [downloadList, filterValue, statusFilter]);
 
@@ -107,33 +103,35 @@ export const DownloadTable: FC = () => {
             : chrome.downloads.pause(id, () => {
                 pausedIdSet.add(id);
               });
-        }}>
+        }}
+      >
         {paused ? 'Resume' : 'Pause'}
       </CellButton>
     );
     const RestartButton = (
       <CellButton
         onClick={() => {
-            chrome.downloads.cancel(id, () => {
-              const entry = indexMap[String(id)];
-              const number = entry?.index;
-              setDownloadList(list => {
-                const newList = [...list];
-                const index = newList.findIndex(item => item.id === id);
-                newList.splice(index, 1);
-                return newList;
-              });
-              chrome.downloads.download({ url }, newId => {
-                void chrome.runtime.sendMessage({
-                  type: 'register-download-index',
-                  id: newId,
-                  index: number ?? 0,
-                  total: entry?.total ?? 0,
-                  downloadPath: entry?.downloadPath
-                });
+          chrome.downloads.cancel(id, () => {
+            const entry = indexMap[String(id)];
+            const number = entry?.index;
+            setDownloadList((list) => {
+              const newList = [...list];
+              const index = newList.findIndex((item) => item.id === id);
+              newList.splice(index, 1);
+              return newList;
+            });
+            chrome.downloads.download({ url }, (newId) => {
+              void chrome.runtime.sendMessage({
+                type: 'register-download-index',
+                id: newId,
+                index: number ?? 0,
+                total: entry?.total ?? 0,
+                downloadPath: entry?.downloadPath,
               });
             });
-          }}>
+          });
+        }}
+      >
         Restart
       </CellButton>
     );
@@ -146,7 +144,7 @@ export const DownloadTable: FC = () => {
           {RestartButton}
         </div>
       ),
-      complete: () => <></>
+      complete: () => <></>,
     };
 
     switch (key) {
@@ -173,7 +171,7 @@ export const DownloadTable: FC = () => {
           startContent={<SearchIcon />}
           onClear={() => setFilterValue('')}
           value={filterValue}
-          onValueChange={value => {
+          onValueChange={(value) => {
             if (value) {
               setPage(1);
               setFilterValue(value);
@@ -193,8 +191,9 @@ export const DownloadTable: FC = () => {
             closeOnSelect={false}
             selectedKeys={statusFilter}
             selectionMode="multiple"
-            onSelectionChange={setStatusFilter}>
-            {stateSelections.map(state => (
+            onSelectionChange={setStatusFilter}
+          >
+            {stateSelections.map((state) => (
               <DropdownItem key={state.id} className="capitalize">
                 {state.label}
               </DropdownItem>
@@ -221,8 +220,9 @@ export const DownloadTable: FC = () => {
           </div>
         }
         classNames={{
-          wrapper: 'h-[440px]'
-        }}>
+          wrapper: 'h-[440px]',
+        }}
+      >
         <TableHeader columns={columns}>
           {({ key }) => (
             <TableColumn key={key} width={key === 'id' ? 100 : 200}>
@@ -231,7 +231,11 @@ export const DownloadTable: FC = () => {
           )}
         </TableHeader>
         <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
-          {item => <TableRow key={item.id}>{key => <TableCell>{renderCell(item, key as string)}</TableCell>}</TableRow>}
+          {(item) => (
+            <TableRow key={item.id}>
+              {(key) => <TableCell>{renderCell(item, key as string)}</TableCell>}
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

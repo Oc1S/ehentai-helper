@@ -7,7 +7,8 @@ export const ChevronDownIcon = ({ strokeWidth = 1.5, ...rest }: React.SVGProps<S
     role="presentation"
     viewBox="0 0 24 24"
     width="1em"
-    {...rest}>
+    {...rest}
+  >
     <path
       d="m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95"
       stroke="currentColor"

@@ -35,26 +35,29 @@ export const extractGalleryInfo = async (htmlOrDoc: string | Document): Promise<
     parent,
     visible,
     language: language ? language.replace(/\s+/, ' ') : '',
-    originalFileSizeMB: originalFileSizeMB ? parseFloat(originalFileSizeMB.replace(/(\S+) MB/, '$1')) : 0,
+    originalFileSizeMB: originalFileSizeMB
+      ? parseFloat(originalFileSizeMB.replace(/(\S+) MB/, '$1'))
+      : 0,
     numImages: numImages ? parseInt(numImages.replace(/(\d+) pages/, '$1')) : 0,
     favorited: favorited ? parseInt(favorited.replace(/(\d+) times/, '$1')) : 0,
     ratingTimes: ratingTimes ? parseInt(ratingTimes) : 0,
     averageScore: averageScore ? parseFloat(averageScore.replace(/Average: (\S+)/, '$1')) : 0.0,
-    tags
+    tags,
   };
   return info;
 };
 
 const extractGalleryTags = (htmlOrDoc: string | Document): GalleryTag[] => {
   const doc = getDocument(htmlOrDoc);
-  const taglistElements = doc.getElementById('taglist')?.childNodes?.[0]?.childNodes?.[0]?.childNodes;
+  const taglistElements =
+    doc.getElementById('taglist')?.childNodes?.[0]?.childNodes?.[0]?.childNodes;
   if (taglistElements === undefined) return [];
   const tags = new Array(taglistElements.length);
   for (let i = 0; i < taglistElements.length; i++) {
     const tr = taglistElements[i];
     tags[i] = {
       category: tr.childNodes[0].textContent,
-      content: ''
+      content: '',
     };
     const tagContentElements = tr.childNodes[1].childNodes;
     for (let j = 0; j < tagContentElements.length; j++) {
@@ -76,7 +79,7 @@ export const extractGalleryPageInfo = (
   const pageInfo = {
     imagesPerPage: 0,
     totalImages: 0,
-    numPages: 0
+    numPages: 0,
   };
   if (!res) return pageInfo;
   pageInfo.imagesPerPage = +res[1];

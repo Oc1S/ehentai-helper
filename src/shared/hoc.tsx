@@ -41,7 +41,10 @@ export function withErrorBoundary<T extends Record<string, unknown>>(
   };
 }
 
-export function withSuspense<T extends Record<string, unknown>>(Component: ComponentType<T>, SuspenseComponent: ReactElement) {
+export function withSuspense<T extends Record<string, unknown>>(
+  Component: ComponentType<T>,
+  SuspenseComponent: ReactElement
+) {
   return function WithSuspense(props: T) {
     return (
       <Suspense fallback={SuspenseComponent}>

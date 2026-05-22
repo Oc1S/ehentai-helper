@@ -8,14 +8,14 @@ type ThemeStorage = BaseStorage<Theme> & {
 
 const storage = createStorage<Theme>('theme-storage-key', 'light', {
   storageType: StorageType.Local,
-  liveUpdate: true
+  liveUpdate: true,
 });
 
 export const exampleThemeStorage: ThemeStorage = {
   ...storage,
   toggle: async () => {
-    await storage.set(currentTheme => {
+    await storage.set((currentTheme) => {
       return currentTheme === 'light' ? 'dark' : 'light';
     });
-  }
+  },
 };

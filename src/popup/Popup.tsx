@@ -13,16 +13,22 @@ import {
   useStorage,
   useStorageSuspense,
   withErrorBoundary,
-  withSuspense
+  withSuspense,
 } from '@/shared';
 import {
   configStorage,
   downloadHistoryStorage,
   downloadIndexMapStorage,
   downloadListStorage,
-  type GalleryInfo
+  type GalleryInfo,
 } from '@/storage';
-import { downloadAsTxtFile, extractGalleryInfo, extractGalleryPageInfo, htmlStr2DOM, removeInvalidCharFromFilename } from '@/utils';
+import {
+  downloadAsTxtFile,
+  extractGalleryInfo,
+  extractGalleryPageInfo,
+  htmlStr2DOM,
+  removeInvalidCharFromFilename,
+} from '@/utils';
 
 import { DownloadIcon } from './components/icons/DownloadIcon';
 import { DownloadSettings } from './components/DownloadSettings';
@@ -37,13 +43,13 @@ enum StatusEnum {
   Fail = 3,
   BeforeDownload = 4,
   Downloading = 5,
-  DownloadSuccess = 6
+  DownloadSuccess = 6,
 }
 
 let galleryInfo: GalleryInfo;
 
 const sendRuntimeMessage = (message: Record<string, unknown>) =>
-  new Promise<void>(resolve => {
+  new Promise<void>((resolve) => {
     chrome.runtime.sendMessage(message, () => resolve());
   });
 
@@ -57,7 +63,7 @@ const PopupLayout = () => {
   const [galleryPageInfo, setGalleryPageInfo, galleryPageInfoRef] = useStateRef({
     imagesPerPage: 0,
     numPages: 0,
-    totalImages: 0
+    totalImages: 0,
   });
   const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
   const [galleryTitle, setGalleryTitle] = useState('');
@@ -76,11 +82,11 @@ const PopupLayout = () => {
   const [start, end] = useMemo(() => {
     const start = {
       indexOfPage: (startIndex - 1) % galleryPageInfo.imagesPerPage,
-      page: Math.floor((startIndex - 1) / galleryPageInfo.imagesPerPage)
+      page: Math.floor((startIndex - 1) / galleryPageInfo.imagesPerPage),
     };
     const end = {
       indexOfPage: (endIndex - 1) % galleryPageInfo.imagesPerPage,
-      page: Math.floor((endIndex - 1) / galleryPageInfo.imagesPerPage)
+      page: Math.floor((endIndex - 1) / galleryPageInfo.imagesPerPage),
     };
     return [start, end];
   }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
@@ -94,8 +100,10 @@ const PopupLayout = () => {
         .map(([id]) => Number(id))
     );
   }, [downloadIndexMap]);
-  const progressDownloadList = storedDownloadList.filter(item => trackedDownloadIdSet.has(item.id));
-  const finishedList = progressDownloadList.filter(item => item.state === 'complete');
+  const progressDownloadList = storedDownloadList.filter((item) =>
+    trackedDownloadIdSet.has(item.id)
+  );
+  const finishedList = progressDownloadList.filter((item) => item.state === 'complete');
 
   const downloadJob = {
     processGalleryPage: async (pageIndex: number) => {
@@ -118,7 +126,9 @@ const PopupLayout = () => {
     },
     extractImagePageUrls: (html: string) => {
       const doc = htmlStr2DOM(html);
-      return Array.from(doc.getElementById('gdt')?.childNodes || []).map(n => (n as HTMLAnchorElement).href);
+      return Array.from(doc.getElementById('gdt')?.childNodes || []).map(
+        (n) => (n as HTMLAnchorElement).href
+      );
     },
     downloadImage: async (url: string, pageIndex: number, imageIndex: number) => {
       const currentIndex = pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1;
@@ -129,20 +139,22 @@ const PopupLayout = () => {
       let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
       if (configRef.current.saveOriginalImages) {
         try {
-          const originalImage = (doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement)?.getElementsByTagName('a')[0].href;
+          const originalImage = (
+            doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement
+          )?.getElementsByTagName('a')[0].href;
           imageUrl = originalImage || imageUrl;
         } catch (e) {
           console.log('get original image failed@', e);
         }
       }
-      chrome.downloads.download({ url: imageUrl }, id => {
+      chrome.downloads.download({ url: imageUrl }, (id) => {
         if (typeof id !== 'number') return;
         void chrome.runtime.sendMessage({
           type: 'register-download-index',
           id,
           index: currentIndex,
           total: galleryPageInfoRef.current.totalImages,
-          downloadPath: configRef.current.intermediateDownloadPath
+          downloadPath: configRef.current.intermediateDownloadPath,
         });
       });
     },
@@ -158,11 +170,15 @@ const PopupLayout = () => {
         downloadJob.processGalleryPage(pageIndex);
         pageIndex++;
       }, configRef.current.downloadInterval * galleryPageInfo.imagesPerPage);
-    }
+    },
   };
 
   useEffect(() => {
-    if (status === StatusEnum.Downloading && downloadCount > 0 && downloadCount === finishedList.length) {
+    if (
+      status === StatusEnum.Downloading &&
+      downloadCount > 0 &&
+      downloadCount === finishedList.length
+    ) {
       setStatus(StatusEnum.DownloadSuccess);
     }
   }, [status, downloadCount, finishedList.length]);
@@ -174,7 +190,9 @@ const PopupLayout = () => {
         const items = configRef.current ?? defaultConfig;
         configRef.current = items;
         galleryFrontPageUrl.current = url.substring(0, url.lastIndexOf('/') + 1);
-        const { data: galleryHtmlStr } = await axios.get(galleryFrontPageUrl.current).catch(() => ({ data: '' }));
+        const { data: galleryHtmlStr } = await axios
+          .get(galleryFrontPageUrl.current)
+          .catch(() => ({ data: '' }));
         if (!galleryHtmlStr) {
           setStatus(StatusEnum.Fail);
           return;
@@ -185,7 +203,9 @@ const PopupLayout = () => {
         setGalleryTitle(galleryInfo.name);
         configRef.current = {
           ...configRef.current,
-          intermediateDownloadPath: configRef.current.intermediateDownloadPath + removeInvalidCharFromFilename(galleryInfo.name)
+          intermediateDownloadPath:
+            configRef.current.intermediateDownloadPath +
+            removeInvalidCharFromFilename(galleryInfo.name),
         };
         setStatus(StatusEnum.BeforeDownload);
         return;
@@ -204,19 +224,19 @@ const PopupLayout = () => {
         url: galleryFrontPageUrl.current,
         name: galleryInfo.name,
         range,
-        info: galleryInfo
+        info: galleryInfo,
       });
     } catch (e) {
       console.error('add download history failed@', e);
     }
     setStatus(StatusEnum.Downloading);
     await sendRuntimeMessage({
-      type: 'clear-download-index-map'
+      type: 'clear-download-index-map',
     });
     await sendRuntimeMessage({
       type: 'set-download-context',
       downloadPath: configRef.current.intermediateDownloadPath,
-      total: galleryPageInfoRef.current.totalImages
+      total: galleryPageInfoRef.current.totalImages,
     });
     downloadJob.downloadAllImages();
     if (configRef.current.saveGalleryInfo) {
@@ -239,7 +259,12 @@ const PopupLayout = () => {
           return (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20">
-                <svg className="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-6 w-6 text-amber-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -249,8 +274,12 @@ const PopupLayout = () => {
                 </svg>
               </div>
               <div className="text-center">
-                <h3 className="mb-1 text-sm font-medium text-amber-100">Non-gallery Page Detected</h3>
-                <p className="text-xs text-amber-200/80">Navigate to a gallery page to start downloading</p>
+                <h3 className="mb-1 text-sm font-medium text-amber-100">
+                  Non-gallery Page Detected
+                </h3>
+                <p className="text-xs text-amber-200/80">
+                  Navigate to a gallery page to start downloading
+                </p>
               </div>
             </div>
           );
@@ -258,7 +287,12 @@ const PopupLayout = () => {
           return (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800/40 to-gray-900/40 p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/20">
-                <svg className="h-6 w-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-6 w-6 text-primary-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -289,10 +323,15 @@ const PopupLayout = () => {
           return (
             <div className="flex flex-col gap-8">
               <div className="space-y-2 px-8 text-center">
-                <h2 className="line-clamp-2 text-xl font-bold leading-tight text-slate-100" title={galleryTitle}>
+                <h2
+                  className="line-clamp-2 text-xl font-bold leading-tight text-slate-100"
+                  title={galleryTitle}
+                >
                   {galleryTitle}
                 </h2>
-                <p className="text-sm font-medium text-slate-400">{galleryPageInfo.totalImages} images found</p>
+                <p className="text-sm font-medium text-slate-400">
+                  {galleryPageInfo.totalImages} images found
+                </p>
               </div>
               <div className="flex flex-col gap-6 rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 shadow-sm">
                 {range[1] > 0 && (
@@ -303,7 +342,11 @@ const PopupLayout = () => {
                         {range[0]} - {range[1]}
                       </span>
                     </div>
-                    <PageSelector range={range} setRange={setRange} maxValue={galleryPageInfo.totalImages} />
+                    <PageSelector
+                      range={range}
+                      setRange={setRange}
+                      maxValue={galleryPageInfo.totalImages}
+                    />
                   </div>
                 )}
                 <div className="space-y-4">
@@ -316,7 +359,8 @@ const PopupLayout = () => {
                   </div>
                   <button
                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 font-semibold text-slate-100 transition-all duration-200 hover:border-slate-500 hover:bg-slate-700"
-                    onClick={handleClickDownload}>
+                    onClick={handleClickDownload}
+                  >
                     <DownloadIcon />
                     Start Download
                   </button>
@@ -334,22 +378,38 @@ const PopupLayout = () => {
                   <span className="text-sm text-slate-400">Downloading...</span>
                 </div>
               </div>
-              <div className="w-full rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">{renders.progress()}</div>
+              <div className="w-full rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">
+                {renders.progress()}
+              </div>
             </div>
           );
         case StatusEnum.DownloadSuccess:
           return (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
-                <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="h-6 w-6 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <div className="space-y-2 text-center">
                 <h3 className="text-sm font-semibold text-green-100">Download Completed!</h3>
                 <p className="text-xs text-gray-400">
                   Enjoying the extension?{' '}
-                  <Link href="https://github.com/Oc1S/ehentai-helper" isExternal className="underline underline-offset-2">
+                  <Link
+                    href="https://github.com/Oc1S/ehentai-helper"
+                    isExternal
+                    className="underline underline-offset-2"
+                  >
                     Star it on GitHub
                   </Link>
                 </p>
@@ -360,13 +420,25 @@ const PopupLayout = () => {
           return (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-rose-500/10 p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/20">
-                <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-6 w-6 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </div>
               <div className="text-center">
                 <h3 className="mb-1 text-sm font-medium text-red-100">Connection Failed</h3>
-                <p className="text-xs text-red-200/80">Unable to fetch data from server. Please try again later.</p>
+                <p className="text-xs text-red-200/80">
+                  Unable to fetch data from server. Please try again later.
+                </p>
               </div>
             </div>
           );
@@ -394,7 +466,7 @@ const PopupLayout = () => {
               track: 'drop-shadow-md border border-default',
               indicator: 'bg-gradient-to-r from-primary-500 to-primaryBlue-500',
               label: 'tracking-wider font-medium text-default-600',
-              value: 'text-foreground-600'
+              value: 'text-foreground-600',
             }}
           />
           <div className="flex justify-between text-xs text-gray-500">
@@ -403,7 +475,7 @@ const PopupLayout = () => {
           </div>
         </div>
       </div>
-    )
+    ),
   };
 
   return (
@@ -417,13 +489,15 @@ const PopupLayout = () => {
           <Tab key="info" title="Info">
             <div className="pt-4">
               {status === StatusEnum.Loading && renders.status()}
-              {[StatusEnum.OtherPage, StatusEnum.EHentaiOther, StatusEnum.Fail].includes(status) && (
-                <div className="flex justify-center">{renders.status()}</div>
-              )}
+              {[StatusEnum.OtherPage, StatusEnum.EHentaiOther, StatusEnum.Fail].includes(
+                status
+              ) && <div className="flex justify-center">{renders.status()}</div>}
               {status === StatusEnum.DownloadSuccess && (
                 <div className="flex flex-col items-center gap-6">
                   <div className="text-center">
-                    <h3 className="mb-2 line-clamp-2 text-lg font-bold text-slate-100">{galleryTitle}</h3>
+                    <h3 className="mb-2 line-clamp-2 text-lg font-bold text-slate-100">
+                      {galleryTitle}
+                    </h3>
                     <p className="text-slate-400">All images downloaded successfully</p>
                   </div>
                   {renders.status()}
@@ -452,4 +526,7 @@ const PopupLayout = () => {
   );
 };
 
-export default withErrorBoundary(withSuspense(PopupLayout, <div>Loading ...</div>), <div>Something went wrong</div>);
+export default withErrorBoundary(
+  withSuspense(PopupLayout, <div>Loading ...</div>),
+  <div>Something went wrong</div>
+);
