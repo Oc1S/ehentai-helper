@@ -8,5 +8,5 @@ export default {
   trailingComma: 'es5',
   bracketSpacing: true,
   plugins: ['prettier-plugin-tailwindcss'],
-  tailwindFunctions: ['cn', 'cva'],
+  tailwindFunctions: ['cn'],
 };

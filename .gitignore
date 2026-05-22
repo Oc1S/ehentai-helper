@@ -1,23 +1,37 @@
-# dependencies
-**/node_modules
-
-# testing
-**/coverage
-
-# build
-**/dist
-**/build
-
-# env
-**/.env.local
-**/.env
-
 # etc
 .DS_Store
 .idea
 **/.turbo
 
-# compiled
-apps/chrome-extension/public/manifest.json
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-./plasmo_ver
+# testing
+/coverage
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env
+**/.env.local
+**/.env
+
+# build
+out/
+build/
+dist/
+
+# plasmo
+.plasmo
+
+# typescript
+.tsbuildinfo

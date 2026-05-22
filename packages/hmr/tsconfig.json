@@ -1,7 +1,0 @@
-{
-  "extends": "@ehentai-helper/tsconfig/utils",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": ["lib", "index.ts", "rollup.config.mjs"]
-}

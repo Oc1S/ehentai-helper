@@ -1,8 +1,0 @@
-{
-  "extends": "@ehentai-helper/tsconfig/utils",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "exclude": ["lib/injections/**/*"],
-  "include": ["lib", "index.ts"]
-}

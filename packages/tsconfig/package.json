@@ -1,6 +1,0 @@
-{
-  "name": "@ehentai-helper/tsconfig",
-  "version": "1.0.0",
-  "description": "tsconfig for chrome extension",
-  "private": true
-}
