@@ -80,6 +80,7 @@ export const Download = () => {
   const finishedList = downloadList.filter(item => item.state === 'complete');
 
   const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
+  const [galleryTitle, setGalleryTitle] = useState('');
   useEffect(() => {
     setRange([1, galleryPageInfo.totalImages]);
   }, [galleryInfo]);
@@ -132,10 +133,10 @@ export const Download = () => {
       const responseText = res.data;
       const doc = htmlStr2DOM(responseText);
       let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
-      // original
+      // original pic logic
       if (configRef.current.saveOriginalImages) {
         try {
-          const originalImage = (doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement).getElementsByTagName(
+          const originalImage = (doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement)?.getElementsByTagName(
             'a'
           )[0].href;
           imageUrl = originalImage || imageUrl;
@@ -413,6 +414,7 @@ export const Download = () => {
           const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
           setGalleryPageInfo(pageInfo);
           galleryInfo = await extractGalleryInfo(galleryHtmlStr);
+          setGalleryTitle(galleryInfo.name);
           configRef.current.intermediateDownloadPath += removeInvalidCharFromFilename(galleryInfo.name);
           setStatus(StatusEnum.BeforeDownload);
         });
@@ -447,60 +449,91 @@ export const Download = () => {
   };
 
   return (
-    <div className="relative mx-auto flex h-[480px] w-full flex-col justify-center gap-8">
-      {/* Settings Button */}
-      <div className="absolute right-4 top-4">
+    <div className="relative mx-auto flex h-full min-h-[480px] w-full flex-col px-4 py-6">
+      <div className="absolute right-2 top-2 z-10">
         <DownloadSettings />
       </div>
 
-      {/* Header Area */}
-      <div className="-mt-16 flex flex-col items-center justify-center">{renders.status()}</div>
+      <div className="flex flex-1 flex-col justify-center">
+        {status === StatusEnum.Loading && renders.status()}
 
-      {/* Progress Section */}
-      {[StatusEnum.Downloading, StatusEnum.DownloadSuccess].includes(status) && (
-        <div className="border-t border-gray-700/30 bg-gray-800/20 px-8 py-6">{renders.progress()}</div>
-      )}
+        {/* Error / Other Page States */}
+        {[StatusEnum.OtherPage, StatusEnum.EHentaiOther, StatusEnum.Fail].includes(status) && (
+          <div className="flex justify-center">{renders.status()}</div>
+        )}
 
-      {/* Download selection */}
-      {[StatusEnum.BeforeDownload].includes(status) && (
-        <div className="border-t border-gray-700/30 bg-gray-800/20 px-8 py-6">
-          <div className="space-y-6">
-            {/* Page Range Selector */}
-            {range[1] > 0 && (
-              <div className="space-y-4">
-                <div className="border-b border-gray-600/20 pb-2">
-                  <label className="text-sm font-medium text-gray-200">Range Selection</label>
-                </div>
-                <PageSelector range={range} setRange={setRange} maxValue={totalImages} />
-              </div>
-            )}
-
-            {/* Gallery Statistics */}
-            {!!totalImages && (
-              <div className="rounded-lg border border-gray-600/30 bg-gray-700/30 p-4 backdrop-blur-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-300">Selected</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-white">{downloadCount}</span>
-                    <span className="text-sm text-gray-400">of {totalImages}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Download Button */}
-            <div className="pt-2">
-              <Button
-                size="lg"
-                className="h-12 w-full border border-slate-600 bg-slate-800 font-medium text-slate-100 shadow-sm transition-all duration-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white hover:shadow-md"
-                onPress={handleClickDownload}>
-                <DownloadIcon />
-                Download
-              </Button>
+        {/* Success State */}
+        {status === StatusEnum.DownloadSuccess && (
+          <div className="flex flex-col items-center gap-6">
+            <div className="text-center">
+              <h3 className="mb-2 line-clamp-2 text-lg font-bold text-slate-100">{galleryTitle}</h3>
+              <p className="text-slate-400">All images downloaded successfully</p>
+            </div>
+            {renders.status()}
+            <div className="w-full max-w-sm rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">
+              {renders.progress()}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {status === StatusEnum.BeforeDownload && (
+          <div className="flex flex-col gap-8">
+            <div className="space-y-2 px-8 text-center">
+              <h2 className="line-clamp-2 text-xl font-bold leading-tight text-slate-100" title={galleryTitle}>
+                {galleryTitle}
+              </h2>
+              <p className="text-sm font-medium text-slate-400">{galleryPageInfo.totalImages} images found</p>
+            </div>
+
+            <div className="flex flex-col gap-6 rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 shadow-sm">
+              {/* Range */}
+              {range[1] > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <label className="text-sm font-medium text-slate-300">Range Selection</label>
+                    <span className="text-xs text-slate-500">
+                      {range[0]} - {range[1]}
+                    </span>
+                  </div>
+                  <PageSelector range={range} setRange={setRange} maxValue={totalImages} />
+                </div>
+              )}
+
+              {/* Stats & Button */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 py-3">
+                  <span className="text-sm text-slate-400">Selected</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-bold text-slate-100">{downloadCount}</span>
+                    <span className="text-xs text-slate-500">images</span>
+                  </div>
+                </div>
+
+                <Button
+                  size="lg"
+                  className="w-full border border-slate-600 bg-slate-800 font-semibold text-slate-100 shadow-lg transition-all duration-200 hover:border-slate-500 hover:bg-slate-700 hover:text-white hover:shadow-xl"
+                  onPress={handleClickDownload}>
+                  <DownloadIcon />
+                  Start Download
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {status === StatusEnum.Downloading && (
+          <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-8">
+            <div className="space-y-2 text-center">
+              <h3 className="line-clamp-2 text-lg font-medium text-slate-200">{galleryTitle}</h3>
+              <div className="flex items-center justify-center gap-2">
+                <Spinner size="sm" color="default" />
+                <span className="text-sm text-slate-400">Downloading...</span>
+              </div>
+            </div>
+            <div className="w-full rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">{renders.progress()}</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

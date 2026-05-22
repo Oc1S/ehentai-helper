@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    @apply m-0 h-full w-full p-0;
+    background-color: #040608;
+    font-family:
+      'Roboto Mono',
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  #__plasmo {
+    min-height: 100%;
+    background-color: #040608;
+  }
+}
+
+button {
+  outline: none;
+}
+
+.font-clock {
+  font-family:
+    'Pinyon Script',
+    'Space Grotesk',
+    'Inter',
+    -apple-system,
+    sans-serif;
+  font-feature-settings: 'tnum' 1;
+}
+
+@layer utilities {
+  .glass-dark {
+    @apply border border-white/[0.18] bg-black/70 backdrop-blur-xl;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 22px 48px rgba(2, 8, 16, 0.4);
+  }
+
+  .surface-panel {
+    @apply border border-white/10 bg-slate-950/80 shadow-2xl shadow-black/50;
+  }
+
+  .linear-input {
+    @apply rounded-lg border border-white/[0.14] bg-black/65 px-3 py-2 text-sm text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-white/[0.2] hover:bg-black/70 focus:border-emerald-500/50 focus:bg-black/75 focus:ring-2 focus:ring-emerald-500/20;
+  }
+
+  .scrollbar-glass {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+
+  .scrollbar-glass::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-glass::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-glass::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-glass::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}

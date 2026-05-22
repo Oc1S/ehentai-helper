@@ -1,0 +1,239 @@
+import {
+  Button,
+  type ButtonProps,
+  Chip,
+  type ChipProps,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Input,
+  Pagination,
+  type Selection,
+  type SortDescriptor,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow
+} from '@nextui-org/react';
+import { type ReactNode, FC, useEffect, useMemo, useState } from 'react';
+
+import { useCreation, useStorageSuspense } from '@/shared';
+import { downloadIndexMapStorage, downloadListStorage } from '@/storage';
+
+import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { SearchIcon } from './icons/SearchIcon';
+
+const pageSize = 10;
+
+type DownloadItem = chrome.downloads.DownloadItem;
+type DownloadState = DownloadItem['state'];
+
+const CellButton = ({ children, ...rest }: ButtonProps) => (
+  <Button size="sm" {...rest}>
+    {children}
+  </Button>
+);
+
+const columns = [
+  { key: 'id' },
+  { key: 'state' },
+  { key: 'filename' },
+  { key: 'operation' }
+];
+
+const stateMap: Record<DownloadState, ReactNode> = {
+  in_progress: <>Downloading</>,
+  interrupted: <>Interrupted</>,
+  complete: <>Complete</>
+};
+
+const statusColorMap: Record<DownloadState, ChipProps['color']> = {
+  complete: 'success',
+  in_progress: 'warning',
+  interrupted: 'danger'
+};
+
+export const DownloadTable: FC = () => {
+  const list = useStorageSuspense(downloadListStorage) || [];
+  const indexMap = useStorageSuspense(downloadIndexMapStorage) || {};
+  const [downloadList, setDownloadList] = useState(list);
+  const [page, setPage] = useState(1);
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+    column: 'id',
+    direction: 'ascending'
+  });
+  const [filterValue, setFilterValue] = useState('');
+  const [statusFilter, setStatusFilter] = useState<Selection>('all');
+
+  useEffect(() => {
+    setDownloadList(list);
+  }, [list]);
+
+  const stateSelections: { label: string; id: DownloadItem['state'] }[] = [
+    { id: 'complete', label: 'Complete' },
+    { id: 'in_progress', label: 'InProgress' },
+    { id: 'interrupted', label: 'Interrupted' }
+  ];
+
+  const filteredList = useMemo(() => {
+    let next = downloadList.map(item => {
+      const localPathArr = item.filename.replace(/\\/g, '/').split('/');
+      const filename = localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
+      return {
+        ...item,
+        filename
+      };
+    });
+    next = filterValue ? next.filter(item => item.filename.includes(filterValue)) : next;
+    next = statusFilter === 'all' ? next : next.filter(item => statusFilter.has(item.state));
+    return next;
+  }, [downloadList, filterValue, statusFilter]);
+
+  const pausedIdSet = useCreation(() => new Set<number>());
+
+  const renderCell = (item: DownloadItem, key: string) => {
+    const { state, id, url } = item;
+    const paused = pausedIdSet.has(id);
+    const PauseButton = (
+      <CellButton
+        onClick={() => {
+          paused
+            ? chrome.downloads.resume(id, () => {
+                pausedIdSet.delete(id);
+              })
+            : chrome.downloads.pause(id, () => {
+                pausedIdSet.add(id);
+              });
+        }}>
+        {paused ? 'Resume' : 'Pause'}
+      </CellButton>
+    );
+    const RestartButton = (
+      <CellButton
+        onClick={() => {
+            chrome.downloads.cancel(id, () => {
+              const entry = indexMap[String(id)];
+              const number = entry?.index;
+              setDownloadList(list => {
+                const newList = [...list];
+                const index = newList.findIndex(item => item.id === id);
+                newList.splice(index, 1);
+                return newList;
+              });
+              chrome.downloads.download({ url }, newId => {
+                void chrome.runtime.sendMessage({
+                  type: 'register-download-index',
+                  id: newId,
+                  index: number ?? 0,
+                  total: entry?.total ?? 0,
+                  downloadPath: entry?.downloadPath
+                });
+              });
+            });
+          }}>
+        Restart
+      </CellButton>
+    );
+
+    const operationMap = {
+      interrupted: () => RestartButton,
+      in_progress: () => (
+        <div className="flex gap-2">
+          {PauseButton}
+          {RestartButton}
+        </div>
+      ),
+      complete: () => <></>
+    };
+
+    switch (key) {
+      case 'state':
+        return (
+          <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">
+            {stateMap[item.state]}
+          </Chip>
+        );
+      case 'operation':
+        return operationMap[state]();
+      default:
+        return item[key as keyof DownloadItem] as React.ReactNode;
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-2">
+        <Input
+          isClearable
+          className="w-full max-w-[50%]"
+          placeholder="Search by filename..."
+          startContent={<SearchIcon />}
+          onClear={() => setFilterValue('')}
+          value={filterValue}
+          onValueChange={value => {
+            if (value) {
+              setPage(1);
+              setFilterValue(value);
+            } else {
+              setFilterValue('');
+            }
+          }}
+        />
+        <Dropdown>
+          <DropdownTrigger>
+            <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+              State
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            disallowEmptySelection
+            closeOnSelect={false}
+            selectedKeys={statusFilter}
+            selectionMode="multiple"
+            onSelectionChange={setStatusFilter}>
+            {stateSelections.map(state => (
+              <DropdownItem key={state.id} className="capitalize">
+                {state.label}
+              </DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+      </div>
+      <Table
+        className="w-[680px]"
+        isHeaderSticky
+        sortDescriptor={sortDescriptor}
+        onSortChange={setSortDescriptor}
+        bottomContent={
+          <div className="flex w-full justify-center">
+            <Pagination
+              isCompact
+              showControls
+              showShadow
+              color="default"
+              total={Math.ceil(filteredList.length / pageSize)}
+              page={page}
+              onChange={setPage}
+            />
+          </div>
+        }
+        classNames={{
+          wrapper: 'h-[440px]'
+        }}>
+        <TableHeader columns={columns}>
+          {({ key }) => (
+            <TableColumn key={key} width={key === 'id' ? 100 : 200}>
+              {key.toUpperCase()}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
+          {item => <TableRow key={item.id}>{key => <TableCell>{renderCell(item, key as string)}</TableCell>}</TableRow>}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
