@@ -14,19 +14,33 @@ export const validateFilePath = (path: string) => {
   return path;
 };
 
-const Row = ({ label, content }: Record<'label' | 'content', ReactNode>) => {
-  return (
-    <div className="flex items-center">
-      <div className="flex w-[200px]">{label}:</div>
-      <div className="w-[600px]">{content}</div>
+const Row = ({
+  label,
+  content,
+  variant,
+}: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'page' }) => (
+  <div className={variant === 'page' ? 'settings-row settings-row--page' : 'settings-row'}>
+    <div className={variant === 'page' ? 'settings-label settings-label--page' : 'settings-label'}>
+      {label}
     </div>
-  );
-};
+    <div
+      className={
+        variant === 'page' ? 'settings-content settings-content--page' : 'settings-content'
+      }
+    >
+      {content}
+    </div>
+  </div>
+);
 
-const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputElement>) => (
+const TextInput = ({
+  className,
+  variant,
+  ...rest
+}: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
   <input
     type="text"
-    className={`border-b border-primary bg-transparent text-gray-100 ${className}`}
+    className={`path-input ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
     {...rest}
   />
 );
@@ -34,7 +48,8 @@ const TextInput = ({ className, ...rest }: React.InputHTMLAttributes<HTMLInputEl
 export const Settings: FC<{
   config: Config;
   setConfig: (config: Config) => void;
-}> = ({ config, setConfig }) => {
+  variant?: 'modal' | 'page';
+}> = ({ config, setConfig, variant = 'modal' }) => {
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
       label: (
@@ -43,16 +58,18 @@ export const Settings: FC<{
         </span>
       ),
       content: (
-        <div className="flex items-baseline">
-          <div
-            className="underline"
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="text-link shrink-0"
             onClick={() => {
               chrome.downloads.showDefaultFolder();
             }}
           >
-            [Default download folder]/
-          </div>
+            [Default]/
+          </button>
           <TextInput
+            variant={variant}
             value={config.intermediateDownloadPath}
             onChange={(e) => setConfig({ ...config, intermediateDownloadPath: e.target.value })}
           />
@@ -73,20 +90,18 @@ export const Settings: FC<{
     saveGalleryInfo: {
       label: 'Save gallery information',
       content: (
-        <div className="flex gap-4">
-          <Checkbox
-            isSelected={config.saveGalleryInfo}
-            onChange={(e) => {
-              setConfig({ ...config, saveGalleryInfo: e.target.checked });
-            }}
-          />
-        </div>
+        <Checkbox
+          isSelected={config.saveGalleryInfo}
+          onChange={(e) => {
+            setConfig({ ...config, saveGalleryInfo: e.target.checked });
+          }}
+        />
       ),
     },
     filenameConflictAction: {
       label: (
         <Tooltip content="Action when filename conflict" closeDelay={200}>
-          Filename conflict action
+          Filename conflict
         </Tooltip>
       ),
       content: (
@@ -116,12 +131,9 @@ export const Settings: FC<{
           type="number"
           placeholder="300"
           value={String(config.downloadInterval)}
-          endContent={
-            <div className="pointer-events-none flex items-center">
-              <span className="text-small text-default-400">ms</span>
-            </div>
-          }
+          endContent={<span className="caption-soft">ms</span>}
           className="w-32"
+          size={variant === 'page' ? 'sm' : 'md'}
           onChange={(e) => {
             setConfig({ ...config, downloadInterval: +e.target.value });
           }}
@@ -149,17 +161,21 @@ export const Settings: FC<{
     },
   };
 
+  const panelClass =
+    variant === 'page'
+      ? 'settings-panel settings-panel--page'
+      : 'settings-panel settings-panel--modal';
+
   return (
-    <div className="relative flex flex-col items-center gap-4">
-      <div className="flex flex-col gap-4 rounded-lg bg-content1 p-4">
-        {Object.keys(formItemMap).map((key) => (
-          <Row
-            key={key}
-            label={formItemMap[key as keyof Config].label}
-            content={formItemMap[key as keyof Config].content}
-          />
-        ))}
-      </div>
+    <div className={panelClass}>
+      {Object.keys(formItemMap).map((key) => (
+        <Row
+          key={key}
+          variant={variant}
+          label={formItemMap[key as keyof Config].label}
+          content={formItemMap[key as keyof Config].content}
+        />
+      ))}
     </div>
   );
 };

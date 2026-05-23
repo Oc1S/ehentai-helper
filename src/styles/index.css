@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 
 @tailwind base;
@@ -17,20 +16,19 @@
 
   html,
   body {
-    @apply m-0 h-full w-full p-0;
-    background-color: #040608;
+    @apply m-0 h-full w-full p-0 bg-canvas text-body;
     font-family:
-      'Roboto Mono',
       'Inter',
       -apple-system,
       BlinkMacSystemFont,
       'Segoe UI',
+      'Roboto Mono',
+      Roboto,
       sans-serif;
   }
 
   #__plasmo {
-    min-height: 100%;
-    background-color: #040608;
+    @apply min-h-full bg-canvas;
   }
 
   button {
@@ -38,18 +36,197 @@
   }
 }
 
-@layer utilities {
-  .glass-dark {
-    @apply border border-white/[0.18] bg-black/70 backdrop-blur-xl;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 22px 48px rgba(2, 8, 16, 0.4);
+@layer components {
+  .btn-primary {
+    @apply inline-flex h-10 w-full items-center justify-center gap-2 rounded-cal-md bg-brand-primary px-5 text-sm font-semibold text-on-primary active:bg-brand-primary-active;
+  }
+
+  .btn-primary-auto {
+    @apply btn-primary w-auto;
+  }
+
+  .btn-secondary {
+    @apply inline-flex h-10 items-center justify-center rounded-cal-md border border-hairline bg-canvas px-5 text-sm font-semibold text-ink active:bg-surface-soft;
+  }
+
+  .btn-ghost {
+    @apply inline-flex h-10 items-center justify-center rounded-cal-md px-4 text-sm font-medium text-muted active:bg-surface-soft;
+  }
+
+  .feature-card {
+    @apply rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card;
+  }
+
+  .feature-icon-card {
+    @apply rounded-cal-lg border border-hairline bg-canvas p-6 shadow-card;
+  }
+
+  .product-panel {
+    @apply rounded-cal-lg border border-hairline bg-surface-soft p-6 shadow-card;
   }
 
   .surface-panel {
-    @apply border border-white/10 bg-slate-950/80 shadow-2xl shadow-black/50;
+    @apply rounded-cal-lg border border-hairline bg-surface-card shadow-card-elevated;
   }
 
+  .text-input-cal {
+    @apply h-10 rounded-cal-md border border-hairline bg-canvas px-3.5 text-base text-ink outline-none focus:border-ink;
+  }
+
+  .path-input {
+    @apply flex-1 border-b border-hairline bg-transparent px-2 py-1 text-sm text-ink outline-none focus:border-ink;
+  }
+
+  .nav-pill-group {
+    @apply inline-flex rounded-full bg-surface-soft p-1.5;
+  }
+
+  .nav-pill-active {
+    @apply rounded-cal-md bg-canvas px-3.5 py-2 text-sm font-medium text-ink shadow-pill;
+  }
+
+  .nav-pill-inactive {
+    @apply rounded-cal-md px-3.5 py-2 text-sm font-medium text-muted;
+  }
+
+  .app-header {
+    @apply flex h-16 items-center justify-between border-b border-hairline-soft px-4;
+  }
+
+  .app-title {
+    @apply font-display text-sm font-semibold tracking-tight text-ink;
+  }
+
+  .display-sm {
+    @apply font-display text-display-sm tracking-tight text-ink;
+  }
+
+  .title-lg {
+    @apply font-display text-title-lg tracking-tight text-ink;
+  }
+
+  .title-md {
+    @apply text-title-md text-ink;
+  }
+
+  .title-sm {
+    @apply text-title-sm text-ink;
+  }
+
+  .body-md {
+    @apply text-base leading-relaxed text-body;
+  }
+
+  .body-sm {
+    @apply text-sm leading-relaxed text-body;
+  }
+
+  .caption {
+    @apply text-sm font-medium text-muted;
+  }
+
+  .caption-soft {
+    @apply text-xs text-muted-soft;
+  }
+
+  .text-link {
+    @apply text-sm font-medium text-ink underline underline-offset-2;
+  }
+
+  .stat-row {
+    @apply flex items-center justify-between rounded-cal-lg border border-hairline bg-surface-soft px-4 py-3;
+  }
+
+  .settings-panel {
+    @apply flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card;
+  }
+
+  .settings-row {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-center;
+  }
+
+  .settings-label {
+    @apply w-full shrink-0 text-sm font-medium text-muted sm:w-[200px];
+  }
+
+  .settings-content {
+    @apply w-full flex-1 text-sm text-body;
+  }
+
+  .status-card {
+    @apply flex flex-col items-center gap-4 rounded-cal-lg border p-6 shadow-card;
+  }
+
+  .status-card-info {
+    @apply status-card border-hairline bg-canvas;
+  }
+
+  .status-card-warning {
+    @apply status-card border-warning/30 bg-surface-card;
+  }
+
+  .status-card-success {
+    @apply status-card border-success/30 bg-surface-card;
+  }
+
+  .status-card-error {
+    @apply status-card border-error/30 bg-surface-card;
+  }
+
+  .icon-circle {
+    @apply flex h-12 w-12 items-center justify-center rounded-full;
+  }
+
+  .icon-circle-info {
+    @apply icon-circle bg-primary/15 text-primary;
+  }
+
+  .icon-circle-warning {
+    @apply icon-circle bg-warning/15 text-warning;
+  }
+
+  .icon-circle-success {
+    @apply icon-circle bg-success/15 text-success;
+  }
+
+  .icon-circle-error {
+    @apply icon-circle bg-error/15 text-error;
+  }
+
+  .status-title {
+    @apply text-sm font-semibold text-ink;
+  }
+
+  .status-desc {
+    @apply text-xs leading-relaxed text-muted;
+  }
+
+  .progress-meta {
+    @apply flex items-center justify-between text-sm;
+  }
+
+  .progress-count {
+    @apply text-lg font-semibold text-ink;
+  }
+
+  .progress-total {
+    @apply text-lg font-medium text-muted;
+  }
+
+  .settings-panel--modal {
+    @apply gap-3 p-4;
+  }
+
+  .table-toolbar {
+    @apply flex flex-wrap items-center gap-3;
+  }
+
+  .badge-pill {
+    @apply inline-flex items-center rounded-full bg-surface-card px-3 py-1 text-xs font-medium text-muted;
+  }
+}
+
+@layer utilities {
   .scrollbar-glass {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.12) transparent;

@@ -7,49 +7,49 @@ type PageSelectorProps = {
 } & SliderProps;
 
 export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange, ...rest }) => {
-  const renderValue = () => {
-    return (
-      <div className="flex items-center gap-0.5">
-        <Input
-          type="number"
-          min={1}
-          value={String(range[0])}
-          max={range[1]}
-          size="sm"
-          onChange={(e) => {
-            const { value } = e.target;
-            range[0] = Number(value);
-            setRange([...range]);
-          }}
-        />
-        -
-        <Input
-          type="number"
-          min={range[0]}
-          value={String(range[1])}
-          max={maxValue}
-          size="sm"
-          onChange={(e) => {
-            const { value } = e.target;
-            range[1] = Number(value);
-            setRange([...range]);
-          }}
-        />
-      </div>
-    );
-  };
+  const renderValue = () => (
+    <div className="flex shrink-0 items-center gap-1">
+      <Input
+        type="number"
+        min={1}
+        value={String(range[0])}
+        max={range[1]}
+        size="sm"
+        className="w-[72px]"
+        onChange={(e) => {
+          const { value } = e.target;
+          range[0] = Number(value);
+          setRange([...range]);
+        }}
+      />
+      <span className="caption-soft">–</span>
+      <Input
+        type="number"
+        min={range[0]}
+        value={String(range[1])}
+        max={maxValue}
+        size="sm"
+        className="w-[72px]"
+        onChange={(e) => {
+          const { value } = e.target;
+          range[1] = Number(value);
+          setRange([...range]);
+        }}
+      />
+    </div>
+  );
+
   return (
     <Slider
-      label={<span className="whitespace-nowrap pr-2">Page Range:</span>}
+      label={<span className="caption shrink-0">Range</span>}
       size="sm"
       value={range}
       step={1}
       minValue={1}
       maxValue={maxValue}
       classNames={{
-        base: 'w-60 gap-3',
-        filler: 'bg-gradient-to-r from-slate-700 to-slate-500',
-        track: 'h-6',
+        base: 'w-full max-w-full gap-3',
+        track: 'h-2',
       }}
       renderValue={renderValue}
       onChange={(val) => {
@@ -58,9 +58,9 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       renderThumb={({ index, ...props }) => (
         <div
           {...props}
-          className={`group top-1/2 flex h-6 w-6 cursor-grab items-center justify-center rounded-full shadow-medium data-[dragging=true]:cursor-grabbing ${index === 0 ? 'bg-slate-700' : 'bg-slate-500'}`}
+          className={`group top-1/2 flex h-5 w-5 cursor-grab items-center justify-center rounded-full border-2 border-canvas bg-ink shadow-pill data-[dragging=true]:cursor-grabbing ${index === 0 ? 'bg-ink' : 'bg-muted'}`}
         >
-          <span className="block h-3/4 w-3/4 rounded-full bg-white/80 shadow-small transition-transform group-data-[dragging=true]:scale-95" />
+          <span className="block h-2 w-2 rounded-full bg-canvas" />
         </div>
       )}
       {...rest}

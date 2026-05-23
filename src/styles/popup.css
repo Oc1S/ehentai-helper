@@ -1,4 +1,214 @@
-html {
-  width: 800px;
-  height: 600px;
+/* Popup viewport: 800 × 600 */
+:root {
+  --popup-w: 800px;
+  --popup-h: 600px;
+  --popup-header-h: 48px;
+  --popup-tabs-h: 40px;
+  --popup-gutter: 16px;
+  --popup-content-h: calc(var(--popup-h) - var(--popup-header-h) - var(--popup-tabs-h) - var(--popup-gutter) * 2);
+}
+
+html,
+body {
+  width: var(--popup-w);
+  height: var(--popup-h);
+  overflow: hidden;
+}
+
+#__plasmo {
+  width: var(--popup-w);
+  height: var(--popup-h);
+  overflow: hidden;
+}
+
+/* Shell */
+.popup-shell {
+  display: flex;
+  flex-direction: column;
+  width: var(--popup-w);
+  height: var(--popup-h);
+  overflow: hidden;
+  background-color: #040608;
+}
+
+.popup-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--popup-header-h);
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup-header__title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f4f4f5;
+}
+
+.popup-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px var(--popup-gutter) var(--popup-gutter);
+}
+
+.popup-tab-scroll {
+  height: var(--popup-content-h);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.popup-tab-scroll--center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+}
+
+.popup-data-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: var(--popup-content-h);
+  min-height: 0;
+}
+
+.popup-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Compact custom components (non-NextUI) */
+.popup-shell .feature-card {
+  padding: 16px;
+  border-radius: 12px;
+  gap: 16px;
+}
+
+.popup-shell .product-panel {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.popup-shell .stat-row {
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.popup-shell .btn-primary {
+  height: 40px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.popup-shell .status-card {
+  width: 100%;
+  max-width: 400px;
+  margin-inline: auto;
+  padding: 20px 18px;
+  border-radius: 12px;
+}
+
+.popup-shell .icon-circle {
+  width: 40px;
+  height: 40px;
+}
+
+.popup-shell .icon-circle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.popup-shell .status-title {
+  font-size: 14px;
+}
+
+.popup-shell .status-desc {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.popup-shell .title-md {
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.popup-shell .title-sm {
+  font-size: 15px;
+}
+
+.popup-shell .caption {
+  font-size: 13px;
+}
+
+.popup-shell .caption-soft {
+  font-size: 11px;
+}
+
+.popup-shell .progress-count {
+  font-size: 16px;
+}
+
+.popup-shell .progress-total {
+  font-size: 16px;
+}
+
+.popup-shell .text-link {
+  font-size: 13px;
+}
+
+.popup-shell .gallery-hero {
+  padding: 0 8px 4px;
+  text-align: center;
+}
+
+.popup-shell .download-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.popup-shell .state-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 4px 12px;
+}
+
+.popup-shell .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: var(--popup-content-h);
+}
+
+.popup-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.popup-toolbar__meta {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.popup-range-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }

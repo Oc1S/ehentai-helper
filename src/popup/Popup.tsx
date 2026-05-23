@@ -1,6 +1,6 @@
-import { Link, Progress, Spinner, Tabs, Tab } from '@nextui-org/react';
-import axios from 'axios';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
+import axios from 'axios';
 
 import { AppShell } from '@/app';
 import {
@@ -30,11 +30,12 @@ import {
   removeInvalidCharFromFilename,
 } from '@/utils';
 
-import { DownloadIcon } from './components/icons/DownloadIcon';
 import { DownloadSettings } from './components/DownloadSettings';
-import { DownloadTable } from './components/Table';
 import { History } from './components/History';
+import { DownloadIcon } from './components/icons/DownloadIcon';
 import { PageSelector } from './components/PageSelector';
+import { StatusCard } from './components/StatusCard';
+import { DownloadTable } from './components/Table';
 
 enum StatusEnum {
   Loading = 0,
@@ -52,6 +53,40 @@ const sendRuntimeMessage = (message: Record<string, unknown>) =>
   new Promise<void>((resolve) => {
     chrome.runtime.sendMessage(message, () => resolve());
   });
+
+const InfoIcon = () => (
+  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+    />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
 const PopupLayout = () => {
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
@@ -250,96 +285,56 @@ const PopupLayout = () => {
         default:
         case StatusEnum.Loading:
           return (
-            <div className="fixed inset-0 flex flex-col items-center justify-center gap-4">
+            <div className="loading-state">
               <Spinner size="lg" color="primary" />
-              <p className="animate-pulse text-sm text-gray-400">Initializing...</p>
+              <p className="caption animate-pulse">Initializing...</p>
             </div>
           );
         case StatusEnum.EHentaiOther:
           return (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20">
-                <svg
-                  className="h-6 w-6 text-amber-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <h3 className="mb-1 text-sm font-medium text-amber-100">
-                  Non-gallery Page Detected
-                </h3>
-                <p className="text-xs text-amber-200/80">
-                  Navigate to a gallery page to start downloading
-                </p>
-              </div>
-            </div>
+            <StatusCard
+              variant="warning"
+              icon={<InfoIcon />}
+              title="Non-gallery Page Detected"
+              description="Navigate to a gallery page to start downloading"
+            />
           );
         case StatusEnum.OtherPage:
           return (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800/40 to-gray-900/40 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/20">
-                <svg
-                  className="h-6 w-6 text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                  />
-                </svg>
+            <StatusCard
+              variant="info"
+              icon={<LinkIcon />}
+              title="Navigate to Gallery"
+              description="Visit a gallery page to start downloading"
+            >
+              <div className="body-sm flex items-center justify-center gap-2">
+                <span>Go to</span>
+                <Link href="https://e-hentai.org/" isExternal className="text-link">
+                  E-Hentai
+                </Link>
+                <span className="caption-soft">or</span>
+                <Link href="https://exhentai.org/" isExternal className="text-link">
+                  ExHentai
+                </Link>
               </div>
-              <div className="space-y-4 text-center">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-white">Navigate to Gallery</h3>
-                  <p className="text-xs text-gray-400">Visit a gallery page to start downloading</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                  <span>Go to</span>
-                  <Link href="https://e-hentai.org/" isExternal className="underline">
-                    E-Hentai
-                  </Link>
-                  <span className="text-gray-500">or</span>
-                  <Link href="https://exhentai.org/" isExternal className="underline">
-                    ExHentai
-                  </Link>
-                </div>
-              </div>
-            </div>
+            </StatusCard>
           );
         case StatusEnum.BeforeDownload:
           return (
-            <div className="flex flex-col gap-8">
-              <div className="space-y-2 px-8 text-center">
-                <h2
-                  className="line-clamp-2 text-xl font-bold leading-tight text-slate-100"
-                  title={galleryTitle}
-                >
+            <div className="download-layout">
+              <div className="gallery-hero">
+                <h2 className="title-md line-clamp-2" title={galleryTitle}>
                   {galleryTitle}
                 </h2>
-                <p className="text-sm font-medium text-slate-400">
-                  {galleryPageInfo.totalImages} images found
-                </p>
+                <p className="caption mt-1">{galleryPageInfo.totalImages} images found</p>
               </div>
-              <div className="flex flex-col gap-6 rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 shadow-sm">
+              <div className="feature-card flex flex-col gap-4">
                 {range[1] > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-sm font-medium text-slate-300">Range Selection</label>
-                      <span className="text-xs text-slate-500">
-                        {range[0]} - {range[1]}
+                  <div>
+                    <div className="popup-range-header">
+                      <label className="caption">Range</label>
+                      <span className="caption-soft">
+                        {range[0]} – {range[1]}
                       </span>
                     </div>
                     <PageSelector
@@ -349,18 +344,15 @@ const PopupLayout = () => {
                     />
                   </div>
                 )}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 py-3">
-                    <span className="text-sm text-slate-400">Selected</span>
+                <div className="flex flex-col gap-3">
+                  <div className="stat-row">
+                    <span className="caption">Selected</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-bold text-slate-100">{downloadCount}</span>
-                      <span className="text-xs text-slate-500">images</span>
+                      <span className="progress-count">{downloadCount}</span>
+                      <span className="caption-soft">images</span>
                     </div>
                   </div>
-                  <button
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 font-semibold text-slate-100 transition-all duration-200 hover:border-slate-500 hover:bg-slate-700"
-                    onClick={handleClickDownload}
-                  >
+                  <button type="button" className="btn-primary" onClick={handleClickDownload}>
                     <DownloadIcon />
                     Start Download
                   </button>
@@ -370,163 +362,135 @@ const PopupLayout = () => {
           );
         case StatusEnum.Downloading:
           return (
-            <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-8">
-              <div className="space-y-2 text-center">
-                <h3 className="line-clamp-2 text-lg font-medium text-slate-200">{galleryTitle}</h3>
-                <div className="flex items-center justify-center gap-2">
-                  <Spinner size="sm" color="default" />
-                  <span className="text-sm text-slate-400">Downloading...</span>
+            <div className="download-layout">
+              <div className="gallery-hero">
+                <h3 className="title-sm line-clamp-2">{galleryTitle}</h3>
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <Spinner size="sm" color="primary" />
+                  <span className="caption">Downloading...</span>
                 </div>
               </div>
-              <div className="w-full rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">
-                {renders.progress()}
-              </div>
+              <div className="product-panel w-full">{renders.progress()}</div>
             </div>
           );
         case StatusEnum.DownloadSuccess:
           return (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
-                <svg
-                  className="h-6 w-6 text-green-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <div className="space-y-2 text-center">
-                <h3 className="text-sm font-semibold text-green-100">Download Completed!</h3>
-                <p className="text-xs text-gray-400">
+            <StatusCard
+              variant="success"
+              icon={<CheckIcon />}
+              title="Download Completed!"
+              description={
+                <>
                   Enjoying the extension?{' '}
                   <Link
                     href="https://github.com/Oc1S/ehentai-helper"
                     isExternal
-                    className="underline underline-offset-2"
+                    className="text-link"
                   >
                     Star it on GitHub
                   </Link>
-                </p>
-              </div>
-            </div>
+                </>
+              }
+            />
           );
         case StatusEnum.Fail:
           return (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-rose-500/10 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/20">
-                <svg
-                  className="h-6 w-6 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <h3 className="mb-1 text-sm font-medium text-red-100">Connection Failed</h3>
-                <p className="text-xs text-red-200/80">
-                  Unable to fetch data from server. Please try again later.
-                </p>
-              </div>
-            </div>
+            <StatusCard
+              variant="error"
+              icon={<CloseIcon />}
+              title="Connection Failed"
+              description="Unable to fetch data from server. Please try again later."
+            />
           );
       }
     },
     progress: () => (
-      <div className="w-full max-w-sm space-y-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400">Progress</span>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-white">{finishedList.length}</span>
-            <span className="text-gray-500">/</span>
-            <span className="text-lg font-medium text-gray-300">{downloadCount}</span>
+      <div className="w-full space-y-3">
+        <div className="progress-meta">
+          <span className="caption">Progress</span>
+          <div className="flex items-center gap-1.5">
+            <span className="progress-count">{finishedList.length}</span>
+            <span className="caption-soft">/</span>
+            <span className="progress-total">{downloadCount}</span>
           </div>
         </div>
-        <div className="space-y-2">
-          <Progress
-            aria-label="Download progress"
-            value={finishedList.length}
-            minValue={0}
-            maxValue={downloadCount}
-            className="w-full"
-            classNames={{
-              base: 'max-w-md',
-              track: 'drop-shadow-md border border-default',
-              indicator: 'bg-gradient-to-r from-primary-500 to-primaryBlue-500',
-              label: 'tracking-wider font-medium text-default-600',
-              value: 'text-foreground-600',
-            }}
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>{Math.round((finishedList.length / downloadCount) * 100)}% complete</span>
-            <span>{downloadCount - finishedList.length} remaining</span>
-          </div>
+        <Progress
+          aria-label="Download progress"
+          value={finishedList.length}
+          minValue={0}
+          maxValue={downloadCount}
+          className="w-full"
+          color="primary"
+          size="sm"
+        />
+        <div className="caption-soft flex justify-between">
+          <span>
+            {downloadCount > 0
+              ? `${Math.round((finishedList.length / downloadCount) * 100)}% complete`
+              : '0% complete'}
+          </span>
+          <span>{Math.max(0, downloadCount - finishedList.length)} remaining</span>
         </div>
       </div>
     ),
   };
 
+  const isCenteredStatus = [
+    StatusEnum.OtherPage,
+    StatusEnum.EHentaiOther,
+    StatusEnum.Fail,
+  ].includes(status);
+
   return (
     <AppShell>
-      <div className="flex h-full w-full flex-col">
-        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-          <div className="text-sm font-medium text-slate-300">Ehentai Helper</div>
+      <div className="popup-shell">
+        <header className="popup-header">
+          <span className="popup-header__title">E-Hentai Helper</span>
           <DownloadSettings />
-        </div>
-        <Tabs aria-label="popup tabs" className="px-4 pt-3">
-          <Tab key="info" title="Info">
-            <div className="pt-4">
-              {status === StatusEnum.Loading && renders.status()}
-              {[StatusEnum.OtherPage, StatusEnum.EHentaiOther, StatusEnum.Fail].includes(
-                status
-              ) && <div className="flex justify-center">{renders.status()}</div>}
-              {status === StatusEnum.DownloadSuccess && (
-                <div className="flex flex-col items-center gap-6">
-                  <div className="text-center">
-                    <h3 className="mb-2 line-clamp-2 text-lg font-bold text-slate-100">
-                      {galleryTitle}
-                    </h3>
-                    <p className="text-slate-400">All images downloaded successfully</p>
+        </header>
+        <div className="popup-body">
+          <Tabs aria-label="popup tabs" className="popup-tabs">
+            <Tab key="info" title="Info">
+              <div
+                className={`popup-tab-scroll scrollbar-glass ${isCenteredStatus ? 'popup-tab-scroll--center' : ''}`}
+              >
+                {status === StatusEnum.Loading && renders.status()}
+                {isCenteredStatus && renders.status()}
+                {status === StatusEnum.DownloadSuccess && (
+                  <div className="state-stack">
+                    <div className="gallery-hero w-full">
+                      <h3 className="title-sm line-clamp-2">{galleryTitle}</h3>
+                      <p className="caption mt-1">All images downloaded successfully</p>
+                    </div>
+                    {renders.status()}
+                    <div className="product-panel w-full">{renders.progress()}</div>
                   </div>
-                  {renders.status()}
-                  <div className="w-full max-w-sm rounded-xl border border-slate-700/50 bg-slate-800/30 p-6">
-                    {renders.progress()}
-                  </div>
-                </div>
-              )}
-              {status === StatusEnum.BeforeDownload && renders.status()}
-              {status === StatusEnum.Downloading && renders.status()}
-            </div>
-          </Tab>
-          <Tab key="downloadList" title="DownloadList">
-            <div className="pt-4">
+                )}
+                {status === StatusEnum.BeforeDownload && renders.status()}
+                {status === StatusEnum.Downloading && renders.status()}
+              </div>
+            </Tab>
+            <Tab key="downloadList" title="Downloads">
               <DownloadTable />
-            </div>
-          </Tab>
-          <Tab key="history" title="History">
-            <div className="pt-4">
+            </Tab>
+            <Tab key="history" title="History">
               <History />
-            </div>
-          </Tab>
-        </Tabs>
+            </Tab>
+          </Tabs>
+        </div>
       </div>
     </AppShell>
   );
 };
 
 export default withErrorBoundary(
-  withSuspense(PopupLayout, <div>Loading ...</div>),
-  <div>Something went wrong</div>
+  withSuspense(
+    PopupLayout,
+    <div className="popup-shell loading-state">
+      <p className="caption">Loading...</p>
+    </div>
+  ),
+  <div className="popup-shell loading-state">
+    <p className="status-desc">Something went wrong</p>
+  </div>
 );

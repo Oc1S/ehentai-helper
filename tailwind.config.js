@@ -10,6 +10,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        canvas: '#040608',
+        ink: '#f4f4f5',
+        body: '#d4d4d8',
+        muted: {
+          DEFAULT: '#a1a1aa',
+          soft: '#71717a',
+        },
+        hairline: {
+          DEFAULT: 'rgba(255, 255, 255, 0.14)',
+          soft: 'rgba(255, 255, 255, 0.08)',
+        },
+        surface: {
+          soft: '#0f1115',
+          card: '#141820',
+          strong: '#1e2430',
+          dark: '#101010',
+          'dark-elevated': '#1a1a1a',
+        },
+        brand: {
+          accent: '#3b82f6',
+          primary: '#f4f4f5',
+          'primary-active': '#e4e4e7',
+        },
         primary: {
           50: '#E6FFFA',
           100: '#B2F5EA',
@@ -38,6 +61,51 @@ module.exports = {
           DEFAULT: '#0EA5E9',
           foreground: '#1a1a1a',
         },
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#ef4444',
+        on: {
+          primary: '#111111',
+          dark: '#ffffff',
+          'dark-soft': '#a1a1aa',
+        },
+      },
+      fontFamily: {
+        sans: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
+        display: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
+        mono: ['"Roboto Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'display-sm': ['28px', { lineHeight: '1.2', letterSpacing: '-0.5px', fontWeight: '600' }],
+        'title-lg': ['22px', { lineHeight: '1.3', letterSpacing: '-0.3px', fontWeight: '600' }],
+        'title-md': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+        'title-sm': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
+      },
+      borderRadius: {
+        'cal-xs': '4px',
+        'cal-sm': '6px',
+        'cal-md': '8px',
+        'cal-lg': '12px',
+        'cal-xl': '16px',
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(0, 0, 0, 0.3)',
+        'card-elevated': '0 4px 12px rgba(0, 0, 0, 0.4)',
+        pill: '0 1px 2px rgba(0, 0, 0, 0.25)',
       },
     },
   },

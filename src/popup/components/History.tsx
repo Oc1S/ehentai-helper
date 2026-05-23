@@ -18,7 +18,7 @@ const columns = [
   { key: 'name', label: 'NAME' },
   { key: 'range', label: 'RANGE' },
   { key: 'time', label: 'TIME' },
-  { key: 'op', label: 'OPERATION' },
+  { key: 'op', label: 'OP' },
 ];
 
 const formatTime = (ts: number) => new Date(ts).toLocaleString();
@@ -36,22 +36,21 @@ export const History: FC = () => {
   }, [data, keyword]);
 
   return (
-    <div className="flex w-[640px] flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Input
-            size="sm"
-            placeholder="Search by name..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            isClearable
-            onClear={() => setKeyword('')}
-            className="w-64"
-          />
-          <div className="text-sm text-gray-400">
-            Records：{filteredData.length} / {data.length}
-          </div>
-        </div>
+    <div className="popup-data-panel">
+      <div className="popup-toolbar">
+        <Input
+          size="sm"
+          placeholder="Search by name..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          isClearable
+          onClear={() => setKeyword('')}
+          className="max-w-[280px] flex-1"
+        />
+        <span className="popup-toolbar__meta">
+          {filteredData.length} / {data.length} records
+        </span>
+        <div className="flex-1" />
         <Button
           size="sm"
           color="danger"
@@ -61,10 +60,20 @@ export const History: FC = () => {
           Clear All
         </Button>
       </div>
-      <Table aria-label="download history">
+      <Table
+        aria-label="download history"
+        classNames={{
+          wrapper: 'popup-table-wrapper',
+          th: 'text-xs',
+          td: 'text-sm',
+        }}
+      >
         <TableHeader columns={columns}>
           {(col) => (
-            <TableColumn key={col.key} width={col.key === 'name' ? 260 : 100}>
+            <TableColumn
+              key={col.key}
+              width={col.key === 'name' ? 280 : col.key === 'time' ? 160 : 80}
+            >
               {col.label}
             </TableColumn>
           )}
@@ -76,15 +85,17 @@ export const History: FC = () => {
                 <Link
                   href={item.url}
                   isExternal
-                  className="text-sm text-primary-400 underline underline-offset-2"
+                  className="line-clamp-1 text-sm text-primary underline underline-offset-2"
                 >
                   {item.name}
                 </Link>
               </TableCell>
-              <TableCell>
-                {item.range[0]} - {item.range[1]}
+              <TableCell className="text-default-400">
+                {item.range[0]}–{item.range[1]}
               </TableCell>
-              <TableCell>{formatTime(item.timestamp)}</TableCell>
+              <TableCell className="whitespace-nowrap text-default-400">
+                {formatTime(item.timestamp)}
+              </TableCell>
               <TableCell>
                 <Button
                   size="sm"

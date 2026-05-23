@@ -9,9 +9,9 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:import/recommended',
     'prettier',
   ],
+  plugins: ['react', '@typescript-eslint', 'react-hooks', 'prettier', 'simple-import-sort'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
@@ -20,14 +20,6 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: [
-    'react',
-    '@typescript-eslint',
-    'react-hooks',
-    'import',
-    'prettier',
-    'simple-import-sort',
-  ],
   settings: {
     react: {
       version: 'detect',
@@ -41,11 +33,11 @@ module.exports = {
       },
     ],
     'simple-import-sort/exports': 'warn',
-    'import/named': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/consistent-type-imports': 'warn',
+    '@typescript-eslint/no-unused-expressions': 'off',
     'prefer-const': 'off',
     'react/react-in-jsx-scope': 'off',
-    'import/no-unresolved': 'off',
     'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/no-explicit-any': 'off',

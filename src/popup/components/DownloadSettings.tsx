@@ -54,12 +54,7 @@ export const DownloadSettings = () => {
 
   return (
     <>
-      <Button
-        size="sm"
-        variant="flat"
-        className="border border-slate-600/30 bg-slate-800/60 text-slate-200 shadow-lg backdrop-blur-sm transition-all duration-200 hover:border-slate-500/50 hover:bg-slate-700/80 hover:shadow-xl"
-        onPress={onOpen}
-      >
+      <Button size="sm" variant="flat" onPress={onOpen}>
         Settings
       </Button>
 
@@ -75,7 +70,9 @@ export const DownloadSettings = () => {
                 <Button variant="light" onPress={onClose}>
                   Cancel
                 </Button>
-                <Button onPress={handleSave}>Save Settings</Button>
+                <Button color="primary" onPress={handleSave}>
+                  Save Settings
+                </Button>
               </ModalFooter>
             </>
           )}

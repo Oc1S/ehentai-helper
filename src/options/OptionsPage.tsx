@@ -30,14 +30,22 @@ export const OptionsPage = () => {
 
   return (
     <AppShell>
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-4 px-8 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-slate-100">Options</h1>
-          <Button color="primary" onPress={handleSave}>
-            Save
-          </Button>
+      <div className="options-root">
+        <div className="options-shell">
+          <header className="options-header">
+            <div className="options-header__text">
+              <h1 className="options-header__title">Settings</h1>
+              <p className="options-header__desc">E-Hentai Helper · Download preferences</p>
+            </div>
+            <Button color="primary" onPress={handleSave}>
+              Save changes
+            </Button>
+          </header>
+          <main className="options-main scrollbar-glass">
+            <p className="settings-section-title">General</p>
+            <Settings config={config} setConfig={setConfig} variant="page" />
+          </main>
         </div>
-        <Settings config={config} setConfig={setConfig} />
       </div>
     </AppShell>
   );

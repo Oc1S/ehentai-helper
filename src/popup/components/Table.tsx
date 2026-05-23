@@ -1,3 +1,5 @@
+import type { FC } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   type ButtonProps,
@@ -18,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
-import { type ReactNode, FC, useEffect, useMemo, useState } from 'react';
 
 import { useCreation, useStorageSuspense } from '@/shared';
 import { downloadIndexMapStorage, downloadListStorage } from '@/storage';
@@ -37,7 +38,12 @@ const CellButton = ({ children, ...rest }: ButtonProps) => (
   </Button>
 );
 
-const columns = [{ key: 'id' }, { key: 'state' }, { key: 'filename' }, { key: 'operation' }];
+const columns = [
+  { key: 'id', label: 'ID', width: 72 },
+  { key: 'state', label: 'STATE', width: 110 },
+  { key: 'filename', label: 'FILE', width: 320 },
+  { key: 'operation', label: 'ACTION', width: 180 },
+];
 
 const stateMap: Record<DownloadState, ReactNode> = {
   in_progress: <>Downloading</>,
@@ -69,7 +75,7 @@ export const DownloadTable: FC = () => {
 
   const stateSelections: { label: string; id: DownloadItem['state'] }[] = [
     { id: 'complete', label: 'Complete' },
-    { id: 'in_progress', label: 'InProgress' },
+    { id: 'in_progress', label: 'In Progress' },
     { id: 'interrupted', label: 'Interrupted' },
   ];
 
@@ -139,12 +145,12 @@ export const DownloadTable: FC = () => {
     const operationMap = {
       interrupted: () => RestartButton,
       in_progress: () => (
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {PauseButton}
           {RestartButton}
         </div>
       ),
-      complete: () => <></>,
+      complete: () => null,
     };
 
     switch (key) {
@@ -154,6 +160,8 @@ export const DownloadTable: FC = () => {
             {stateMap[item.state]}
           </Chip>
         );
+      case 'filename':
+        return <span className="line-clamp-1">{item.filename}</span>;
       case 'operation':
         return operationMap[state]();
       default:
@@ -162,13 +170,14 @@ export const DownloadTable: FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
+    <div className="popup-data-panel">
+      <div className="popup-toolbar">
         <Input
           isClearable
-          className="w-full max-w-[50%]"
-          placeholder="Search by filename..."
+          className="max-w-[320px] flex-1"
+          placeholder="Search filename..."
           startContent={<SearchIcon />}
+          size="sm"
           onClear={() => setFilterValue('')}
           value={filterValue}
           onValueChange={(value) => {
@@ -182,8 +191,12 @@ export const DownloadTable: FC = () => {
         />
         <Dropdown>
           <DropdownTrigger>
-            <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
-              State
+            <Button
+              size="sm"
+              endContent={<ChevronDownIcon className="text-small" />}
+              variant="flat"
+            >
+              Filter
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -200,33 +213,35 @@ export const DownloadTable: FC = () => {
             ))}
           </DropdownMenu>
         </Dropdown>
+        <span className="popup-toolbar__meta">{filteredList.length} items</span>
       </div>
       <Table
-        className="w-[680px]"
         isHeaderSticky
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
         bottomContent={
-          <div className="flex w-full justify-center">
+          <div className="flex w-full justify-center border-t border-divider py-2">
             <Pagination
               isCompact
               showControls
-              showShadow
-              color="default"
-              total={Math.ceil(filteredList.length / pageSize)}
+              color="primary"
+              size="sm"
+              total={Math.max(1, Math.ceil(filteredList.length / pageSize))}
               page={page}
               onChange={setPage}
             />
           </div>
         }
         classNames={{
-          wrapper: 'h-[440px]',
+          wrapper: 'popup-table-wrapper',
+          th: 'text-xs font-medium',
+          td: 'text-sm',
         }}
       >
         <TableHeader columns={columns}>
-          {({ key }) => (
-            <TableColumn key={key} width={key === 'id' ? 100 : 200}>
-              {key.toUpperCase()}
+          {(col) => (
+            <TableColumn key={col.key} width={col.width}>
+              {col.label}
             </TableColumn>
           )}
         </TableHeader>

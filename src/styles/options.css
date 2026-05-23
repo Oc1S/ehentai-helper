@@ -1,0 +1,118 @@
+/* Options page — same 800px content width as popup, full-height tab */
+:root {
+  --options-content-w: 800px;
+  --options-header-h: 56px;
+  --options-gutter: 24px;
+}
+
+.options-root {
+  min-height: 100vh;
+  background-color: #040608;
+}
+
+.options-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--options-content-w);
+  min-height: 100vh;
+  margin-inline: auto;
+}
+
+.options-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--options-header-h);
+  padding: 0 var(--options-gutter);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #040608;
+}
+
+.options-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.options-header__title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f4f4f5;
+}
+
+.options-header__desc {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.options-main {
+  flex: 1;
+  padding: var(--options-gutter);
+}
+
+/* Scoped compact styles (non-NextUI) — mirror popup-shell */
+.options-shell .settings-panel--page {
+  padding: 4px 20px;
+  border-radius: 12px;
+}
+
+.options-shell .settings-row--page {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.options-shell .settings-row--page:last-child {
+  border-bottom: none;
+}
+
+.options-shell .settings-label--page {
+  width: 200px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #a1a1aa;
+}
+
+.options-shell .settings-content--page {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: #d4d4d8;
+}
+
+.options-shell .path-input--page {
+  width: 100%;
+  max-width: 420px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background-color: #040608;
+}
+
+.options-shell .path-input--page:focus {
+  border-color: #f4f4f5;
+}
+
+.options-shell .text-link {
+  font-size: 13px;
+}
+
+.options-shell .settings-section-title {
+  margin-bottom: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #71717a;
+}
