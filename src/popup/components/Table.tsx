@@ -170,8 +170,8 @@ export const DownloadTable: FC = () => {
   };
 
   return (
-    <div className="popup-data-panel">
-      <div className="popup-toolbar">
+    <div className="flex h-popup-content min-h-0 flex-col gap-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-2.5">
         <Input
           isClearable
           className="max-w-[320px] flex-1"
@@ -213,7 +213,7 @@ export const DownloadTable: FC = () => {
             ))}
           </DropdownMenu>
         </Dropdown>
-        <span className="popup-toolbar__meta">{filteredList.length} items</span>
+        <span className="text-xs text-muted">{filteredList.length} items</span>
       </div>
       <Table
         isHeaderSticky
@@ -233,7 +233,7 @@ export const DownloadTable: FC = () => {
           </div>
         }
         classNames={{
-          wrapper: 'popup-table-wrapper',
+          wrapper: 'min-h-0 flex-1 overflow-auto',
           th: 'text-xs font-medium',
           td: 'text-sm',
         }}

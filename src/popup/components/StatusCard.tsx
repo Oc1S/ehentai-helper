@@ -31,11 +31,13 @@ export const StatusCard = ({
   children?: ReactNode;
   className?: string;
 }) => (
-  <div className={`${cardClass[variant]} ${className}`.trim()}>
-    <div className={iconClass[variant]}>{icon}</div>
+  <div
+    className={`${cardClass[variant]} mx-auto w-full max-w-[400px] px-[18px] py-5 ${className}`.trim()}
+  >
+    <div className={`${iconClass[variant]} h-10 w-10 [&_svg]:h-5 [&_svg]:w-5`}>{icon}</div>
     <div className="w-full space-y-2 text-center">
-      <h3 className="status-title">{title}</h3>
-      {description && <div className="status-desc">{description}</div>}
+      <h3 className="text-sm font-semibold text-ink">{title}</h3>
+      {description && <div className="text-xs leading-relaxed text-muted">{description}</div>}
       {children}
     </div>
   </div>

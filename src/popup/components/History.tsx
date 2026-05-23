@@ -36,8 +36,8 @@ export const History: FC = () => {
   }, [data, keyword]);
 
   return (
-    <div className="popup-data-panel">
-      <div className="popup-toolbar">
+    <div className="flex h-popup-content min-h-0 flex-col gap-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-2.5">
         <Input
           size="sm"
           placeholder="Search by name..."
@@ -47,7 +47,7 @@ export const History: FC = () => {
           onClear={() => setKeyword('')}
           className="max-w-[280px] flex-1"
         />
-        <span className="popup-toolbar__meta">
+        <span className="text-xs text-muted">
           {filteredData.length} / {data.length} records
         </span>
         <div className="flex-1" />
@@ -63,7 +63,7 @@ export const History: FC = () => {
       <Table
         aria-label="download history"
         classNames={{
-          wrapper: 'popup-table-wrapper',
+          wrapper: 'min-h-0 flex-1 overflow-auto',
           th: 'text-xs',
           td: 'text-sm',
         }}

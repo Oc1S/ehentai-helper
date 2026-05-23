@@ -285,9 +285,9 @@ const PopupLayout = () => {
         default:
         case StatusEnum.Loading:
           return (
-            <div className="loading-state">
+            <div className="flex h-popup-content flex-col items-center justify-center gap-3">
               <Spinner size="lg" color="primary" />
-              <p className="caption animate-pulse">Initializing...</p>
+              <p className="animate-pulse text-[13px] font-medium text-muted">Initializing...</p>
             </div>
           );
         case StatusEnum.EHentaiOther:
@@ -309,11 +309,19 @@ const PopupLayout = () => {
             >
               <div className="body-sm flex items-center justify-center gap-2">
                 <span>Go to</span>
-                <Link href="https://e-hentai.org/" isExternal className="text-link">
+                <Link
+                  href="https://e-hentai.org/"
+                  isExternal
+                  className="text-[13px] font-medium text-ink underline underline-offset-2"
+                >
                   E-Hentai
                 </Link>
-                <span className="caption-soft">or</span>
-                <Link href="https://exhentai.org/" isExternal className="text-link">
+                <span className="text-[11px] text-muted-soft">or</span>
+                <Link
+                  href="https://exhentai.org/"
+                  isExternal
+                  className="text-[13px] font-medium text-ink underline underline-offset-2"
+                >
                   ExHentai
                 </Link>
               </div>
@@ -321,19 +329,24 @@ const PopupLayout = () => {
           );
         case StatusEnum.BeforeDownload:
           return (
-            <div className="download-layout">
-              <div className="gallery-hero">
-                <h2 className="title-md line-clamp-2" title={galleryTitle}>
+            <div className="mx-auto flex w-full max-w-[520px] flex-col gap-4">
+              <div className="px-2 pb-1 text-center">
+                <h2
+                  className="line-clamp-2 text-[17px] font-semibold leading-[1.35] text-ink"
+                  title={galleryTitle}
+                >
                   {galleryTitle}
                 </h2>
-                <p className="caption mt-1">{galleryPageInfo.totalImages} images found</p>
+                <p className="mt-1 text-[13px] font-medium text-muted">
+                  {galleryPageInfo.totalImages} images found
+                </p>
               </div>
-              <div className="feature-card flex flex-col gap-4">
+              <div className="flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-4 shadow-card">
                 {range[1] > 0 && (
                   <div>
-                    <div className="popup-range-header">
-                      <label className="caption">Range</label>
-                      <span className="caption-soft">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="text-[13px] font-medium text-muted">Range</label>
+                      <span className="text-[11px] text-muted-soft">
                         {range[0]} – {range[1]}
                       </span>
                     </div>
@@ -345,14 +358,18 @@ const PopupLayout = () => {
                   </div>
                 )}
                 <div className="flex flex-col gap-3">
-                  <div className="stat-row">
-                    <span className="caption">Selected</span>
+                  <div className="flex items-center justify-between rounded-[10px] border border-hairline bg-surface-soft px-3.5 py-2.5">
+                    <span className="text-[13px] font-medium text-muted">Selected</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="progress-count">{downloadCount}</span>
-                      <span className="caption-soft">images</span>
+                      <span className="text-base font-semibold text-ink">{downloadCount}</span>
+                      <span className="text-[11px] text-muted-soft">images</span>
                     </div>
                   </div>
-                  <button type="button" className="btn-primary" onClick={handleClickDownload}>
+                  <button
+                    type="button"
+                    className="btn-primary text-[13px]"
+                    onClick={handleClickDownload}
+                  >
                     <DownloadIcon />
                     Start Download
                   </button>
@@ -362,15 +379,17 @@ const PopupLayout = () => {
           );
         case StatusEnum.Downloading:
           return (
-            <div className="download-layout">
-              <div className="gallery-hero">
-                <h3 className="title-sm line-clamp-2">{galleryTitle}</h3>
+            <div className="mx-auto flex w-full max-w-[520px] flex-col gap-4">
+              <div className="px-2 pb-1 text-center">
+                <h3 className="line-clamp-2 text-[15px] font-semibold text-ink">{galleryTitle}</h3>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <Spinner size="sm" color="primary" />
-                  <span className="caption">Downloading...</span>
+                  <span className="text-[13px] font-medium text-muted">Downloading...</span>
                 </div>
               </div>
-              <div className="product-panel w-full">{renders.progress()}</div>
+              <div className="w-full rounded-cal-lg border border-hairline bg-surface-soft p-4 shadow-card">
+                {renders.progress()}
+              </div>
             </div>
           );
         case StatusEnum.DownloadSuccess:
@@ -385,7 +404,7 @@ const PopupLayout = () => {
                   <Link
                     href="https://github.com/Oc1S/ehentai-helper"
                     isExternal
-                    className="text-link"
+                    className="text-[13px] font-medium text-ink underline underline-offset-2"
                   >
                     Star it on GitHub
                   </Link>
@@ -406,12 +425,12 @@ const PopupLayout = () => {
     },
     progress: () => (
       <div className="w-full space-y-3">
-        <div className="progress-meta">
-          <span className="caption">Progress</span>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-[13px] font-medium text-muted">Progress</span>
           <div className="flex items-center gap-1.5">
-            <span className="progress-count">{finishedList.length}</span>
-            <span className="caption-soft">/</span>
-            <span className="progress-total">{downloadCount}</span>
+            <span className="text-base font-semibold text-ink">{finishedList.length}</span>
+            <span className="text-[11px] text-muted-soft">/</span>
+            <span className="text-base font-medium text-muted">{downloadCount}</span>
           </div>
         </div>
         <Progress
@@ -423,7 +442,7 @@ const PopupLayout = () => {
           color="primary"
           size="sm"
         />
-        <div className="caption-soft flex justify-between">
+        <div className="flex justify-between text-[11px] text-muted-soft">
           <span>
             {downloadCount > 0
               ? `${Math.round((finishedList.length / downloadCount) * 100)}% complete`
@@ -443,27 +462,33 @@ const PopupLayout = () => {
 
   return (
     <AppShell>
-      <div className="popup-shell">
-        <header className="popup-header">
-          <span className="popup-header__title">E-Hentai Helper</span>
+      <div className="flex h-popup w-popup flex-col overflow-hidden bg-canvas">
+        <header className="flex h-popup-header shrink-0 items-center justify-between border-b border-hairline-soft px-5">
+          <span className="text-[15px] font-semibold tracking-tight text-ink">E-Hentai Helper</span>
           <DownloadSettings />
         </header>
-        <div className="popup-body">
-          <Tabs aria-label="popup tabs" className="popup-tabs">
+        <div className="flex min-h-0 flex-1 flex-col items-center px-4 pb-4 pt-3">
+          <Tabs aria-label="popup tabs">
             <Tab key="info" title="Info">
               <div
-                className={`popup-tab-scroll scrollbar-glass ${isCenteredStatus ? 'popup-tab-scroll--center' : ''}`}
+                className={`scrollbar-glass h-popup-content overflow-y-auto overflow-x-hidden ${isCenteredStatus ? 'flex items-center justify-center px-1 py-2' : ''}`}
               >
                 {status === StatusEnum.Loading && renders.status()}
                 {isCenteredStatus && renders.status()}
                 {status === StatusEnum.DownloadSuccess && (
-                  <div className="state-stack">
-                    <div className="gallery-hero w-full">
-                      <h3 className="title-sm line-clamp-2">{galleryTitle}</h3>
-                      <p className="caption mt-1">All images downloaded successfully</p>
+                  <div className="flex flex-col items-center gap-4 px-1 py-2 pb-3">
+                    <div className="w-full px-2 pb-1 text-center">
+                      <h3 className="line-clamp-2 text-[15px] font-semibold text-ink">
+                        {galleryTitle}
+                      </h3>
+                      <p className="mt-1 text-[13px] font-medium text-muted">
+                        All images downloaded successfully
+                      </p>
                     </div>
                     {renders.status()}
-                    <div className="product-panel w-full">{renders.progress()}</div>
+                    <div className="w-full rounded-cal-lg border border-hairline bg-surface-soft p-4 shadow-card">
+                      {renders.progress()}
+                    </div>
                   </div>
                 )}
                 {status === StatusEnum.BeforeDownload && renders.status()}
@@ -486,11 +511,11 @@ const PopupLayout = () => {
 export default withErrorBoundary(
   withSuspense(
     PopupLayout,
-    <div className="popup-shell loading-state">
-      <p className="caption">Loading...</p>
+    <div className="flex h-popup w-popup flex-col items-center justify-center gap-3 overflow-hidden bg-canvas">
+      <p className="text-[13px] font-medium text-muted">Loading...</p>
     </div>
   ),
-  <div className="popup-shell loading-state">
-    <p className="status-desc">Something went wrong</p>
+  <div className="flex h-popup w-popup flex-col items-center justify-center gap-3 overflow-hidden bg-canvas">
+    <p className="text-xs leading-relaxed text-muted">Something went wrong</p>
   </div>
 );

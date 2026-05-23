@@ -95,6 +95,14 @@ module.exports = {
         'title-md': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
         'title-sm': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
       },
+      width: {
+        popup: '800px',
+      },
+      height: {
+        popup: '600px',
+        'popup-header': '48px',
+        'popup-content': '480px',
+      },
       borderRadius: {
         'cal-xs': '4px',
         'cal-sm': '6px',
