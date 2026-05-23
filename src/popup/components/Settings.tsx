@@ -93,7 +93,7 @@ export const Settings: FC<{
         <RadioGroup
           orientation="horizontal"
           value={config.filenameConflictAction}
-          onValueChange={(val) =>
+          onValueChange={(val: chrome.downloads.FilenameConflictAction) =>
             setConfig({
               ...config,
               filenameConflictAction: val,
