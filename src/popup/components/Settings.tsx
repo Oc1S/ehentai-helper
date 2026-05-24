@@ -1,5 +1,5 @@
-import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 import { type FC, type ReactNode } from 'react';
+import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
 import { type Config, PATTERN_INVALID_FILE_PATH_CHAR } from '@/shared';
 
@@ -99,11 +99,7 @@ export const Settings: FC<{
       ),
     },
     filenameConflictAction: {
-      label: (
-        <Tooltip content="Action when filename conflict" closeDelay={200}>
-          Filename conflict
-        </Tooltip>
-      ),
+      label: <Tooltip closeDelay={200}>Filename conflict Action</Tooltip>,
       content: (
         <RadioGroup
           orientation="horizontal"

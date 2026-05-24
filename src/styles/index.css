@@ -38,7 +38,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex h-10 w-full items-center justify-center gap-2 rounded-cal-md bg-brand-primary px-5 text-sm font-semibold text-on-primary active:bg-brand-primary-active;
+    @apply inline-flex h-11 w-full items-center justify-center gap-2 rounded-cal-md bg-brand-primary px-5 text-sm font-semibold text-on-primary shadow-glow active:bg-brand-primary-active;
   }
 
   .btn-primary-auto {

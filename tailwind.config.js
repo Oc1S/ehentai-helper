@@ -10,28 +10,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        canvas: '#040608',
-        ink: '#f4f4f5',
-        body: '#d4d4d8',
+        canvas: '#0c0a09',
+        ink: '#fafaf9',
+        body: '#e7e5e4',
         muted: {
-          DEFAULT: '#a1a1aa',
-          soft: '#71717a',
+          DEFAULT: '#a8a29e',
+          soft: '#78716c',
         },
         hairline: {
-          DEFAULT: 'rgba(255, 255, 255, 0.14)',
-          soft: 'rgba(255, 255, 255, 0.08)',
+          DEFAULT: 'rgba(250, 250, 249, 0.14)',
+          soft: 'rgba(250, 250, 249, 0.07)',
         },
         surface: {
-          soft: '#0f1115',
-          card: '#141820',
-          strong: '#1e2430',
-          dark: '#101010',
-          'dark-elevated': '#1a1a1a',
+          soft: '#1c1917',
+          card: '#292524',
+          strong: '#44403c',
+          dark: '#0c0a09',
+          'dark-elevated': '#1c1917',
         },
         brand: {
-          accent: '#3b82f6',
-          primary: '#f4f4f5',
-          'primary-active': '#e4e4e7',
+          accent: '#2dd4bf',
+          primary: '#14b8a6',
+          'primary-active': '#0d9488',
         },
         primary: {
           50: '#E6FFFA',
@@ -65,9 +65,9 @@ module.exports = {
         warning: '#f59e0b',
         error: '#ef4444',
         on: {
-          primary: '#111111',
-          dark: '#ffffff',
-          'dark-soft': '#a1a1aa',
+          primary: '#042f2e',
+          dark: '#fafaf9',
+          'dark-soft': '#a8a29e',
         },
       },
       fontFamily: {
@@ -111,9 +111,10 @@ module.exports = {
         'cal-xl': '16px',
       },
       boxShadow: {
-        card: '0 1px 2px rgba(0, 0, 0, 0.3)',
-        'card-elevated': '0 4px 12px rgba(0, 0, 0, 0.4)',
+        card: '0 1px 3px rgba(0, 0, 0, 0.35)',
+        'card-elevated': '0 8px 24px rgba(0, 0, 0, 0.45)',
         pill: '0 1px 2px rgba(0, 0, 0, 0.25)',
+        glow: '0 0 0 1px rgba(45, 212, 191, 0.15), 0 4px 16px rgba(20, 184, 166, 0.12)',
       },
     },
   },
