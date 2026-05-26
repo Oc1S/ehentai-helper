@@ -1,5 +1,6 @@
-import { StatusCard } from '../status-card';
-import { InfoIcon } from './icons';
+import { StatusCard } from '@/components/status-card';
+
+import { InfoIcon } from '../icons';
 
 export const EHentaiOtherStatus = () => (
   <StatusCard

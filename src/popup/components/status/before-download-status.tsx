@@ -1,5 +1,6 @@
-import { DownloadIcon } from '../icons/DownloadIcon';
-import { PageSelector } from '../page-selector';
+import { DownloadIcon } from '@/components/icons/DownloadIcon';
+import { PageSelector } from '@/components/page-selector';
+
 import { DownloadCard } from './download-card';
 import { MetaBadge } from './meta-badge';
 

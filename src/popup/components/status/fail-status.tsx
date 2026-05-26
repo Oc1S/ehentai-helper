@@ -1,5 +1,6 @@
-import { StatusCard } from '../status-card';
-import { CloseIcon } from './icons';
+import { StatusCard } from '@/components/status-card';
+
+import { CloseIcon } from '../icons';
 
 export const FailStatus = () => (
   <StatusCard

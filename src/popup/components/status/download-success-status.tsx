@@ -1,9 +1,10 @@
 import { Link } from '@nextui-org/react';
 
-import { StatusCard } from '../status-card';
+import { StatusCard } from '@/components/status-card';
+
+import { CheckIcon } from '../icons';
 import { DownloadCard } from './download-card';
 import { DownloadProgress } from './download-progress';
-import { CheckIcon } from './icons';
 
 export const DownloadSuccessStatus = ({
   galleryTitle,

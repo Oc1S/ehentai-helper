@@ -1,7 +1,8 @@
 import { Link } from '@nextui-org/react';
 
-import { StatusCard } from '../status-card';
-import { LinkIcon } from './icons';
+import { StatusCard } from '@/components/status-card';
+
+import { LinkIcon } from '../icons';
 
 export const OtherPageStatus = () => (
   <StatusCard

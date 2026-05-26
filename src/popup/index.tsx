@@ -1,3 +1,6 @@
+import '../styles/index.css';
+import '../styles/popup.css';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Tab, Tabs } from '@nextui-org/react';
 import axios from 'axios';
@@ -12,8 +15,6 @@ import {
   useStateRef,
   useStorage,
   useStorageSuspense,
-  withErrorBoundary,
-  withSuspense,
 } from '@/shared';
 import {
   configStorage,
@@ -32,8 +33,8 @@ import {
 
 import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
-import { PopupStatusView } from '../components/status';
 import { DownloadTable } from '../components/Table';
+import { PopupStatusView } from './components/status';
 import { CENTERED_STATUSES, StatusEnum } from './status';
 
 let galleryInfo: GalleryInfo;
@@ -43,7 +44,7 @@ const sendRuntimeMessage = (message: Record<string, unknown>) =>
     chrome.runtime.sendMessage(message, () => resolve());
   });
 
-const PopupLayout = () => {
+const Popup = () => {
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
   const config = useStorage(configStorage);
   const storedDownloadList = useStorageSuspense(downloadListStorage) || [];
@@ -292,14 +293,4 @@ const PopupLayout = () => {
   );
 };
 
-export default withErrorBoundary(
-  withSuspense(
-    PopupLayout,
-    <div className="flex h-popup w-popup flex-col items-center justify-center gap-3 overflow-hidden bg-canvas">
-      <p className="text-[13px] font-medium text-muted">Loading...</p>
-    </div>
-  ),
-  <div className="flex h-popup w-popup flex-col items-center justify-center gap-3 overflow-hidden bg-canvas">
-    <p className="text-xs leading-relaxed text-muted">Something went wrong</p>
-  </div>
-);
+export default Popup;

@@ -1,8 +1,7 @@
-import { StatusEnum } from '../../popup/status';
-
+import { StatusEnum } from '../../status';
 import { BeforeDownloadStatus } from './before-download-status';
-import { DownloadingStatus } from './downloading-status';
 import { DownloadSuccessStatus } from './download-success-status';
+import { DownloadingStatus } from './downloading-status';
 import { EHentaiOtherStatus } from './ehentai-other-status';
 import { FailStatus } from './fail-status';
 import { LoadingStatus } from './loading-status';
