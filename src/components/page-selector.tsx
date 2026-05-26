@@ -26,7 +26,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       renderThumb={({ index, ...props }) => (
         <div
           {...props}
-          className="group top-1/2 flex h-5 w-5 cursor-grab items-center justify-center rounded-full border border-surface-strong bg-surface-card shadow-card outline-none transition-all hover:scale-110 hover:border-brand-accent data-[dragging=true]:scale-110 data-[dragging=true]:cursor-grabbing data-[dragging=true]:border-brand-accent data-[dragging=true]:shadow-glow"
+          className="group top-1/2 flex h-5 w-5 cursor-grab items-center justify-center rounded-full border border-surface-strong bg-surface-card shadow-card outline-none transition-colors hover:scale-110 hover:border-brand-accent data-[dragging=true]:scale-110 data-[dragging=true]:cursor-grabbing data-[dragging=true]:border-brand-accent data-[dragging=true]:shadow-glow"
         >
           <div
             className={`h-1.5 w-1.5 rounded-full transition-all duration-300 group-hover:scale-[1.5] group-hover:bg-brand-accent group-data-[dragging=true]:scale-[1.5] group-data-[dragging=true]:bg-brand-accent ${
