@@ -1,1 +1,1 @@
-export * from '../popup/components/Settings';
+export * from '../components/settings-com';

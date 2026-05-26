@@ -30,10 +30,10 @@ import {
   removeInvalidCharFromFilename,
 } from '@/utils';
 
-import { History } from './components/download-history';
-import { DownloadSettings } from './components/download-settings';
-import { PopupStatusView } from './components/status';
-import { DownloadTable } from './components/Table';
+import { History } from '../components/download-history';
+import { DownloadSettings } from '../components/download-settings';
+import { PopupStatusView } from '../components/status';
+import { DownloadTable } from '../components/Table';
 import { CENTERED_STATUSES, StatusEnum } from './status';
 
 let galleryInfo: GalleryInfo;

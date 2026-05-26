@@ -1,12 +1,13 @@
-import { Button } from '@nextui-org/react';
 import { useState } from 'react';
+import { Button } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
 import { useMounted } from '@/shared';
-import { configStorage, defaultConfig, type Config } from '@/storage';
+import { type Config, configStorage, defaultConfig } from '@/storage';
 
-import { Settings, validateFilePath } from './Settings';
+import { validateFilePath } from '../components/settings-com';
+import { Settings } from '../components/settings-com';
 
 export const OptionsPage = () => {
   const [config, setConfig] = useState<Config>(defaultConfig);

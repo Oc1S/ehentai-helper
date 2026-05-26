@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '@/shared';
 import { type Config, configStorage, defaultConfig } from '@/storage';
 
-import { Settings } from './Settings';
+import { Settings } from './settings-com';
 
 const formatDownloadDir = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {

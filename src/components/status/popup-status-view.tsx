@@ -1,4 +1,4 @@
-import { StatusEnum } from '../../status';
+import { StatusEnum } from '../../popup/status';
 
 import { BeforeDownloadStatus } from './before-download-status';
 import { DownloadingStatus } from './downloading-status';
