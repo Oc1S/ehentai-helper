@@ -158,7 +158,7 @@
   }
 
   .status-card-info {
-    @apply status-card border-hairline bg-canvas;
+    @apply status-card border-primary/30 bg-surface-card;
   }
 
   .status-card-warning {

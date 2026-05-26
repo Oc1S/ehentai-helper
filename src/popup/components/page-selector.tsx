@@ -1,5 +1,5 @@
-import { Input, Slider, type SliderProps } from '@nextui-org/react';
 import { type FC } from 'react';
+import { Input, Slider, type SliderProps } from '@nextui-org/react';
 
 type PageSelectorProps = {
   range: [number, number];
@@ -26,16 +26,22 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       renderThumb={({ index, ...props }) => (
         <div
           {...props}
-          className={`group top-1/2 flex h-5 w-5 cursor-grab items-center justify-center rounded-full border-2 border-brand-primary shadow-pill data-[dragging=true]:cursor-grabbing ${index === 0 ? 'bg-ink' : 'bg-brand-accent'}`}
+          className="group top-1/2 flex h-5 w-5 cursor-grab items-center justify-center rounded-full border border-surface-strong bg-surface-card shadow-card outline-none transition-all hover:scale-110 hover:border-brand-accent data-[dragging=true]:scale-110 data-[dragging=true]:cursor-grabbing data-[dragging=true]:border-brand-accent data-[dragging=true]:shadow-glow"
         >
-          <span className="block h-2 w-2 rounded-full bg-canvas" />
+          <div
+            className={`h-1.5 w-1.5 rounded-full transition-all duration-300 group-hover:scale-[1.5] group-hover:bg-brand-accent group-data-[dragging=true]:scale-[1.5] group-data-[dragging=true]:bg-brand-accent ${
+              index === 0 ? 'bg-muted-soft' : 'bg-brand-accent'
+            }`}
+          />
         </div>
       )}
       {...rest}
     />
     <div className="grid grid-cols-2 gap-3">
       <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">From</span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+          From
+        </span>
         <Input
           type="number"
           min={1}
@@ -43,7 +49,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
           max={range[1]}
           size="sm"
           classNames={{
-            inputWrapper: 'border border-hairline bg-surface-soft shadow-none',
+            inputWrapper: 'border border-surface-strong bg-surface-soft shadow-none',
           }}
           onChange={(e) => {
             const next = Number(e.target.value);
@@ -61,7 +67,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
           max={maxValue}
           size="sm"
           classNames={{
-            inputWrapper: 'border border-hairline bg-surface-soft shadow-none',
+            inputWrapper: 'border border-surface-strong bg-surface-soft shadow-none',
           }}
           onChange={(e) => {
             const next = Number(e.target.value);

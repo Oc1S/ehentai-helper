@@ -1,3 +1,5 @@
+import type { FC } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Button,
   Input,
@@ -9,10 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
-import { FC, useMemo, useState } from 'react';
 
 import { useStorageSuspense } from '@/shared';
-import { downloadHistoryStorage, type DownloadHistoryItem } from '@/storage';
+import { type DownloadHistoryItem, downloadHistoryStorage } from '@/storage';
 
 const columns = [
   { key: 'name', label: 'NAME' },

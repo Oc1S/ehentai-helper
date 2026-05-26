@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Button,
   Modal,
@@ -7,11 +8,11 @@ import {
   ModalHeader,
   useDisclosure,
 } from '@nextui-org/react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '@/shared';
-import { configStorage, type Config, defaultConfig } from '@/storage';
+import { type Config, configStorage, defaultConfig } from '@/storage';
+
 import { Settings } from './Settings';
 
 const formatDownloadDir = (path: string) => {
