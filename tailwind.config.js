@@ -119,14 +119,21 @@ module.exports = {
     },
   },
   plugins: [
-    // NextUI 构建期无法解析 CSS 变量，色值须与 src/styles/tokens.css 保持同步
+    // NextUI 主题色在构建期写入 Tailwind，无法使用 CSS 变量；与 tokens.css 无重复定义
     nextui({
+      defaultTheme: 'dark',
       themes: {
         dark: {
           colors: {
             background: '#09090b',
             foreground: '#e4e4e7',
             focus: '#d4af37',
+            divider: 'rgba(212, 175, 55, 0.14)',
+            overlay: 'rgba(0, 0, 0, 0.75)',
+            content1: '#1c1c1f',
+            content2: '#27272a',
+            content3: '#2a2822',
+            content4: '#3f3f46',
             primary: {
               50: '#fffbeb',
               100: '#fef3c7',
@@ -141,18 +148,19 @@ module.exports = {
               DEFAULT: '#b8860b',
               foreground: '#09090b',
             },
+            // 暗色主题：50 最深、900 最浅；Input/Table 等用 bg-default-100，若 100 配成浅色会发白
             default: {
-              50: '#fafafa',
-              100: '#f4f4f5',
-              200: '#e4e4e7',
-              300: '#d4d4d8',
-              400: '#a1a1aa',
-              500: '#71717a',
-              600: '#52525b',
-              700: '#3f3f46',
-              800: '#27272a',
-              900: '#18181b',
-              DEFAULT: '#1c1c1f',
+              50: '#09090b',
+              100: '#141414',
+              200: '#1c1c1f',
+              300: '#27272a',
+              400: '#6b6b74',
+              500: '#84848e',
+              600: '#9a9aa3',
+              700: '#b4b4bc',
+              800: '#d8d8de',
+              900: '#f4f4f5',
+              DEFAULT: '#27272a',
               foreground: '#e4e4e7',
             },
           },

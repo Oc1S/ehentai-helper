@@ -53,13 +53,6 @@
   --eh-primary-800: #854d0e;
   --eh-primary-900: #713f12;
 
-  /* NextUI 构建期色值 — 须与 tailwind.config.js nextui.themes.dark 保持同步 */
-  --eh-nextui-background: #09090b;
-  --eh-nextui-foreground: #e4e4e7;
-  --eh-nextui-focus: #d4af37;
-  --eh-nextui-default: #1c1c1f;
-  --eh-nextui-default-fg: #e4e4e7;
-
   /* 描边与阴影 */
   --eh-hairline: rgba(212, 175, 55, 0.14);
   --eh-hairline-soft: rgba(212, 175, 55, 0.07);

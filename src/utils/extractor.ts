@@ -3,6 +3,14 @@ import { type GalleryInfo, type GalleryTag } from '@/storage';
 
 import { getDocument } from './htmlStr2Dom';
 
+/** 画廊页 HTML 特征（排除纯文本错误页、空响应等） */
+export const isGalleryPageHtml = (body: unknown): body is string => {
+  if (typeof body !== 'string') return false;
+  const html = body.trim();
+  if (!html || !html.includes('<')) return false;
+  return html.includes('id="gn"') && (html.includes('id="gdt"') || html.includes('class="gpc"'));
+};
+
 const getTextContent = (node: Node | null | undefined): string => {
   return node?.textContent || '';
 };

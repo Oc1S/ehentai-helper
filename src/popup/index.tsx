@@ -31,6 +31,7 @@ import {
   extractGalleryInfo,
   extractGalleryPageInfo,
   htmlStr2DOM,
+  isGalleryPageHtml,
   removeInvalidCharFromFilename,
 } from '@/utils';
 
@@ -229,7 +230,7 @@ const Popup = () => {
         const { data: galleryHtmlStr } = await axios
           .get(galleryFrontPageUrl.current)
           .catch(() => ({ data: '' }));
-        if (!galleryHtmlStr) {
+        if (!isGalleryPageHtml(galleryHtmlStr)) {
           setStatus(StatusEnum.Fail);
           return;
         }

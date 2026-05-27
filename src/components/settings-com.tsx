@@ -2,7 +2,6 @@ import { type FC, type ReactNode } from 'react';
 import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
 import { type Config, PATTERN_INVALID_FILE_PATH_CHAR } from '@/shared';
-
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
