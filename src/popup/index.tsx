@@ -1,8 +1,8 @@
 import '../styles/index.css';
 import '../styles/popup.css';
 
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
 import axios from 'axios';
 
 import { AppShell } from '@/app';
@@ -39,24 +39,6 @@ import { DownloadSettings } from '../components/download-settings';
 import { DownloadTable } from '../components/Table';
 import { CheckIcon, CloseIcon, InfoIcon, LinkIcon } from './components/icons';
 import { CENTERED_STATUSES, StatusEnum } from './status';
-
-const DOWNLOAD_CARD_WIDTH = 'w-[480px]';
-
-const DownloadCard = ({
-  children,
-  className = '',
-}: {
-  children: ReactNode;
-  className?: string;
-}) => (
-  <div className={`flex w-full shrink-0 justify-center px-4 py-4 ${className}`.trim()}>
-    <div
-      className={`${DOWNLOAD_CARD_WIDTH} shrink-0 overflow-hidden rounded-cal-xl border border-surface-strong bg-surface-card shadow-card-elevated`}
-    >
-      {children}
-    </div>
-  </div>
-);
 
 const DownloadProgress = ({
   downloadCount,
@@ -327,7 +309,7 @@ const Popup = () => {
             title="Navigate to Gallery"
             description="Visit a gallery page to start downloading"
           >
-            <div className="body-sm flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-sm leading-relaxed text-body">
               <span>Go to</span>
               <Link
                 href="https://e-hentai.org/"
@@ -358,92 +340,119 @@ const Popup = () => {
         );
       case StatusEnum.BeforeDownload:
         return (
-          <DownloadCard>
-            <div className="border-b border-surface-strong bg-surface-soft px-5 py-4">
-              <h2
-                className="line-clamp-2 text-[17px] font-semibold leading-snug text-ink"
-                title={galleryTitle}
+          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
+            {/* Gallery Info Widget - Bento Style */}
+            <div className="group relative flex min-h-[100px] flex-col justify-end overflow-hidden rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-4 shadow-xl backdrop-blur-xl transition-all hover:border-white/[0.12] hover:shadow-2xl">
+              {/* Dynamic Abstract Background */}
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand-primary/10 blur-[80px] transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
+
+              <div className="relative z-10 flex flex-col gap-2.5">
+                <h2
+                  className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink"
+                  title={galleryTitle}
+                >
+                  {galleryTitle}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
+                    <div className="h-1.5 w-1.5 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                    {galleryPageInfo.totalImages} Images
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
+                    <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-[0_0_8px_rgba(6,95,70,0.8)]" />
+                    {galleryPageInfo.numPages} Pages
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {/* Range Selector Widget */}
+              {range[1] > 0 && (
+                <div className="col-span-3 flex flex-col gap-1.5 rounded-[16px] border border-white/[0.06] bg-surface-card/40 px-4 py-3 shadow-md backdrop-blur-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-semibold tracking-tight text-ink">
+                      Download Range
+                    </span>
+                    <span className="flex h-5 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
+                      {range[0]} - {range[1]}
+                    </span>
+                  </div>
+                  <div className="px-1 pb-1">
+                    <PageSelector
+                      range={range}
+                      setRange={setRange}
+                      maxValue={galleryPageInfo.totalImages}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Count Widget */}
+              <div className="col-span-1 flex flex-col items-center justify-center overflow-hidden rounded-[16px] border border-brand-accent/20 bg-brand-accent/[0.03] p-3 text-center shadow-inner">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-soft">
+                  Selected
+                </span>
+                <span className="mt-0.5 font-mono text-2xl font-black tracking-tighter text-brand-accent">
+                  {downloadCount}
+                </span>
+              </div>
+
+              {/* Action Button Widget */}
+              <Button
+                type="button"
+                variant="flat"
+                className="group relative col-span-2 flex h-full min-h-[72px] flex-row items-center justify-center gap-3 overflow-hidden rounded-[16px] bg-brand-primary/40 px-5 py-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition-transform active:scale-95"
+                onPress={handleClickDownload}
+                disableRipple
               >
-                {galleryTitle}
-              </h2>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                <span className="inline-flex items-center rounded-full border border-hairline bg-surface-soft px-2.5 py-1 text-[11px] font-medium text-muted">
-                  {galleryPageInfo.totalImages} images
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white">
+                  <DownloadIcon />
+                </div>
+                <span className="text-sm font-bold tracking-wide text-on-primary">
+                  Start Download
                 </span>
-                <span className="inline-flex items-center rounded-full border border-hairline bg-surface-soft px-2.5 py-1 text-[11px] font-medium text-muted">
-                  {galleryPageInfo.numPages} pages
-                </span>
-              </div>
+              </Button>
             </div>
-            {range[1] > 0 && (
-              <div className="border-b border-surface-strong px-5 py-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-soft">
-                    Image range
-                  </span>
-                  <span className="text-xs font-medium text-brand-accent">
-                    {range[0]} – {range[1]}
-                  </span>
-                </div>
-                <PageSelector
-                  range={range}
-                  setRange={setRange}
-                  maxValue={galleryPageInfo.totalImages}
-                />
-              </div>
-            )}
-            <div className="bg-surface-card px-5 py-4">
-              <div className="mb-4 grid grid-cols-2 gap-3">
-                <div className="rounded-cal-md border border-surface-strong bg-surface-soft px-4 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-                    Selected
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">
-                    {downloadCount}
-                  </p>
-                </div>
-                <div className="rounded-cal-md border border-surface-strong bg-surface-soft px-4 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-                    Total
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
-                    {galleryPageInfo.totalImages}
-                  </p>
-                </div>
-              </div>
-              <button type="button" className="btn-primary" onClick={handleClickDownload}>
-                <DownloadIcon />
-                Start Download
-              </button>
-            </div>
-          </DownloadCard>
+          </div>
         );
       case StatusEnum.Downloading:
         return (
-          <DownloadCard>
-            <div className="border-b border-surface-strong bg-surface-soft px-5 py-4">
-              <h3 className="line-clamp-2 text-[15px] font-semibold text-ink">{galleryTitle}</h3>
-              <div className="mt-2 flex items-center gap-2">
-                <Spinner size="sm" color="primary" />
-                <span className="text-[13px] font-medium text-muted">Downloading images...</span>
+          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
+            <div className="relative flex flex-col justify-end overflow-hidden rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-xl backdrop-blur-xl">
+              <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-brand-primary/10 blur-[80px]" />
+              <div className="relative z-10">
+                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
+                  {galleryTitle}
+                </h3>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <Spinner size="sm" color="primary" />
+                  <span className="text-[13px] font-medium text-brand-accent">
+                    Downloading images...
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="px-5 py-4">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-lg backdrop-blur-xl">
               <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
             </div>
-          </DownloadCard>
+          </div>
         );
       case StatusEnum.DownloadSuccess:
         return (
-          <DownloadCard className="py-2">
-            <div className="border-b border-hairline-soft bg-surface-soft/70 px-5 py-4 text-center">
-              <h3 className="line-clamp-2 text-[15px] font-semibold text-ink">{galleryTitle}</h3>
-              <p className="mt-1 text-[13px] font-medium text-muted">
-                All images downloaded successfully
-              </p>
-            </div>
-            <div className="px-5 pt-2">
+          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-xl backdrop-blur-xl">
+              <div className="text-left">
+                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
+                  {galleryTitle}
+                </h3>
+                <p className="mt-1.5 text-[12px] font-medium text-muted">
+                  All images downloaded successfully
+                </p>
+              </div>
               <StatusCard
+                embedded
                 variant="success"
                 icon={<CheckIcon />}
                 title="Download Completed!"
@@ -459,13 +468,12 @@ const Popup = () => {
                     </Link>
                   </>
                 }
-                className="max-w-none border-0 bg-transparent px-0 py-4 shadow-none"
               />
             </div>
-            <div className="border-t border-surface-strong px-5 py-4">
+            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-lg backdrop-blur-xl">
               <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
             </div>
-          </DownloadCard>
+          </div>
         );
       default:
         return null;

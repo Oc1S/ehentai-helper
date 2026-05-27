@@ -235,6 +235,21 @@ export const themePresets: ThemePreset[] = [
     primary: { DEFAULT: '#d9f99d', foreground: '#1a2e05' },
     glow: '0 0 0 1px rgba(217, 249, 157, 0.4), 0 4px 16px rgba(217, 249, 157, 0.2)',
   },
+  // ── 奢华质感系 ──
+  {
+    id: 'black-gold',
+    name: 'Black Gold 黑金',
+    tagline: '深邃的曜黑与璀璨的暗金交织，极具奢华质感',
+    harmony: 'high',
+    brand: {
+      accent: '#eab308',
+      primary: '#18181b',
+      'primary-active': '#09090b',
+    },
+    on: { primary: '#ffffff' },
+    primary: { DEFAULT: '#18181b', foreground: '#ffffff' },
+    glow: '0 0 0 1px rgba(234, 179, 8, 0.25), 0 4px 16px rgba(24, 24, 27, 0.4)',
+  },
   // ── 现代冷灰系 ──
   {
     id: 'abyss-green',
@@ -521,7 +536,7 @@ export const themePresets: ThemePreset[] = [
   },
 ];
 
-export const defaultThemePresetId = 'forest-pine';
+export const defaultThemePresetId = 'black-gold';
 
 export const warmBgPresets = themePresets.filter((p) => p.harmony === 'high');
 

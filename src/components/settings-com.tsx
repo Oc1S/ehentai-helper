@@ -40,7 +40,7 @@ const TextInput = ({
 }: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
   <input
     type="text"
-    className={`path-input ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
+    className={`flex-1 border-b border-hairline bg-transparent px-2 py-1 text-sm text-ink outline-none focus:border-ink ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
     {...rest}
   />
 );
@@ -61,7 +61,7 @@ export const Settings: FC<{
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="text-link shrink-0"
+            className={`shrink-0 font-medium text-ink underline underline-offset-2 ${variant === 'page' ? 'text-[13px]' : 'text-sm'}`}
             onClick={() => {
               chrome.downloads.showDefaultFolder();
             }}
@@ -127,7 +127,7 @@ export const Settings: FC<{
           type="number"
           placeholder="300"
           value={String(config.downloadInterval)}
-          endContent={<span className="caption-soft">ms</span>}
+          endContent={<span className="text-xs text-muted-soft">ms</span>}
           className="w-32"
           size={variant === 'page' ? 'sm' : 'md'}
           onChange={(e) => {
@@ -159,8 +159,8 @@ export const Settings: FC<{
 
   const panelClass =
     variant === 'page'
-      ? 'settings-panel settings-panel--page'
-      : 'settings-panel settings-panel--modal';
+      ? 'flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
+      : 'flex flex-col gap-3 rounded-cal-lg border border-hairline bg-surface-card p-4 shadow-card';
 
   return (
     <div className={panelClass}>
