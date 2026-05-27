@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import './tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -8,10 +9,6 @@
 @layer base {
   * {
     box-sizing: border-box;
-  }
-
-  html {
-    color-scheme: dark;
   }
 
   html,
@@ -53,7 +50,7 @@
 @layer utilities {
   .scrollbar-glass {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: var(--eh-scrollbar-thumb) var(--eh-scrollbar-track);
   }
 
   .scrollbar-glass::-webkit-scrollbar {
@@ -65,11 +62,27 @@
   }
 
   .scrollbar-glass::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--eh-scrollbar-thumb);
     border-radius: 9999px;
   }
 
   .scrollbar-glass::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--eh-scrollbar-thumb-hover);
+  }
+
+  .glass-panel {
+    @apply border border-hairline-soft bg-surface-card/50 shadow-card backdrop-blur-xl transition-colors;
+  }
+
+  .glass-panel:hover {
+    @apply border-hairline shadow-card-elevated;
+  }
+
+  .shadow-glow-dot {
+    box-shadow: var(--eh-glow-dot);
+  }
+
+  .shadow-glow-dot-soft {
+    box-shadow: var(--eh-glow-dot-soft);
   }
 }

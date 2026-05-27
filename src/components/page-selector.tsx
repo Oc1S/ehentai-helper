@@ -17,8 +17,8 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, maxValue, setRange,
       maxValue={maxValue}
       classNames={{
         base: 'w-full max-w-full gap-2',
-        track: 'h-2 border-s border-primary/20 bg-surface-strong',
-        filler: 'bg-brand-primary',
+        track: 'h-2 border-s border-hairline-soft bg-surface-strong',
+        filler: 'bg-brand-accent',
       }}
       onChange={(val) => {
         setRange(val as [number, number]);

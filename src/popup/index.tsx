@@ -342,10 +342,9 @@ const Popup = () => {
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
             {/* Gallery Info Widget - Bento Style */}
-            <div className="group relative flex min-h-[100px] flex-col justify-end overflow-hidden rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-4 shadow-xl backdrop-blur-xl transition-all hover:border-white/[0.12] hover:shadow-2xl">
-              {/* Dynamic Abstract Background */}
-              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand-primary/10 blur-[80px] transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
+            <div className="glass-panel group relative flex min-h-[100px] flex-col justify-end overflow-hidden rounded-[20px] p-4">
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand-accent/10 blur-[80px] transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/[0.04] to-transparent" />
 
               <div className="relative z-10 flex flex-col gap-2.5">
                 <h2
@@ -355,12 +354,12 @@ const Popup = () => {
                   {galleryTitle}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <div className="flex items-center gap-1.5 rounded-full border border-hairline-soft bg-brand-accent/[0.04] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
+                    <div className="shadow-glow-dot h-1.5 w-1.5 rounded-full bg-brand-accent" />
                     {galleryPageInfo.totalImages} Images
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-[0_0_8px_rgba(6,95,70,0.8)]" />
+                  <div className="flex items-center gap-1.5 rounded-full border border-hairline-soft bg-brand-accent/[0.04] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
+                    <div className="shadow-glow-dot-soft h-1.5 w-1.5 rounded-full bg-brand-accent/70" />
                     {galleryPageInfo.numPages} Pages
                   </div>
                 </div>
@@ -370,7 +369,7 @@ const Popup = () => {
             <div className="grid grid-cols-3 gap-3">
               {/* Range Selector Widget */}
               {range[1] > 0 && (
-                <div className="col-span-3 flex flex-col gap-1.5 rounded-[16px] border border-white/[0.06] bg-surface-card/40 px-4 py-3 shadow-md backdrop-blur-xl">
+                <div className="glass-panel col-span-3 flex flex-col gap-1.5 rounded-[16px] px-4 py-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold tracking-tight text-ink">
                       Download Range
@@ -403,14 +402,14 @@ const Popup = () => {
               <Button
                 type="button"
                 variant="flat"
-                className="group relative col-span-2 flex h-full min-h-[72px] flex-row items-center justify-center gap-3 overflow-hidden rounded-[16px] bg-brand-primary/40 px-5 py-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition-transform active:scale-95"
+                className="group relative col-span-2 flex h-full min-h-[72px] flex-row items-center justify-center gap-3 overflow-hidden rounded-[16px] border border-brand-accent/30 bg-brand-accent/15 px-5 py-3 shadow-glow transition-transform hover:bg-brand-accent/25 active:scale-95"
                 onPress={handleClickDownload}
                 disableRipple
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-accent/20 text-brand-accent">
                   <DownloadIcon />
                 </div>
-                <span className="text-sm font-bold tracking-wide text-on-primary">
+                <span className="text-sm font-bold tracking-wide text-brand-accent">
                   Start Download
                 </span>
               </Button>
@@ -420,8 +419,8 @@ const Popup = () => {
       case StatusEnum.Downloading:
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="relative flex flex-col justify-end overflow-hidden rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-xl backdrop-blur-xl">
-              <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-brand-primary/10 blur-[80px]" />
+            <div className="glass-panel relative flex flex-col justify-end overflow-hidden rounded-[20px] p-5">
+              <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-brand-accent/10 blur-[80px]" />
               <div className="relative z-10">
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
                   {galleryTitle}
@@ -434,7 +433,7 @@ const Popup = () => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-lg backdrop-blur-xl">
+            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
               <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
             </div>
           </div>
@@ -442,7 +441,7 @@ const Popup = () => {
       case StatusEnum.DownloadSuccess:
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-xl backdrop-blur-xl">
+            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
               <div className="text-left">
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
                   {galleryTitle}
@@ -470,7 +469,7 @@ const Popup = () => {
                 }
               />
             </div>
-            <div className="flex flex-col gap-3 rounded-[20px] border border-white/[0.06] bg-surface-card/40 p-5 shadow-lg backdrop-blur-xl">
+            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
               <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
             </div>
           </div>
@@ -483,7 +482,7 @@ const Popup = () => {
   return (
     <AppShell>
       <div className="flex h-popup w-popup flex-col overflow-hidden bg-canvas">
-        <header className="flex h-popup-header shrink-0 items-center justify-between border-b border-surface-strong bg-surface-dark px-5">
+        <header className="flex h-popup-header shrink-0 items-center justify-between border-b border-hairline bg-surface-dark px-5">
           <span className="text-[15px] font-semibold tracking-tight text-ink">
             E-Hentai <span className="text-brand-accent">Helper</span>
           </span>

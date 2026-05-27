@@ -1,0 +1,88 @@
+/**
+ * 黑金主题 — 全项目颜色 token 唯一来源
+ * Tailwind: rgb(var(--eh-*) / <alpha-value>)
+ * 普通 CSS: var(--eh-*-hex) 或 var(--eh-hairline)
+ */
+:root {
+  color-scheme: dark;
+
+  /* 画布与文字 */
+  --eh-canvas: 9 9 11;
+  --eh-canvas-hex: #09090b;
+  --eh-ink: 250 250 250;
+  --eh-ink-hex: #fafafa;
+  --eh-body: 228 228 231;
+  --eh-body-hex: #e4e4e7;
+  --eh-muted: 161 161 170;
+  --eh-muted-hex: #a1a1aa;
+  --eh-muted-soft: 113 113 122;
+  --eh-muted-soft-hex: #71717a;
+
+  /* 表面层级 */
+  --eh-surface-soft: 20 20 20;
+  --eh-surface-soft-hex: #141414;
+  --eh-surface-card: 28 28 31;
+  --eh-surface-card-hex: #1c1c1f;
+  --eh-surface-strong: 42 40 34;
+  --eh-surface-strong-hex: #2a2822;
+  --eh-surface-dark: 5 5 5;
+  --eh-surface-dark-hex: #050505;
+  --eh-surface-dark-elevated-hex: #121212;
+
+  /* 品牌 / 按钮 */
+  --eh-brand-accent: 212 175 55;
+  --eh-brand-accent-hex: #d4af37;
+  --eh-brand-accent-bright-hex: #f0c14b;
+  --eh-brand-primary: 26 26 30;
+  --eh-brand-primary-hex: #1a1a1e;
+  --eh-brand-primary-active-hex: #0a0a0c;
+  --eh-primary: 184 134 11;
+  --eh-primary-hex: #b8860b;
+  --eh-primary-hover-hex: #996f00;
+  --eh-primary-fg: 9 9 11;
+  --eh-primary-fg-hex: #09090b;
+  --eh-on-primary-hex: #fafafa;
+  --eh-primary-50: #fffbeb;
+  --eh-primary-100: #fef3c7;
+  --eh-primary-200: #fde68a;
+  --eh-primary-300: #fcd34d;
+  --eh-primary-400: #fbbf24;
+  --eh-primary-500: #eab308;
+  --eh-primary-600: #ca8a04;
+  --eh-primary-700: #a16207;
+  --eh-primary-800: #854d0e;
+  --eh-primary-900: #713f12;
+
+  /* NextUI 构建期色值 — 须与 tailwind.config.js nextui.themes.dark 保持同步 */
+  --eh-nextui-background: #09090b;
+  --eh-nextui-foreground: #e4e4e7;
+  --eh-nextui-focus: #d4af37;
+  --eh-nextui-default: #1c1c1f;
+  --eh-nextui-default-fg: #e4e4e7;
+
+  /* 描边与阴影 */
+  --eh-hairline: rgba(212, 175, 55, 0.14);
+  --eh-hairline-soft: rgba(212, 175, 55, 0.07);
+  --eh-glow: 0 0 0 1px rgba(212, 175, 55, 0.22), 0 4px 20px rgba(0, 0, 0, 0.45);
+  --eh-glow-dot: 0 0 8px rgba(212, 175, 55, 0.75);
+  --eh-glow-dot-soft: 0 0 8px rgba(184, 134, 11, 0.6);
+  --eh-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --eh-shadow-card-elevated: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --eh-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  /* 语义色 */
+  --eh-success-hex: #22c55e;
+  --eh-warning-hex: #f59e0b;
+  --eh-error-hex: #ef4444;
+  --eh-section-label-hex: #a16207;
+
+  /* 滚动条 */
+  --eh-scrollbar-thumb: rgba(212, 175, 55, 0.22);
+  --eh-scrollbar-thumb-hover: rgba(212, 175, 55, 0.38);
+  --eh-scrollbar-track: transparent;
+
+  /* Options 页布局 */
+  --options-content-w: 800px;
+  --options-header-h: 56px;
+  --options-gutter: 24px;
+}

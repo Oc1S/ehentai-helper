@@ -15,18 +15,18 @@ const variantStyle: Record<
   }
 > = {
   info: {
-    ambient: 'bg-primary/10',
-    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-white/[0.12]',
-    iconGlow: 'bg-primary/20',
-    iconRing: 'border-white/[0.15] bg-primary/10',
-    iconText: 'text-primary',
-    glassBg: 'bg-gradient-to-b from-white/[0.08] to-white/[0.02]',
+    ambient: 'bg-brand-accent/10',
+    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]',
+    border: 'border-hairline',
+    iconGlow: 'bg-brand-accent/20',
+    iconRing: 'border-hairline bg-brand-accent/10',
+    iconText: 'text-brand-accent',
+    glassBg: 'bg-gradient-to-b from-brand-accent/[0.08] to-transparent',
   },
   warning: {
     ambient: 'bg-warning/10',
     cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-white/[0.12]',
+    border: 'border-hairline-soft',
     iconGlow: 'bg-warning/20',
     iconRing: 'border-white/[0.15] bg-warning/10',
     iconText: 'text-warning',
@@ -35,7 +35,7 @@ const variantStyle: Record<
   success: {
     ambient: 'bg-success/10',
     cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-white/[0.12]',
+    border: 'border-hairline-soft',
     iconGlow: 'bg-success/20',
     iconRing: 'border-white/[0.15] bg-success/10',
     iconText: 'text-success',
@@ -44,7 +44,7 @@ const variantStyle: Record<
   error: {
     ambient: 'bg-error/10',
     cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-white/[0.12]',
+    border: 'border-hairline-soft',
     iconGlow: 'bg-error/20',
     iconRing: 'border-white/[0.15] bg-error/10',
     iconText: 'text-error',
@@ -89,7 +89,7 @@ export const StatusCard = ({
   }
 
   return (
-    <div className={`group relative mx-auto w-full max-w-[400px] overflow-hidden rounded-[24px] border ${style.border} ${style.glassBg} ${style.cardShadow} bg-surface-card/40 p-6 backdrop-blur-xl transition-all hover:border-white/[0.12] hover:shadow-2xl ${className}`.trim()}>
+    <div className={`group relative mx-auto w-full max-w-[400px] overflow-hidden rounded-[24px] border ${style.border} ${style.glassBg} ${style.cardShadow} bg-surface-card/50 p-6 backdrop-blur-xl transition-all hover:border-hairline hover:shadow-glow ${className}`.trim()}>
       <div
         className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[80px] transition-transform duration-700 group-hover:scale-110 ${style.ambient}`}
         aria-hidden

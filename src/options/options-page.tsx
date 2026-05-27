@@ -36,7 +36,9 @@ export const OptionsPage = () => {
           <header className="options-header">
             <div className="options-header__text">
               <h1 className="options-header__title">Settings</h1>
-              <p className="options-header__desc">E-Hentai Helper · Download preferences</p>
+              <p className="options-header__desc">
+                <span className="options-header__accent">E-Hentai Helper</span> · Download preferences
+              </p>
             </div>
             <Button color="primary" onPress={handleSave}>
               Save changes
