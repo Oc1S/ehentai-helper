@@ -25,18 +25,22 @@ import {
   downloadIndexMapStorage,
   downloadListStorage,
   type GalleryInfo,
+  galleryRecordsStorage,
 } from '@/storage';
 import {
+  convertImageToFormat,
   downloadAsTxtFile,
   extractGalleryInfo,
   extractGalleryPageInfo,
   htmlStr2DOM,
   isGalleryPageHtml,
+  releaseConvertedUrlOnDownloadDone,
   removeInvalidCharFromFilename,
 } from '@/utils';
 
 import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
+import { GalleryDetailModal } from '../components/gallery-detail-modal';
 import { DownloadTable } from '../components/Table';
 import { CheckIcon, CloseIcon, InfoIcon, LinkIcon } from './components/icons';
 import { CENTERED_STATUSES, StatusEnum } from './status';
@@ -95,8 +99,10 @@ const Popup = () => {
   const config = useStorage(configStorage);
   const storedDownloadList = useStorageSuspense(downloadListStorage) || [];
   const downloadIndexMap = useStorageSuspense(downloadIndexMapStorage) || {};
+  const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
   const galleryFrontPageUrl = useRef('');
   const configRef = useRef(defaultConfig);
+  const [galleryDetailOpen, setGalleryDetailOpen] = useState(false);
   const [galleryPageInfo, setGalleryPageInfo, galleryPageInfoRef] = useStateRef({
     imagesPerPage: 0,
     numPages: 0,
@@ -184,14 +190,36 @@ const Popup = () => {
           console.log('get original image failed@', e);
         }
       }
-      chrome.downloads.download({ url: imageUrl }, (id) => {
-        if (typeof id !== 'number') return;
+
+      const sourceImageUrl = imageUrl;
+      let downloadUrl = imageUrl;
+      let convertedObjectUrl: string | null = null;
+      const desiredFormat = configRef.current.imageFormat;
+      if (desiredFormat && desiredFormat !== 'original') {
+        try {
+          convertedObjectUrl = await convertImageToFormat(imageUrl, desiredFormat);
+          downloadUrl = convertedObjectUrl;
+        } catch (e) {
+          console.warn('image format convert failed, fallback to original@', e);
+        }
+      }
+
+      chrome.downloads.download({ url: downloadUrl }, (id) => {
+        if (typeof id !== 'number') {
+          if (convertedObjectUrl) URL.revokeObjectURL(convertedObjectUrl);
+          return;
+        }
+        if (convertedObjectUrl) {
+          releaseConvertedUrlOnDownloadDone(id, convertedObjectUrl);
+        }
         void chrome.runtime.sendMessage({
           type: 'register-download-index',
           id,
           index: currentIndex,
           total: galleryPageInfoRef.current.totalImages,
           downloadPath: configRef.current.intermediateDownloadPath,
+          galleryUrl: galleryFrontPageUrl.current,
+          sourceUrl: sourceImageUrl,
         });
       });
     },
@@ -274,6 +302,9 @@ const Popup = () => {
       type: 'set-download-context',
       downloadPath: configRef.current.intermediateDownloadPath,
       total: galleryPageInfoRef.current.totalImages,
+      galleryUrl: galleryFrontPageUrl.current,
+      galleryName: galleryInfo?.name ?? galleryTitle,
+      galleryId: galleryInfo?.id ?? '',
     });
     downloadJob.downloadAllImages();
     if (configRef.current.saveGalleryInfo) {
@@ -339,7 +370,23 @@ const Popup = () => {
             description="Unable to fetch data from server. Please try again later."
           />
         );
-      case StatusEnum.BeforeDownload:
+      case StatusEnum.BeforeDownload: {
+        const currentGalleryRecord = galleryRecords[galleryFrontPageUrl.current];
+        const counts = currentGalleryRecord
+          ? Object.values(currentGalleryRecord.images).reduce(
+              (acc, img) => {
+                acc[img.state] += 1;
+                return acc;
+              },
+              { complete: 0, in_progress: 0, interrupted: 0 } as Record<
+                'complete' | 'in_progress' | 'interrupted',
+                number
+              >
+            )
+          : null;
+        const trackedTotal = counts
+          ? counts.complete + counts.in_progress + counts.interrupted
+          : 0;
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
             {/* Gallery Info Widget - Bento Style */}
@@ -366,6 +413,34 @@ const Popup = () => {
                 </div>
               </div>
             </div>
+
+            {counts && trackedTotal > 0 && (
+              <div className="glass-panel flex flex-col gap-2 rounded-[16px] px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] font-semibold tracking-tight text-ink">
+                    Previously tracked
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setGalleryDetailOpen(true)}
+                    className="rounded-full border border-brand-accent/30 bg-brand-accent/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-brand-accent hover:bg-brand-accent/[0.15]"
+                  >
+                    View details
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success">
+                    {counts.complete} complete
+                  </span>
+                  <span className="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning">
+                    {counts.in_progress} in-progress
+                  </span>
+                  <span className="rounded-full bg-error/15 px-2 py-0.5 font-medium text-error">
+                    {counts.interrupted} failed
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               {/* Range Selector Widget */}
@@ -417,6 +492,7 @@ const Popup = () => {
             </div>
           </div>
         );
+      }
       case StatusEnum.Downloading:
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
@@ -514,6 +590,11 @@ const Popup = () => {
             </Tabs>
           </div>
         </div>
+        <GalleryDetailModal
+          isOpen={galleryDetailOpen}
+          onClose={() => setGalleryDetailOpen(false)}
+          record={galleryRecords[galleryFrontPageUrl.current] ?? null}
+        />
       </div>
     </AppShell>
   );

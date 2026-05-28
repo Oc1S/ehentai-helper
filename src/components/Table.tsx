@@ -27,7 +27,7 @@ import { downloadIndexMapStorage, downloadListStorage } from '@/storage';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
 
-const pageSize = 10;
+const pageSize = 6;
 
 type DownloadItem = chrome.downloads.DownloadItem;
 type DownloadState = DownloadItem['state'];
@@ -39,10 +39,10 @@ const CellButton = ({ children, ...rest }: ButtonProps) => (
 );
 
 const columns = [
-  { key: 'id', label: 'ID', width: 72 },
-  { key: 'state', label: 'STATE', width: 110 },
-  { key: 'filename', label: 'FILE', width: 320 },
-  { key: 'operation', label: 'ACTION', width: 180 },
+  { key: 'id', label: 'ID', width: 64 },
+  { key: 'state', label: 'STATE', width: 100 },
+  { key: 'filename', label: 'FILE', width: 300 },
+  { key: 'operation', label: 'ACTION', width: 156 },
 ];
 
 const stateMap: Record<DownloadState, ReactNode> = {
@@ -120,19 +120,22 @@ export const DownloadTable: FC = () => {
           chrome.downloads.cancel(id, () => {
             const entry = indexMap[String(id)];
             const number = entry?.index;
+            const restartUrl = entry?.sourceUrl || url;
             setDownloadList((list) => {
               const newList = [...list];
               const index = newList.findIndex((item) => item.id === id);
               newList.splice(index, 1);
               return newList;
             });
-            chrome.downloads.download({ url }, (newId) => {
+            chrome.downloads.download({ url: restartUrl }, (newId) => {
               void chrome.runtime.sendMessage({
                 type: 'register-download-index',
                 id: newId,
                 index: number ?? 0,
                 total: entry?.total ?? 0,
                 downloadPath: entry?.downloadPath,
+                galleryUrl: entry?.galleryUrl,
+                sourceUrl: entry?.sourceUrl,
               });
             });
           });
@@ -219,23 +222,13 @@ export const DownloadTable: FC = () => {
         isHeaderSticky
         sortDescriptor={sortDescriptor}
         onSortChange={setSortDescriptor}
-        bottomContent={
-          <div className="flex w-full justify-center border-t border-divider py-2">
-            <Pagination
-              isCompact
-              showControls
-              color="primary"
-              size="sm"
-              total={Math.max(1, Math.ceil(filteredList.length / pageSize))}
-              page={page}
-              onChange={setPage}
-            />
-          </div>
-        }
+        removeWrapper={false}
         classNames={{
-          wrapper: 'min-h-0 flex-1 overflow-auto',
-          th: 'text-xs font-medium',
-          td: 'text-sm',
+          base: 'min-h-0 flex-1 overflow-hidden',
+          wrapper: 'min-h-0 h-full overflow-auto p-0',
+          th: 'text-[11px] font-medium h-8',
+          td: 'text-xs py-1.5',
+          tr: 'h-9',
         }}
       >
         <TableHeader columns={columns}>
@@ -253,6 +246,17 @@ export const DownloadTable: FC = () => {
           )}
         </TableBody>
       </Table>
+      <div className="flex shrink-0 items-center justify-center pt-1">
+        <Pagination
+          isCompact
+          showControls
+          color="primary"
+          size="sm"
+          total={Math.max(1, Math.ceil(filteredList.length / pageSize))}
+          page={page}
+          onChange={setPage}
+        />
+      </div>
     </div>
   );
 };

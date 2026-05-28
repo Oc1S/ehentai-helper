@@ -1,5 +1,11 @@
 import { defaultConfig, EXTENSION_NAME, isObject } from './shared';
-import { configStorage, downloadIndexMapStorage, downloadListStorage } from './storage';
+import {
+  configStorage,
+  downloadIndexMapStorage,
+  downloadListStorage,
+  downloadOwnerStorage,
+  galleryRecordsStorage,
+} from './storage';
 import { splitFilename } from './utils';
 
 const textMime = 'text/plain';
@@ -96,7 +102,50 @@ let currentConfig = defaultConfig;
 let currentDownloadContext: {
   downloadPath: string;
   total: number;
+  galleryUrl?: string;
+  galleryName?: string;
+  galleryId?: string;
 } | null = null;
+
+const MAX_OWNER_ENTRIES = 5000;
+
+const trimOwnerMap = (map: Record<string, unknown>): Record<string, unknown> => {
+  const keys = Object.keys(map);
+  if (keys.length <= MAX_OWNER_ENTRIES) return map;
+  // chrome download ids are monotonically increasing → keep the newest IDs
+  const sorted = keys.map(Number).sort((a, b) => a - b);
+  const toDrop = sorted.slice(0, keys.length - MAX_OWNER_ENTRIES);
+  const next = { ...map };
+  for (const id of toDrop) delete next[String(id)];
+  return next;
+};
+
+const getFormatOverrideExtension = (): string | null => {
+  const fmt = currentConfig.imageFormat;
+  if (!fmt || fmt === 'original') return null;
+  return fmt;
+};
+
+const propagateImagePatchToGallery = async (
+  chromeDownloadId: number,
+  patch: {
+    state?: chrome.downloads.DownloadItem['state'];
+    filename?: string;
+    error?: string;
+    bytesReceived?: number;
+    totalBytes?: number;
+  }
+) => {
+  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
+  const owner = ownerMap?.[String(chromeDownloadId)];
+  if (!owner) return;
+  await galleryRecordsStorage.patchImageByDownloadId(
+    chromeDownloadId,
+    owner.galleryUrl,
+    owner.index,
+    patch
+  );
+};
 
 const registerListeners = () => {
   if (listenersRegistered) return;
@@ -108,6 +157,10 @@ const registerListeners = () => {
 
     trackedExtensionDownloadIds.add(downloadItem.id);
     void patchDownloadListNow(downloadItem);
+    void propagateImagePatchToGallery(downloadItem.id, {
+      state: downloadItem.state,
+      filename: downloadItem.filename,
+    });
   });
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
@@ -122,6 +175,23 @@ const registerListeners = () => {
       }
     }
     scheduleDownloadPatch(next);
+
+    const galleryPatch: {
+      state?: chrome.downloads.DownloadItem['state'];
+      filename?: string;
+      error?: string;
+      totalBytes?: number;
+    } = {};
+    if (downloadDelta.state) {
+      galleryPatch.state =
+        downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
+    }
+    if (downloadDelta.filename) galleryPatch.filename = downloadDelta.filename.current;
+    if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
+    if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
+    if (Object.keys(galleryPatch).length > 0) {
+      void propagateImagePatchToGallery(id, galleryPatch);
+    }
   });
 
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
@@ -136,14 +206,19 @@ const registerListeners = () => {
       currentConfig.intermediateDownloadPath;
 
     let { filename } = downloadItem;
-    const [name, fileType] = splitFilename(filename);
+    const [name, originalFileType] = splitFilename(filename);
     if (downloadItem.mime === textMime) {
       filename = `${downloadPath}/info.txt`;
     } else {
+      const overrideExt = getFormatOverrideExtension();
+      const fileType = overrideExt || originalFileType || 'jpg';
       filename = `${downloadPath}/${fileNameRule
         .replace('[index]', String(entry?.index ?? ''))
         .replace('[name]', name)
-        .replace('[total]', String(entry?.total ?? currentDownloadContext?.total ?? ''))}.${fileType}`;
+        .replace(
+          '[total]',
+          String(entry?.total ?? currentDownloadContext?.total ?? '')
+        )}.${fileType}`;
     }
 
     suggest({
@@ -165,8 +240,31 @@ const registerListeners = () => {
           index: message.index,
           total: message.total,
           downloadPath: message.downloadPath,
+          galleryUrl: message.galleryUrl,
+          sourceUrl: message.sourceUrl,
         },
       }));
+
+      if (message.galleryUrl) {
+        void downloadOwnerStorage.set(
+          (map) =>
+            trimOwnerMap({
+              ...(map || {}),
+              [String(message.id)]: {
+                galleryUrl: message.galleryUrl,
+                index: message.index,
+              },
+            }) as Record<string, { galleryUrl: string; index: number }>
+        );
+        void galleryRecordsStorage.upsertImage(message.galleryUrl, {
+          index: message.index,
+          sourceUrl: message.sourceUrl ?? '',
+          state: 'in_progress',
+          chromeDownloadId: message.id,
+          updatedAt: Date.now(),
+        });
+      }
+
       sendResponse({ ok: true });
       return true;
     }
@@ -175,7 +273,19 @@ const registerListeners = () => {
       currentDownloadContext = {
         downloadPath: message.downloadPath,
         total: message.total,
+        galleryUrl: message.galleryUrl,
+        galleryName: message.galleryName,
+        galleryId: message.galleryId,
       };
+      if (message.galleryUrl) {
+        void galleryRecordsStorage.upsertGallery({
+          galleryUrl: message.galleryUrl,
+          galleryName: message.galleryName ?? '',
+          galleryId: message.galleryId ?? '',
+          downloadPath: message.downloadPath,
+          total: message.total,
+        });
+      }
       sendResponse({ ok: true });
       return true;
     }
@@ -199,6 +309,8 @@ const registerListeners = () => {
   const indexMap = await downloadIndexMapStorage.get();
   rebuildTrackedIdsFromIndexMap(indexMap);
   await downloadListStorage.get().catch(() => []);
+  await downloadOwnerStorage.get().catch(() => ({}));
+  await galleryRecordsStorage.get().catch(() => ({}));
   await syncDownloadList().catch(() => undefined);
 
   configStorage.subscribe(() => {

@@ -4,6 +4,8 @@ export type DownloadIndexEntry = {
   index: number;
   total: number;
   downloadPath?: string;
+  galleryUrl?: string;
+  sourceUrl?: string;
 };
 
 export const downloadIndexMapStorage = createStorage<Record<string, DownloadIndexEntry>>(

@@ -1,7 +1,7 @@
 import { type FC, type ReactNode } from 'react';
 import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
-import { type Config, PATTERN_INVALID_FILE_PATH_CHAR } from '@/shared';
+import { type Config, type ImageFormat, PATTERN_INVALID_FILE_PATH_CHAR } from '@/shared';
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
@@ -151,6 +151,30 @@ export const Settings: FC<{
           <Radio value="[index]">{'[Index]'}</Radio>
           <Radio value="[name]">{'[Name]'}</Radio>
           <Radio value="[index]_[total]">{'[Index]_[Total]'}</Radio>
+        </RadioGroup>
+      ),
+    },
+    imageFormat: {
+      label: (
+        <span title="Convert downloaded images to the selected format on the fly.">
+          Image format
+        </span>
+      ),
+      content: (
+        <RadioGroup
+          orientation="horizontal"
+          value={config.imageFormat}
+          onValueChange={(val) =>
+            setConfig({
+              ...config,
+              imageFormat: val as ImageFormat,
+            })
+          }
+        >
+          <Radio value="original">Original</Radio>
+          <Radio value="jpg">JPG</Radio>
+          <Radio value="png">PNG</Radio>
+          <Radio value="webp">WebP</Radio>
         </RadioGroup>
       ),
     },
