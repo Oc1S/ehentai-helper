@@ -42,13 +42,13 @@ const variantStyle: Record<
     glassBg: 'bg-gradient-to-b from-white/[0.08] to-white/[0.02]',
   },
   error: {
-    ambient: 'bg-error/10',
-    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-hairline-soft',
-    iconGlow: 'bg-error/20',
-    iconRing: 'border-white/[0.15] bg-error/10',
+    ambient: 'bg-brand-accent/10',
+    cardShadow: 'shadow-[0_18px_54px_-28px_rgba(212,175,55,0.35)]',
+    border: 'border-hairline',
+    iconGlow: 'bg-brand-accent/10',
+    iconRing: 'border-hairline bg-surface-dark-elevated/80',
     iconText: 'text-error',
-    glassBg: 'bg-gradient-to-b from-white/[0.08] to-white/[0.02]',
+    glassBg: 'bg-gradient-to-b from-brand-accent/[0.06] via-surface-card/60 to-surface-card/40',
   },
 };
 
@@ -94,18 +94,30 @@ export const StatusCard = ({
         className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[80px] transition-transform duration-700 group-hover:scale-110 ${style.ambient}`}
         aria-hidden
       />
-
-      <div className="relative z-10 flex flex-col items-start gap-5">
+      {variant === 'error' && (
         <div
-          className={`relative flex h-14 w-14 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl ${style.iconRing} ${style.iconText} [&_svg]:h-6 [&_svg]:w-6`}
+          className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/45 to-transparent"
+          aria-hidden
+        />
+      )}
+
+      <div className="relative z-10 flex flex-col items-center gap-5 text-center">
+        <div
+          className={`relative flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl ${style.iconRing} ${style.iconText} [&_svg]:h-6 [&_svg]:w-6`}
         >
-          {icon}
+          <span
+            className={`absolute inset-1 rounded-[14px] blur-md ${style.iconGlow}`}
+            aria-hidden
+          />
+          <span className="relative z-10 flex items-center justify-center">
+            {icon}
+          </span>
         </div>
 
-        <div className="flex w-full flex-col gap-2 text-left">
+        <div className="flex w-full flex-col items-center gap-2">
           <h3 className="text-xl font-bold tracking-tight text-ink">{title}</h3>
           {description && (
-            <div className="text-[13px] leading-relaxed text-muted">{description}</div>
+            <div className="max-w-[300px] text-[13px] leading-relaxed text-muted">{description}</div>
           )}
           {children && <div className="mt-2">{children}</div>}
         </div>

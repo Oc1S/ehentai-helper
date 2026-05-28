@@ -16,7 +16,7 @@ export type Config = {
   imageFormat: ImageFormat;
 };
 
-export const defaultConfig: Config = {
+export const DEFAULT_CONFIG: Config = {
   intermediateDownloadPath: 'e-hentai helper/',
   saveOriginalImages: false,
   saveGalleryInfo: false,

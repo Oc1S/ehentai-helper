@@ -1,11 +1,10 @@
-import { BaseStorage, createStorage, StorageType } from './base';
-import { defaultConfig, type Config } from '../shared/constant';
-
-export { defaultConfig, type Config } from '../shared/constant';
+import { type Config, DEFAULT_CONFIG } from '../shared/constant';
+import type { BaseStorage } from './base';
+import { createStorage, StorageType } from './base';
 
 export const configStorage: BaseStorage<Config> = createStorage<Config>(
   'ehentai-helper-config',
-  defaultConfig,
+  DEFAULT_CONFIG,
   {
     storageType: StorageType.Sync,
     liveUpdate: true,

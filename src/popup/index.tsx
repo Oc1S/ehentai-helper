@@ -9,8 +9,10 @@ import { AppShell } from '@/app';
 import { DownloadIcon } from '@/components/icons/DownloadIcon';
 import { PageSelector } from '@/components/page-selector';
 import { StatusCard } from '@/components/status-card';
+import { useLatest } from '@/hooks/use-latest';
 import {
-  defaultConfig,
+  DEFAULT_CONFIG,
+  getCurrentTabHtml,
   getCurrentTabUrl,
   isEHentaiGalleryUrl,
   isEHentaiPageUrl,
@@ -73,11 +75,6 @@ const DownloadProgress = ({
       value={finishedCount}
       minValue={0}
       maxValue={downloadCount}
-      className="w-full"
-      classNames={{
-        track: 'h-2 border-s border-primary/20 bg-surface-strong',
-        indicator: 'bg-brand-primary',
-      }}
       color="primary"
       size="sm"
     />
@@ -87,8 +84,6 @@ const DownloadProgress = ({
   </div>
 );
 
-let galleryInfo: GalleryInfo;
-
 const sendRuntimeMessage = (message: Record<string, unknown>) =>
   new Promise<void>((resolve) => {
     chrome.runtime.sendMessage(message, () => resolve());
@@ -96,26 +91,20 @@ const sendRuntimeMessage = (message: Record<string, unknown>) =>
 
 const Popup = () => {
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
-  const config = useStorage(configStorage);
   const storedDownloadList = useStorageSuspense(downloadListStorage) || [];
   const downloadIndexMap = useStorageSuspense(downloadIndexMapStorage) || {};
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
   const galleryFrontPageUrl = useRef('');
-  const configRef = useRef(defaultConfig);
+  const config = useStorage(configStorage);
+  const configLatest = useLatest(config || DEFAULT_CONFIG);
   const [galleryDetailOpen, setGalleryDetailOpen] = useState(false);
   const [galleryPageInfo, setGalleryPageInfo, galleryPageInfoRef] = useStateRef({
     imagesPerPage: 0,
     numPages: 0,
     totalImages: 0,
   });
+  const [galleryInfo, setGalleryInfo] = useState<GalleryInfo | null>(null);
   const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
-  const [galleryTitle, setGalleryTitle] = useState('');
-
-  useEffect(() => {
-    if (config) {
-      configRef.current = config;
-    }
-  }, [config]);
 
   useEffect(() => {
     setRange([1, galleryPageInfo.totalImages]);
@@ -136,7 +125,7 @@ const Popup = () => {
 
   const downloadCount = range[1] - range[0] + 1;
   const trackedDownloadIdSet = useMemo(() => {
-    const currentDownloadPath = configRef.current.intermediateDownloadPath;
+    const currentDownloadPath = configLatest.current.intermediateDownloadPath;
     return new Set(
       Object.entries(downloadIndexMap)
         .filter(([, entry]) => entry.downloadPath === currentDownloadPath)
@@ -164,7 +153,7 @@ const Popup = () => {
         }
         downloadJob.downloadImage(imagePageUrls[imageIndex], pageIndex, imageIndex);
         imageIndex++;
-      }, configRef.current.downloadInterval);
+      }, configLatest.current.downloadInterval);
       return imagePageUrls.length;
     },
     extractImagePageUrls: (html: string) => {
@@ -180,7 +169,7 @@ const Popup = () => {
       const responseText = res.data;
       const doc = htmlStr2DOM(responseText);
       let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
-      if (configRef.current.saveOriginalImages) {
+      if (configLatest.current.saveOriginalImages) {
         try {
           const originalImage = (
             doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement
@@ -194,7 +183,7 @@ const Popup = () => {
       const sourceImageUrl = imageUrl;
       let downloadUrl = imageUrl;
       let convertedObjectUrl: string | null = null;
-      const desiredFormat = configRef.current.imageFormat;
+      const desiredFormat = configLatest.current.imageFormat;
       if (desiredFormat && desiredFormat !== 'original') {
         try {
           convertedObjectUrl = await convertImageToFormat(imageUrl, desiredFormat);
@@ -212,12 +201,12 @@ const Popup = () => {
         if (convertedObjectUrl) {
           releaseConvertedUrlOnDownloadDone(id, convertedObjectUrl);
         }
-        void chrome.runtime.sendMessage({
+        chrome.runtime.sendMessage({
           type: 'register-download-index',
           id,
           index: currentIndex,
           total: galleryPageInfoRef.current.totalImages,
-          downloadPath: configRef.current.intermediateDownloadPath,
+          downloadPath: configLatest.current.intermediateDownloadPath,
           galleryUrl: galleryFrontPageUrl.current,
           sourceUrl: sourceImageUrl,
         });
@@ -234,7 +223,7 @@ const Popup = () => {
         }
         downloadJob.processGalleryPage(pageIndex);
         pageIndex++;
-      }, configRef.current.downloadInterval * galleryPageInfo.imagesPerPage);
+      }, configLatest.current.downloadInterval * galleryPageInfo.imagesPerPage);
     },
   };
 
@@ -252,26 +241,29 @@ const Popup = () => {
     (async () => {
       const url = await getCurrentTabUrl().catch(() => '');
       if (isEHentaiGalleryUrl(url)) {
-        const items = configRef.current ?? defaultConfig;
-        configRef.current = items;
-        galleryFrontPageUrl.current = url.substring(0, url.lastIndexOf('/') + 1);
-        const { data: galleryHtmlStr } = await axios
-          .get(galleryFrontPageUrl.current)
-          .catch(() => ({ data: '' }));
+        const items = configLatest.current ?? DEFAULT_CONFIG;
+        configLatest.current = items;
+
+        const trimmed = url.split('?')[0];
+        galleryFrontPageUrl.current = trimmed.substring(0, trimmed.lastIndexOf('/') + 1);
+        const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
         if (!isGalleryPageHtml(galleryHtmlStr)) {
           setStatus(StatusEnum.Fail);
           return;
         }
+
         const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
         setGalleryPageInfo(pageInfo);
-        galleryInfo = await extractGalleryInfo(galleryHtmlStr);
-        setGalleryTitle(galleryInfo.name);
-        configRef.current = {
-          ...configRef.current,
+        const galleryInfoResult = await extractGalleryInfo(galleryHtmlStr);
+        setGalleryInfo(galleryInfoResult);
+
+        configLatest.current = {
+          ...configLatest.current,
           intermediateDownloadPath:
-            configRef.current.intermediateDownloadPath +
-            removeInvalidCharFromFilename(galleryInfo.name),
+            configLatest.current.intermediateDownloadPath +
+            removeInvalidCharFromFilename(galleryInfoResult.name),
         };
+
         setStatus(StatusEnum.BeforeDownload);
         return;
       }
@@ -300,14 +292,14 @@ const Popup = () => {
     });
     await sendRuntimeMessage({
       type: 'set-download-context',
-      downloadPath: configRef.current.intermediateDownloadPath,
+      downloadPath: configLatest.current.intermediateDownloadPath,
       total: galleryPageInfoRef.current.totalImages,
       galleryUrl: galleryFrontPageUrl.current,
-      galleryName: galleryInfo?.name ?? galleryTitle,
+      galleryName: galleryInfo?.name ?? '',
       galleryId: galleryInfo?.id ?? '',
     });
     downloadJob.downloadAllImages();
-    if (configRef.current.saveGalleryInfo) {
+    if (configLatest.current.saveGalleryInfo) {
       downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
     }
   };
@@ -384,9 +376,7 @@ const Popup = () => {
               >
             )
           : null;
-        const trackedTotal = counts
-          ? counts.complete + counts.in_progress + counts.interrupted
-          : 0;
+        const trackedTotal = counts ? counts.complete + counts.in_progress + counts.interrupted : 0;
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
             {/* Gallery Info Widget - Bento Style */}
@@ -395,11 +385,8 @@ const Popup = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/[0.04] to-transparent" />
 
               <div className="relative z-10 flex flex-col gap-2.5">
-                <h2
-                  className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink"
-                  title={galleryTitle}
-                >
-                  {galleryTitle}
+                <h2 className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink">
+                  {galleryInfo.name || ''}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-1.5 rounded-full border border-hairline-soft bg-brand-accent/[0.04] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-md">
@@ -429,13 +416,13 @@ const Popup = () => {
                   </button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
-                  <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success">
+                  <span className="bg-success/15 rounded-full px-2 py-0.5 font-medium text-success">
                     {counts.complete} complete
                   </span>
-                  <span className="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning">
+                  <span className="bg-warning/15 rounded-full px-2 py-0.5 font-medium text-warning">
                     {counts.in_progress} in-progress
                   </span>
-                  <span className="rounded-full bg-error/15 px-2 py-0.5 font-medium text-error">
+                  <span className="bg-error/15 rounded-full px-2 py-0.5 font-medium text-error">
                     {counts.interrupted} failed
                   </span>
                 </div>
@@ -500,7 +487,7 @@ const Popup = () => {
               <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-brand-accent/10 blur-[80px]" />
               <div className="relative z-10">
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryTitle}
+                  {galleryInfo.name || ''}
                 </h3>
                 <div className="mt-2.5 flex items-center gap-2">
                   <Spinner size="sm" color="primary" />
@@ -521,7 +508,7 @@ const Popup = () => {
             <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
               <div className="text-left">
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryTitle}
+                  {galleryInfo.name || ''}
                 </h3>
                 <p className="mt-1.5 text-[12px] font-medium text-muted">
                   All images downloaded successfully
@@ -565,6 +552,7 @@ const Popup = () => {
           </span>
           <DownloadSettings />
         </header>
+
         <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3">
           <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col">
             <Tabs

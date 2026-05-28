@@ -1,4 +1,4 @@
-import { defaultConfig, EXTENSION_NAME, isObject } from './shared';
+import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './shared';
 import {
   configStorage,
   downloadIndexMapStorage,
@@ -98,7 +98,7 @@ const clearPendingPatches = () => {
   }
 };
 
-let currentConfig = defaultConfig;
+let currentConfig = DEFAULT_CONFIG;
 let currentDownloadContext: {
   downloadPath: string;
   total: number;
@@ -183,8 +183,7 @@ const registerListeners = () => {
       totalBytes?: number;
     } = {};
     if (downloadDelta.state) {
-      galleryPatch.state =
-        downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
+      galleryPatch.state = downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
     }
     if (downloadDelta.filename) galleryPatch.filename = downloadDelta.filename.current;
     if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
