@@ -3,7 +3,7 @@ import { Button } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
-import { Settings, validateFilePath } from '@/components/settings-com';
+import { Settings, validateFilePath } from '@/components/settings';
 import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG } from '@/utils';

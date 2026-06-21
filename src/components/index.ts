@@ -3,5 +3,5 @@ export * from './download-settings';
 export * from './gallery-detail-modal';
 export * from './Noise';
 export * from './page-selector';
-export * from './settings-com';
+export * from './settings';
 export * from './Table';

@@ -14,7 +14,7 @@ import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
 
-import { Settings } from './settings-com';
+import { Settings } from './settings';
 
 const formatDownloadDir = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
