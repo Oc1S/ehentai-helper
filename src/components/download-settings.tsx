@@ -10,8 +10,9 @@ import {
 } from '@nextui-org/react';
 import { toast } from 'sonner';
 
-import { PATTERN_INVALID_FILE_PATH_CHAR, useMounted } from '@/shared';
-import { type Config, configStorage, defaultConfig } from '@/storage';
+import { useMounted } from '@/hooks';
+import { configStorage } from '@/storage';
+import { type Config, DEFAULT_CONFIG, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
 
 import { Settings } from './settings-com';
 
@@ -28,7 +29,7 @@ const formatDownloadDir = (path: string) => {
 
 export const DownloadSettings = () => {
   const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
-  const [config, setConfig] = useState<Config>(defaultConfig);
+  const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
   useMounted(() => {
     configStorage.get().then((items) => {

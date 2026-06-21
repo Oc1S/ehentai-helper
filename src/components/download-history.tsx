@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@nextui-org/react';
 
-import { useStorageSuspense } from '@/shared';
+import { useStorageSuspense } from '@/hooks';
 import {
   type DownloadHistoryItem,
   downloadHistoryStorage,

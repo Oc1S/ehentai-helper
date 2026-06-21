@@ -1,4 +1,4 @@
-import type { ImageFormat } from '@/shared';
+import type { ImageFormat } from './constant';
 
 const MIME_MAP: Record<Exclude<ImageFormat, 'original'>, string> = {
   jpg: 'image/jpeg',

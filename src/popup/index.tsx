@@ -9,18 +9,7 @@ import { AppShell } from '@/app';
 import { DownloadIcon } from '@/components/icons/DownloadIcon';
 import { PageSelector } from '@/components/page-selector';
 import { StatusCard } from '@/components/status-card';
-import { useLatest } from '@/hooks/use-latest';
-import {
-  DEFAULT_CONFIG,
-  getCurrentTabHtml,
-  getCurrentTabUrl,
-  isEHentaiGalleryUrl,
-  isEHentaiPageUrl,
-  useMounted,
-  useStateRef,
-  useStorage,
-  useStorageSuspense,
-} from '@/shared';
+import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
 import {
   configStorage,
   downloadHistoryStorage,
@@ -29,6 +18,13 @@ import {
   type GalleryInfo,
   galleryRecordsStorage,
 } from '@/storage';
+import {
+  DEFAULT_CONFIG,
+  getCurrentTabHtml,
+  getCurrentTabUrl,
+  isEHentaiGalleryUrl,
+  isEHentaiPageUrl,
+} from '@/utils';
 import {
   convertImageToFormat,
   downloadAsTxtFile,

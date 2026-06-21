@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@nextui-org/react';
 
-import { useCreation, useStorageSuspense } from '@/shared';
+import { useCreation, useStorageSuspense } from '@/hooks';
 import { downloadIndexMapStorage, downloadListStorage } from '@/storage';
 
 import { ChevronDownIcon } from './icons/ChevronDownIcon';

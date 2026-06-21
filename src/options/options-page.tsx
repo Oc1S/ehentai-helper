@@ -3,10 +3,10 @@ import { Button } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
-import { type Config, DEFAULT_CONFIG, useMounted } from '@/shared';
+import { Settings, validateFilePath } from '@/components/settings-com';
+import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
-
-import { Settings, validateFilePath } from '../components/settings-com';
+import { type Config, DEFAULT_CONFIG } from '@/utils';
 
 export const OptionsPage = () => {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);

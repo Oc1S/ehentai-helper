@@ -1,4 +1,4 @@
-import { type Config, DEFAULT_CONFIG } from '../shared/constant';
+import { type Config, DEFAULT_CONFIG } from '../utils/constant';
 import type { BaseStorage } from './base';
 import { createStorage, StorageType } from './base';
 

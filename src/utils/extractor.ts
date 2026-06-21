@@ -1,6 +1,6 @@
-import { getCurrentTabUrl } from '@/shared';
 import { type GalleryInfo, type GalleryTag } from '@/storage';
 
+import { getCurrentTabUrl } from './browser';
 import { getDocument } from './htmlStr2Dom';
 
 /** 画廊页 HTML 特征（排除纯文本错误页、空响应等） */

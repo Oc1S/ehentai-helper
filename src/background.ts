@@ -1,4 +1,3 @@
-import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './shared';
 import {
   configStorage,
   downloadIndexMapStorage,
@@ -6,6 +5,7 @@ import {
   downloadOwnerStorage,
   galleryRecordsStorage,
 } from './storage';
+import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './utils';
 import { splitFilename } from './utils';
 
 const textMime = 'text/plain';
