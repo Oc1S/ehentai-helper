@@ -3,14 +3,13 @@ import { Button } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
-import { useMounted } from '@/shared';
-import { type Config, configStorage, defaultConfig } from '@/storage';
+import { type Config, DEFAULT_CONFIG, useMounted } from '@/shared';
+import { configStorage } from '@/storage';
 
-import { validateFilePath } from '../components/settings-com';
-import { Settings } from '../components/settings-com';
+import { Settings, validateFilePath } from '../components/settings-com';
 
 export const OptionsPage = () => {
-  const [config, setConfig] = useState<Config>(defaultConfig);
+  const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
   useMounted(() => {
     configStorage.get().then((items) => {
@@ -37,7 +36,8 @@ export const OptionsPage = () => {
             <div className="options-header__text">
               <h1 className="options-header__title">Settings</h1>
               <p className="options-header__desc">
-                <span className="options-header__accent">E-Hentai Helper</span> · Download preferences
+                <span className="options-header__accent">E-Hentai Helper</span> · Download
+                preferences
               </p>
             </div>
             <Button color="primary" onPress={handleSave}>
