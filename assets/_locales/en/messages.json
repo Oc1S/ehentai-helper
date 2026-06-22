@@ -24,7 +24,8 @@
   "estimatedTime": { "message": "Estimated" },
   "seconds": { "message": "s" },
   "viewFileList": { "message": "View file list" },
-  "downloadsTab": { "message": "Downloads" },
+  "galleryTab": { "message": "Gallery" },
+  "filesTab": { "message": "Files" },
   "backgroundHint": {
     "message": "You can close this popup — download continues in the background."
   },
@@ -32,7 +33,6 @@
   "settings": { "message": "Settings" },
   "saveSettings": { "message": "Save Settings" },
   "historyTab": { "message": "History" },
-  "infoTab": { "message": "Info" },
   "previouslyTracked": { "message": "Previously tracked" },
   "viewDetails": { "message": "View details" },
   "downloadCancelled": { "message": "Download cancelled" },
@@ -59,7 +59,10 @@
   "initializing": { "message": "Initializing..." },
   "notOnGalleryPage": { "message": "Not on a Gallery Page" },
   "notOnGalleryDesc": { "message": "Open a gallery from the list or search to start downloading." },
-  "openGalleryFirst": { "message": "Start by Opening a Gallery" },
+  "openGalleryFirst": { "message": "No Gallery Open" },
+  "openGalleryDesc": {
+    "message": "Visit E-Hentai or ExHentai and open a gallery to start downloading."
+  },
   "unableReadGallery": { "message": "Unable to Read Gallery" },
   "unableReadGalleryDesc": {
     "message": "Could not parse the current page. Refresh the gallery and try again."

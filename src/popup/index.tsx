@@ -296,27 +296,50 @@ const Popup = () => {
     await launchDownload('retry', failed);
   };
 
-  const reloadGallery = async () => {
+  const initFromCurrentTab = async () => {
     setStatus(StatusEnum.Loading);
     const url = await getCurrentTabUrl().catch(() => '');
     tabUrlRef.current = url;
     setCurrentPage(getCurrentPageFromUrl(url));
+
+    if (!isEHentaiGalleryUrl(url)) {
+      setStatus(isEHentaiPageUrl(url) ? StatusEnum.EHentaiOther : StatusEnum.OtherPage);
+      return;
+    }
+
+    const items = configLatest.current ?? DEFAULT_CONFIG;
+    configLatest.current = items;
+
+    const trimmed = url.split('?')[0];
+    galleryFrontPageUrl.current = trimmed.substring(0, trimmed.lastIndexOf('/') + 1);
     const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
     if (!isGalleryPageHtml(galleryHtmlStr)) {
       setStatus(StatusEnum.Fail);
       return;
     }
+
     const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
     setGalleryPageInfo(pageInfo);
     const galleryInfoResult = await extractGalleryInfo(galleryHtmlStr);
     setGalleryInfo(galleryInfoResult);
+
+    const basePath = (config || DEFAULT_CONFIG).intermediateDownloadPath;
     configLatest.current = {
       ...configLatest.current,
-      intermediateDownloadPath:
-        (config || DEFAULT_CONFIG).intermediateDownloadPath +
-        removeInvalidCharFromFilename(galleryInfoResult.name),
+      intermediateDownloadPath: basePath + removeInvalidCharFromFilename(galleryInfoResult.name),
     };
+
     setStatus(StatusEnum.BeforeDownload);
+
+    const task = await downloadTaskStorage.get();
+    if (task?.galleryUrl === galleryFrontPageUrl.current) {
+      const restored = taskStatusToUi(task.status);
+      if (restored !== null) setStatus(restored);
+    }
+  };
+
+  const reloadGallery = () => {
+    void initFromCurrentTab();
   };
 
   const isDownloading =
@@ -327,49 +350,7 @@ const Popup = () => {
   const downloadsBadge = isDownloading && inProgressCount > 0 ? String(inProgressCount) : undefined;
 
   useMounted(() => {
-    (async () => {
-      const url = await getCurrentTabUrl().catch(() => '');
-      tabUrlRef.current = url;
-      setCurrentPage(getCurrentPageFromUrl(url));
-      if (isEHentaiGalleryUrl(url)) {
-        const items = configLatest.current ?? DEFAULT_CONFIG;
-        configLatest.current = items;
-
-        const trimmed = url.split('?')[0];
-        galleryFrontPageUrl.current = trimmed.substring(0, trimmed.lastIndexOf('/') + 1);
-        const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
-        if (!isGalleryPageHtml(galleryHtmlStr)) {
-          setStatus(StatusEnum.Fail);
-          return;
-        }
-
-        const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
-        setGalleryPageInfo(pageInfo);
-        const galleryInfoResult = await extractGalleryInfo(galleryHtmlStr);
-        setGalleryInfo(galleryInfoResult);
-
-        configLatest.current = {
-          ...configLatest.current,
-          intermediateDownloadPath:
-            configLatest.current.intermediateDownloadPath +
-            removeInvalidCharFromFilename(galleryInfoResult.name),
-        };
-
-        setStatus(StatusEnum.BeforeDownload);
-
-        const task = await downloadTaskStorage.get();
-        if (task?.galleryUrl === galleryFrontPageUrl.current) {
-          const restored = taskStatusToUi(task.status);
-          if (restored !== null) setStatus(restored);
-        }
-        return;
-      }
-      if (isEHentaiPageUrl(url)) {
-        setStatus(StatusEnum.EHentaiOther);
-        return;
-      }
-      setStatus(StatusEnum.OtherPage);
-    })();
+    void initFromCurrentTab();
   });
 
   const handleClickDownload = () => {
@@ -416,35 +397,38 @@ const Popup = () => {
             icon={<InfoIcon />}
             title={t('notOnGalleryPage')}
             description={t('notOnGalleryDesc')}
-          >
-            <Button size="sm" variant="flat" onPress={() => void reloadGallery()}>
-              {t('refreshPage')}
-            </Button>
-          </StatusCard>
+          />
         );
       case StatusEnum.OtherPage:
         return (
-          <StatusCard variant="info" icon={<LinkIcon />} title={t('openGalleryFirst')}>
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center justify-center gap-2 text-sm leading-relaxed text-body">
-                <Link
-                  href="https://e-hentai.org/"
-                  isExternal
-                  className="font-medium text-brand-accent underline underline-offset-2"
-                >
-                  E-Hentai
-                </Link>
-                <span className="text-[11px] text-muted-soft">·</span>
-                <Link
-                  href="https://exhentai.org/"
-                  isExternal
-                  className="font-medium text-brand-accent underline underline-offset-2"
-                >
-                  ExHentai
-                </Link>
-              </div>
-              <Button size="sm" variant="flat" onPress={() => void reloadGallery()}>
-                {t('refreshPage')}
+          <StatusCard
+            variant="info"
+            icon={<LinkIcon />}
+            title={t('openGalleryFirst')}
+            description={t('openGalleryDesc')}
+          >
+            <div className="grid w-full max-w-[280px] grid-cols-2 gap-2">
+              <Button
+                as="a"
+                href="https://e-hentai.org/"
+                target="_blank"
+                rel="noreferrer"
+                size="sm"
+                variant="flat"
+                className="h-9 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.25)] font-medium text-brand-accent"
+              >
+                E-Hentai
+              </Button>
+              <Button
+                as="a"
+                href="https://exhentai.org/"
+                target="_blank"
+                rel="noreferrer"
+                size="sm"
+                variant="flat"
+                className="h-9 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.25)] font-medium text-brand-accent"
+              >
+                ExHentai
               </Button>
             </div>
           </StatusCard>
@@ -788,9 +772,9 @@ const Popup = () => {
                 base: 'flex justify-center',
               }}
             >
-              <Tab key="info" title={t('infoTab')}>
+              <Tab key="info" title={t('galleryTab')}>
                 <div
-                  className={`scrollbar-glass h-popup-content w-full overflow-y-auto overflow-x-hidden ${isCenteredStatus ? 'flex items-center justify-center px-4 py-2' : ''}`}
+                  className={`scrollbar-glass h-popup-content w-full overflow-y-auto overflow-x-hidden ${isCenteredStatus ? 'flex flex-col items-center justify-center px-4 py-2 -translate-y-4' : ''}`}
                 >
                   {statusContent}
                 </div>
@@ -799,7 +783,7 @@ const Popup = () => {
                 key="downloadList"
                 title={
                   <span className="inline-flex items-center gap-1.5">
-                    {t('downloadsTab')}
+                    {t('filesTab')}
                     {downloadsBadge ? (
                       <span className="rounded-full bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
                         {downloadsBadge}

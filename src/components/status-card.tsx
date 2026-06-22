@@ -34,7 +34,9 @@ export const StatusCard = ({
 
   if (embedded) {
     return (
-      <div className={`${cardShell} flex w-full items-start gap-3 rounded-2xl p-3 ${className}`.trim()}>
+      <div
+        className={`${cardShell} flex w-full items-start gap-3 rounded-2xl p-3 ${className}`.trim()}
+      >
         <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
         <div
           className={`pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full opacity-70 blur-[64px] ${ambient}`}
@@ -47,7 +49,9 @@ export const StatusCard = ({
         </div>
         <div className="relative z-10 flex flex-col gap-1 text-left">
           <h3 className="text-[13px] font-semibold tracking-tight text-ink">{title}</h3>
-          {description && <div className="text-[11px] leading-relaxed text-muted">{description}</div>}
+          {description && (
+            <div className="text-[11px] leading-relaxed text-muted">{description}</div>
+          )}
           {children && <div className="mt-1">{children}</div>}
         </div>
       </div>
@@ -55,17 +59,22 @@ export const StatusCard = ({
   }
 
   return (
-    <div className={`${cardShell} mx-auto w-full max-w-[400px] rounded-[24px] p-6 ${className}`.trim()}>
+    <div
+      className={`${cardShell} mx-auto w-full max-w-[400px] rounded-[24px] p-5 ${className}`.trim()}
+    >
       <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
-      <div className="glass-highlight-pool pointer-events-none absolute inset-x-8 top-0 h-px" aria-hidden />
+      <div
+        className="glass-highlight-pool pointer-events-none absolute inset-x-8 top-0 h-px"
+        aria-hidden
+      />
       <div
         className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full opacity-70 blur-[80px] ${ambient}`}
         aria-hidden
       />
 
-      <div className="relative z-10 flex flex-col items-center gap-5 text-center">
+      <div className="relative z-10 flex flex-col items-center gap-4 text-center">
         <div
-          className={`flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.04)] ${iconGlass} ${
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.04)] ${iconGlass} ${
             variant === 'warning'
               ? 'text-warning/90'
               : variant === 'success'
@@ -81,7 +90,9 @@ export const StatusCard = ({
         <div className="flex w-full flex-col items-center gap-2">
           <h3 className="text-xl font-bold tracking-tight text-ink">{title}</h3>
           {description && (
-            <div className="max-w-[300px] text-[13px] leading-relaxed text-muted">{description}</div>
+            <div className="max-w-[300px] text-[13px] leading-relaxed text-muted">
+              {description}
+            </div>
           )}
           {children && <div className="mt-2">{children}</div>}
         </div>
