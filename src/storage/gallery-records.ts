@@ -28,7 +28,7 @@ export type GalleryRecord = {
 
 export type GalleryRecordsMap = Record<string, GalleryRecord>;
 
-const MAX_GALLERIES = 100;
+import { MAX_GALLERY_RECORDS } from './limits';
 
 type GalleryRecordsStorage = BaseStorage<GalleryRecordsMap> & {
   upsertGallery: (record: Omit<GalleryRecord, 'createdAt' | 'updatedAt' | 'images'>) => Promise<void>;
@@ -53,9 +53,9 @@ const baseStorage = createStorage<GalleryRecordsMap>('gallery-records', {}, {
 
 const trimToMax = (map: GalleryRecordsMap): GalleryRecordsMap => {
   const entries = Object.entries(map);
-  if (entries.length <= MAX_GALLERIES) return map;
+  if (entries.length <= MAX_GALLERY_RECORDS) return map;
   entries.sort((a, b) => b[1].updatedAt - a[1].updatedAt);
-  const kept = entries.slice(0, MAX_GALLERIES);
+  const kept = entries.slice(0, MAX_GALLERY_RECORDS);
   return Object.fromEntries(kept);
 };
 

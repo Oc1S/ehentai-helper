@@ -1,3 +1,5 @@
+import { clearCbzTask, putCbzImage } from '@/download/cbz-cache';
+import { packAndDownloadCbz } from '@/download/cbz-pack';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
 import {
@@ -11,8 +13,8 @@ import {
   extractImagePageUrlsFromHtml,
   extractImageUrlFromPageHtml,
 } from '@/utils/gallery-html-parse';
+import { resolveImageBlob } from '@/utils/image-blob';
 import { releaseConvertedUrlOnDownloadDone } from '@/utils/image-format';
-import { convertImageToFormatInWorker } from '@/utils/image-format-worker';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -33,6 +35,41 @@ const patchTask = async (patch: Partial<ActiveDownloadTask>) => {
     if (!prev) return prev;
     return { ...prev, ...patch, updatedAt: Date.now() };
   });
+};
+
+const needsCbzCache = (config: Config) => (config.outputMode ?? 'files') !== 'files';
+const needsFileDownload = (config: Config) => (config.outputMode ?? 'files') !== 'cbz';
+
+const markImageComplete = async (galleryUrl: string, index: number, sourceUrl: string) => {
+  await galleryRecordsStorage.upsertImage(galleryUrl, {
+    index,
+    sourceUrl,
+    state: 'complete',
+    updatedAt: Date.now(),
+  });
+  onGalleryRecordChanged(galleryUrl);
+};
+
+const getCompleteIndices = (
+  task: ActiveDownloadTask,
+  images: Record<string, { state: string }> | undefined
+): number[] => {
+  const indices = task.targetIndices ?? rangeIndices(task.rangeStart, task.rangeEnd);
+  return indices.filter((i) => images?.[String(i)]?.state === 'complete');
+};
+
+const maybePackCbz = async (task: ActiveDownloadTask, config: Config, galleryUrl: string) => {
+  if ((config.outputMode ?? 'files') === 'files') return;
+
+  const records = await galleryRecordsStorage.get();
+  const gallery = records?.[galleryUrl];
+  const completeIndices = getCompleteIndices(task, gallery?.images);
+  if (completeIndices.length === 0) {
+    await clearCbzTask(task.taskId);
+    return;
+  }
+
+  await packAndDownloadCbz(task, config, completeIndices);
 };
 
 const markImageFailed = async (
@@ -103,7 +140,17 @@ const scheduleFinalize = (galleryUrl: string) => {
 export const finalizeTask = async (galleryUrl: string) => {
   const task = await downloadTaskStorage.get();
   if (!task || task.galleryUrl !== galleryUrl) return;
-  if (task.status === 'cancelled' || task.status === 'completed') return;
+  if (task.status === 'cancelled') return;
+
+  const terminal = task.status === 'completed' || task.status === 'partial_success';
+  if (terminal) {
+    if (!task.cbzPacked) {
+      const config = await configStorage.get();
+      await maybePackCbz(task, config, galleryUrl);
+      await patchTask({ cbzPacked: true });
+    }
+    return;
+  }
 
   const records = await galleryRecordsStorage.get();
   const gallery = records?.[galleryUrl];
@@ -117,6 +164,15 @@ export const finalizeTask = async (galleryUrl: string) => {
   }
 
   await patchTask({ status: nextStatus });
+
+  if (nextStatus === 'completed' || nextStatus === 'partial_success') {
+    const config = await configStorage.get();
+    const updated = { ...task, status: nextStatus };
+    await maybePackCbz(updated, config, galleryUrl);
+    await patchTask({ cbzPacked: true });
+  } else if (nextStatus === 'failed') {
+    await clearCbzTask(task.taskId);
+  }
 };
 
 export const onGalleryRecordChanged = (galleryUrl: string) => {
@@ -154,47 +210,63 @@ const downloadImage = async (
   }
 
   const sourceImageUrl = imageUrl;
-  let downloadUrl = imageUrl;
-  let convertedObjectUrl: string | null = null;
-  const desiredFormat = config.imageFormat;
+  let blob: Blob;
+  let ext: string;
+  try {
+    ({ blob, ext } = await resolveImageBlob(sourceImageUrl, config.imageFormat));
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Failed to fetch image';
+    await markImageFailed(params.galleryFrontPageUrl, currentIndex, msg, sourceImageUrl);
+    return;
+  }
 
-  if (desiredFormat && desiredFormat !== 'original') {
+  if (needsCbzCache(config) && activeTaskId) {
     try {
-      convertedObjectUrl = await convertImageToFormatInWorker(imageUrl, desiredFormat);
-      downloadUrl = convertedObjectUrl;
+      await putCbzImage(activeTaskId, currentIndex, blob, ext, sourceImageUrl);
     } catch (e) {
-      console.warn('image format convert failed, fallback to original@', e);
+      console.error('cbz cache failed@', e);
+      await markImageFailed(
+        params.galleryFrontPageUrl,
+        currentIndex,
+        'Failed to cache image for CBZ',
+        sourceImageUrl
+      );
+      return;
     }
   }
 
-  await new Promise<void>((resolve) => {
-    chrome.downloads.download({ url: downloadUrl }, (id) => {
-      if (chrome.runtime.lastError || typeof id !== 'number') {
-        if (convertedObjectUrl) URL.revokeObjectURL(convertedObjectUrl);
-        void markImageFailed(
-          params.galleryFrontPageUrl,
-          currentIndex,
-          chrome.runtime.lastError?.message ?? 'Download API rejected request',
-          sourceImageUrl
-        ).then(resolve);
-        return;
-      }
-      if (convertedObjectUrl) {
-        releaseConvertedUrlOnDownloadDone(id, convertedObjectUrl);
-      }
-      chrome.runtime.sendMessage({
-        type: 'register-download-index',
-        id,
-        index: currentIndex,
-        total: params.totalImages,
-        downloadPath: params.downloadPath,
-        galleryUrl: params.galleryFrontPageUrl,
-        sourceUrl: sourceImageUrl,
-        taskId: activeTaskId,
+  if (needsFileDownload(config)) {
+    const objectUrl = URL.createObjectURL(blob);
+    await new Promise<void>((resolve) => {
+      chrome.downloads.download({ url: objectUrl }, (id) => {
+        if (chrome.runtime.lastError || typeof id !== 'number') {
+          URL.revokeObjectURL(objectUrl);
+          void markImageFailed(
+            params.galleryFrontPageUrl,
+            currentIndex,
+            chrome.runtime.lastError?.message ?? 'Download API rejected request',
+            sourceImageUrl
+          ).then(resolve);
+          return;
+        }
+        releaseConvertedUrlOnDownloadDone(id, objectUrl);
+        chrome.runtime.sendMessage({
+          type: 'register-download-index',
+          id,
+          index: currentIndex,
+          total: params.totalImages,
+          downloadPath: params.downloadPath,
+          galleryUrl: params.galleryFrontPageUrl,
+          sourceUrl: sourceImageUrl,
+          taskId: activeTaskId,
+        });
+        resolve();
       });
-      resolve();
     });
-  });
+    return;
+  }
+
+  await markImageComplete(params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
 };
 
 const processGalleryPage = async (
@@ -291,6 +363,7 @@ export const runDownloadJob = async (params: JobParams) => {
   for (const [pageIndex, pageIndices] of groupIndicesByPage(indices, params.imagesPerPage)) {
     if (cancelRequested) {
       await patchTask({ status: 'cancelled' });
+      if (activeTaskId) await clearCbzTask(activeTaskId);
       activeTaskId = null;
       return;
     }
@@ -299,6 +372,7 @@ export const runDownloadJob = async (params: JobParams) => {
 
   if (cancelRequested) {
     await patchTask({ status: 'cancelled' });
+    if (activeTaskId) await clearCbzTask(activeTaskId);
     activeTaskId = null;
     return;
   }

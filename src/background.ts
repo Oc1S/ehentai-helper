@@ -1,3 +1,5 @@
+import { clearCbzTask } from './download/cbz-cache';
+import { consumePendingCbzFilename } from './download/cbz-download';
 import {
   onGalleryRecordChanged,
   requestCancelDownload,
@@ -210,6 +212,15 @@ const registerListeners = () => {
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
     if (downloadItem.byExtensionName !== EXTENSION_NAME) return;
 
+    const cbzPath = consumePendingCbzFilename();
+    if (cbzPath) {
+      suggest({
+        filename: cbzPath,
+        conflictAction: currentConfig.filenameConflictAction,
+      });
+      return;
+    }
+
     const indexMap = downloadIndexMapStorage.getSnapshot() ?? {};
     const { fileNameRule, filenameConflictAction: conflictAction } = currentConfig;
     const entry = indexMap[String(downloadItem.id)];
@@ -339,9 +350,13 @@ const registerListeners = () => {
 
     if (message.type === 'cancel-download') {
       requestCancelDownload();
-      void downloadTaskStorage.set((prev) =>
-        prev ? { ...prev, status: 'cancelled', updatedAt: Date.now() } : prev
-      );
+      void (async () => {
+        const prev = await downloadTaskStorage.get();
+        if (prev?.taskId) await clearCbzTask(prev.taskId);
+        await downloadTaskStorage.set((task) =>
+          task ? { ...task, status: 'cancelled', updatedAt: Date.now() } : task
+        );
+      })();
       sendResponse({ ok: true });
       return true;
     }

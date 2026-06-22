@@ -26,6 +26,8 @@ import {
   downloadHistoryStorage,
   type GalleryRecord,
   galleryRecordsStorage,
+  MAX_DOWNLOAD_HISTORY,
+  MAX_GALLERY_RECORDS,
 } from '@/storage';
 import { removeInvalidCharFromFilename } from '@/utils';
 import { t } from '@/utils/i18n';
@@ -99,8 +101,18 @@ export const History: FC = () => {
     else toast.error('Failed to start download');
   };
 
+  const galleryCount = Object.keys(galleryRecords).length;
+
   return (
     <div className="flex h-popup-content min-h-0 flex-col gap-3">
+      <p className="shrink-0 text-[11px] leading-relaxed text-muted-soft">
+        {t('storageLimitHint', [
+          String(data.length),
+          String(MAX_DOWNLOAD_HISTORY),
+          String(galleryCount),
+          String(MAX_GALLERY_RECORDS),
+        ])}
+      </p>
       <div className="flex shrink-0 flex-wrap items-center gap-2.5">
         <Input
           size="sm"

@@ -28,6 +28,11 @@ const fallbackMessages: Record<string, string> = {
   downloadCancelled: 'Download cancelled',
   partialSuccessToast: '$1 succeeded, $2 failed',
   downloadFailedToast: 'Download failed ($1 errors)',
+  storageLimitHint:
+    'History keeps the latest $1 of $2 entries · Gallery tracking keeps $3 of $4 galleries. Older records are removed automatically.',
+  outputModeFiles: 'Individual files',
+  outputModeCbz: 'CBZ only',
+  outputModeBoth: 'Both',
 };
 
 export type I18nKey = keyof typeof fallbackMessages;

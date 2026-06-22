@@ -100,5 +100,14 @@
     "placeholders": {
       "1": { "content": "$1" }
     }
+  },
+  "storageLimitHint": {
+    "message": "History keeps the latest $1 of $2 entries · Gallery tracking keeps $3 of $4 galleries. Older records are removed automatically.",
+    "placeholders": {
+      "1": { "content": "$1" },
+      "2": { "content": "$2" },
+      "3": { "content": "$3" },
+      "4": { "content": "$4" }
+    }
   }
 }

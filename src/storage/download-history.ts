@@ -1,5 +1,6 @@
 import type { BaseStorage } from './base';
 import { createStorage, StorageType } from './base';
+import { MAX_DOWNLOAD_HISTORY } from './limits';
 
 export type DownloadHistoryItem = {
   url: string;
@@ -47,7 +48,9 @@ export const downloadHistoryStorage: HistoryStorage = {
   ...storage,
   add: async (item) => {
     const entry = { ...item, timestamp: Date.now() };
-    await storage.set((list) => [entry, ...(Array.isArray(list) ? list : [])].slice(0, 200));
+    await storage.set((list) =>
+      [entry, ...(Array.isArray(list) ? list : [])].slice(0, MAX_DOWNLOAD_HISTORY)
+    );
   },
   clear: async () => {
     await storage.set([]);

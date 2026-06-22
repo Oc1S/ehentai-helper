@@ -14,7 +14,7 @@ export const OptionsPage = () => {
 
   useMounted(() => {
     configStorage.get().then((items) => {
-      setConfig(items as Config);
+      setConfig({ ...DEFAULT_CONFIG, ...items });
     });
   });
 

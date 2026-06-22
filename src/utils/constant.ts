@@ -6,6 +6,8 @@ export const PATTERN_IMAGE_PAGE_URL = /https?:\/\/e[-x]hentai.org\/s\/*/;
 
 export type ImageFormat = 'original' | 'jpg' | 'png' | 'webp';
 
+export type OutputMode = 'files' | 'cbz' | 'both';
+
 export type Config = {
   intermediateDownloadPath: string;
   saveOriginalImages: boolean;
@@ -14,6 +16,7 @@ export type Config = {
   downloadInterval: number;
   fileNameRule: string;
   imageFormat: ImageFormat;
+  outputMode: OutputMode;
 };
 
 export const DEFAULT_CONFIG: Config = {
@@ -24,4 +27,5 @@ export const DEFAULT_CONFIG: Config = {
   downloadInterval: 300,
   fileNameRule: '[index]',
   imageFormat: 'original',
+  outputMode: 'files',
 };

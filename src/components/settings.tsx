@@ -1,7 +1,7 @@
 import { type FC, type ReactNode } from 'react';
 import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
-import { type Config, type ImageFormat, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
+import { type Config, type ImageFormat, type OutputMode, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
@@ -178,6 +178,29 @@ export const Settings: FC<{
           <Radio value="jpg">JPG</Radio>
           <Radio value="png">PNG</Radio>
           <Radio value="webp">WebP</Radio>
+        </RadioGroup>
+      ),
+    },
+    outputMode: {
+      label: (
+        <span title="CBZ mode caches images during download and packs one archive when finished.">
+          Output
+        </span>
+      ),
+      content: (
+        <RadioGroup
+          orientation="horizontal"
+          value={config.outputMode ?? 'files'}
+          onValueChange={(val) =>
+            setConfig({
+              ...config,
+              outputMode: val as OutputMode,
+            })
+          }
+        >
+          <Radio value="files">Individual files</Radio>
+          <Radio value="cbz">CBZ only</Radio>
+          <Radio value="both">Both</Radio>
         </RadioGroup>
       ),
     },

@@ -100,5 +100,14 @@
     "placeholders": {
       "1": { "content": "$1" }
     }
+  },
+  "storageLimitHint": {
+    "message": "历史记录保留最新 $1 / $2 条 · 画廊跟踪保留 $3 / $4 本，超出后自动删除最旧记录。",
+    "placeholders": {
+      "1": { "content": "$1" },
+      "2": { "content": "$2" },
+      "3": { "content": "$3" },
+      "4": { "content": "$4" }
+    }
   }
 }

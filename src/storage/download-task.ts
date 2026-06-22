@@ -28,6 +28,8 @@ export type ActiveDownloadTask = {
   queueFailedCount: number;
   /** 本次任务实际下载的序号；缺省为 range 内全部 */
   targetIndices?: number[];
+  /** CBZ 已打包下载，避免重复触发 */
+  cbzPacked?: boolean;
   startedAt: number;
   updatedAt: number;
 };
