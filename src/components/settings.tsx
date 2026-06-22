@@ -48,7 +48,8 @@ export const Settings: FC<{
   config: Config;
   setConfig: (config: Config) => void;
   variant?: 'modal' | 'page';
-}> = ({ config, setConfig, variant = 'modal' }) => {
+  pathPreview?: string;
+}> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
       label: (
@@ -130,7 +131,9 @@ export const Settings: FC<{
           className="w-32"
           size={variant === 'page' ? 'sm' : 'md'}
           onChange={(e) => {
-            setConfig({ ...config, downloadInterval: +e.target.value });
+            const val = +e.target.value;
+            if (Number.isNaN(val) || val < 0) return;
+            setConfig({ ...config, downloadInterval: val });
           }}
         />
       ),
@@ -187,6 +190,11 @@ export const Settings: FC<{
 
   return (
     <div className={panelClass}>
+      {pathPreview ? (
+        <p className="text-[11px] leading-relaxed text-muted">
+          Preview: <span className="font-mono text-brand-accent">[Default]/{pathPreview}</span>
+        </p>
+      ) : null}
       {Object.keys(formItemMap).map((key) => (
         <Row
           key={key}

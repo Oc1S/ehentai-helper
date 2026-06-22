@@ -1,0 +1,104 @@
+{
+  "extensionDescription": {
+    "description": "扩展描述",
+    "message": "无需 credit/GP 或登录即可下载 E-Hentai 画廊"
+  },
+  "extensionName": {
+    "description": "扩展名称",
+    "message": "E-Hentai Helper"
+  },
+  "startDownload": {
+    "message": "开始下载"
+  },
+  "confirmDownload": {
+    "message": "确认下载"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "continueMissing": {
+    "message": "继续下载缺失"
+  },
+  "redownloadAll": {
+    "message": "重新下载全部"
+  },
+  "retryFailed": {
+    "message": "重试失败项"
+  },
+  "openFolder": {
+    "message": "打开下载文件夹"
+  },
+  "downloadAgain": {
+    "message": "再次下载"
+  },
+  "refreshPage": {
+    "message": "刷新"
+  },
+  "clearAll": {
+    "message": "清空全部"
+  },
+  "delete": {
+    "message": "删除"
+  },
+  "confirmClearAll": {
+    "message": "清空全部历史记录与画廊记录？"
+  },
+  "confirmDelete": {
+    "message": "删除此历史记录及对应画廊记录？"
+  },
+  "confirmDownloadBody": {
+    "message": "张图片 · 范围"
+  },
+  "estimatedTime": {
+    "message": "预计耗时"
+  },
+  "seconds": {
+    "message": "秒"
+  },
+  "viewFileList": {
+    "message": "查看文件列表"
+  },
+  "downloadsTab": {
+    "message": "下载"
+  },
+  "backgroundHint": {
+    "message": "可以关闭此弹窗，下载会在后台继续。"
+  },
+  "pathPreviewExample": {
+    "message": "画廊名称/"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "saveSettings": {
+    "message": "保存设置"
+  },
+  "historyTab": {
+    "message": "历史"
+  },
+  "infoTab": {
+    "message": "信息"
+  },
+  "previouslyTracked": {
+    "message": "已有记录"
+  },
+  "viewDetails": {
+    "message": "查看详情"
+  },
+  "downloadCancelled": {
+    "message": "下载已取消"
+  },
+  "partialSuccessToast": {
+    "message": "成功 $1 张，失败 $2 张",
+    "placeholders": {
+      "1": { "content": "$1" },
+      "2": { "content": "$2" }
+    }
+  },
+  "downloadFailedToast": {
+    "message": "下载失败（$1 个错误）",
+    "placeholders": {
+      "1": { "content": "$1" }
+    }
+  }
+}

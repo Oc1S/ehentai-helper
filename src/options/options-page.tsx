@@ -7,6 +7,7 @@ import { Settings, validateFilePath } from '@/components/settings';
 import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG } from '@/utils';
+import { t } from '@/utils/i18n';
 
 export const OptionsPage = () => {
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
@@ -46,7 +47,12 @@ export const OptionsPage = () => {
           </header>
           <main className="options-main scrollbar-glass">
             <p className="settings-section-title">General</p>
-            <Settings config={config} setConfig={setConfig} variant="page" />
+            <Settings
+              config={config}
+              setConfig={setConfig}
+              variant="page"
+              pathPreview={`${config.intermediateDownloadPath}${t('pathPreviewExample')}`}
+            />
           </main>
         </div>
       </div>

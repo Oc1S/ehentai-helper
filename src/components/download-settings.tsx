@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
+import { t } from '@/utils/i18n';
 
 import { Settings } from './settings';
 
@@ -27,7 +28,13 @@ const formatDownloadDir = (path: string) => {
   return path;
 };
 
-export const DownloadSettings = () => {
+export const DownloadSettings = ({
+  disabled = false,
+  pathPreview,
+}: {
+  disabled?: boolean;
+  pathPreview?: string;
+}) => {
   const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
@@ -56,8 +63,8 @@ export const DownloadSettings = () => {
 
   return (
     <>
-      <Button size="sm" variant="flat" onPress={onOpen}>
-        Settings
+      <Button size="sm" variant="flat" onPress={onOpen} isDisabled={disabled}>
+        {t('settings')}
       </Button>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside">
@@ -66,14 +73,14 @@ export const DownloadSettings = () => {
             <>
               <ModalHeader className="flex flex-col gap-1">Download Settings</ModalHeader>
               <ModalBody className="space-y-6">
-                <Settings config={config} setConfig={setConfig} />
+                <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
               <ModalFooter className="gap-3">
                 <Button variant="light" onPress={onClose}>
-                  Cancel
+                  {t('cancel')}
                 </Button>
                 <Button color="primary" onPress={handleSave}>
-                  Save Settings
+                  {t('saveSettings')}
                 </Button>
               </ModalFooter>
             </>

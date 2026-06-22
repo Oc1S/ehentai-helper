@@ -3,18 +3,26 @@ import '../styles/popup.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
-import axios from 'axios';
+import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
+import { DownloadConfirmModal } from '@/components/download-confirm-modal';
 import { DownloadIcon } from '@/components/icons/DownloadIcon';
 import { PageSelector } from '@/components/page-selector';
 import { StatusCard } from '@/components/status-card';
+import {
+  cancelDownload,
+  resumeDownload,
+  retryFailedDownload,
+  startDownload,
+} from '@/download/client';
+import { computeFailedIndices, computeMissingIndices } from '@/download/helpers';
+import type { DownloadJobPayload } from '@/download/types';
 import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
 import {
   configStorage,
   downloadHistoryStorage,
-  downloadIndexMapStorage,
-  downloadListStorage,
+  downloadTaskStorage,
   type GalleryInfo,
   galleryRecordsStorage,
 } from '@/storage';
@@ -26,15 +34,13 @@ import {
   isEHentaiPageUrl,
 } from '@/utils';
 import {
-  convertImageToFormat,
   downloadAsTxtFile,
   extractGalleryInfo,
   extractGalleryPageInfo,
-  htmlStr2DOM,
   isGalleryPageHtml,
-  releaseConvertedUrlOnDownloadDone,
   removeInvalidCharFromFilename,
 } from '@/utils';
+import { t } from '@/utils/i18n';
 
 import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
@@ -45,52 +51,128 @@ import { CENTERED_STATUSES, StatusEnum } from './status';
 
 const DownloadProgress = ({
   downloadCount,
-  finishedCount,
+  completeCount,
+  failedCount,
+  inProgressCount,
 }: {
   downloadCount: number;
-  finishedCount: number;
-}) => (
-  <div className="w-full space-y-4">
-    <div className="flex items-end justify-between">
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">Progress</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">
-          {downloadCount > 0 ? Math.round((finishedCount / downloadCount) * 100) : 0}%
-        </p>
+  completeCount: number;
+  failedCount: number;
+  inProgressCount: number;
+}) => {
+  const settledCount = completeCount + failedCount;
+  const percent = downloadCount > 0 ? Math.round((settledCount / downloadCount) * 100) : 0;
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+            Progress
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">{percent}%</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+            Completed
+          </p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
+            {completeCount}
+            <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
+          </p>
+        </div>
       </div>
-      <div className="text-right">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">Completed</p>
-        <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
-          {finishedCount}
-          <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
-        </p>
+      <Progress
+        aria-label="Download progress"
+        value={settledCount}
+        minValue={0}
+        maxValue={downloadCount}
+        color="primary"
+        size="sm"
+      />
+      <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-soft">
+        <span className="text-success">{completeCount} complete</span>
+        <span>·</span>
+        <span className="text-warning">{inProgressCount} in progress</span>
+        <span>·</span>
+        <span className="text-error">{failedCount} failed</span>
       </div>
     </div>
-    <Progress
-      aria-label="Download progress"
-      value={finishedCount}
-      minValue={0}
-      maxValue={downloadCount}
-      color="primary"
-      size="sm"
-    />
-    <p className="text-center text-[11px] text-muted-soft">
-      {Math.max(0, downloadCount - finishedCount)} images remaining
-    </p>
-  </div>
-);
+  );
+};
 
-const sendRuntimeMessage = (message: Record<string, unknown>) =>
-  new Promise<void>((resolve) => {
-    chrome.runtime.sendMessage(message, () => resolve());
-  });
+const countRangeProgress = (
+  record: { images: Record<string, { state: string }> } | undefined,
+  rangeStart: number,
+  rangeEnd: number
+) => {
+  let completeCount = 0;
+  let failedCount = 0;
+  let inProgressCount = 0;
+  if (!record) return { completeCount, failedCount, inProgressCount };
+
+  for (let i = rangeStart; i <= rangeEnd; i++) {
+    const img = record.images[String(i)];
+    if (!img) continue;
+    if (img.state === 'complete') completeCount++;
+    else if (img.state === 'interrupted') failedCount++;
+    else if (img.state === 'in_progress') inProgressCount++;
+  }
+  return { completeCount, failedCount, inProgressCount };
+};
+
+const countIndicesProgress = (
+  record: { images: Record<string, { state: string }> } | undefined,
+  indices: number[]
+) => {
+  let completeCount = 0;
+  let failedCount = 0;
+  let inProgressCount = 0;
+  for (const i of indices) {
+    const img = record?.images[String(i)];
+    if (!img) continue;
+    if (img.state === 'complete') completeCount++;
+    else if (img.state === 'interrupted') failedCount++;
+    else if (img.state === 'in_progress') inProgressCount++;
+  }
+  return { completeCount, failedCount, inProgressCount };
+};
+
+const getCurrentPageFromUrl = (url: string) => {
+  try {
+    const p = new URL(url).searchParams.get('p');
+    return p ? Number(p) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const taskStatusToUi = (taskStatus: string): StatusEnum | null => {
+  switch (taskStatus) {
+    case 'running':
+    case 'dispatch_complete':
+      return StatusEnum.Downloading;
+    case 'completed':
+      return StatusEnum.DownloadSuccess;
+    case 'partial_success':
+      return StatusEnum.DownloadPartialSuccess;
+    case 'failed':
+      return StatusEnum.DownloadFailed;
+    default:
+      return null;
+  }
+};
 
 const Popup = () => {
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
-  const storedDownloadList = useStorageSuspense(downloadListStorage) || [];
-  const downloadIndexMap = useStorageSuspense(downloadIndexMapStorage) || {};
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
+  const activeTask = useStorage(downloadTaskStorage);
   const galleryFrontPageUrl = useRef('');
+  const tabUrlRef = useRef('');
+  const lastNotifiedTaskStatus = useRef<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('info');
+  const [currentPage, setCurrentPage] = useState(0);
   const config = useStorage(configStorage);
   const configLatest = useLatest(config || DEFAULT_CONFIG);
   const [galleryDetailOpen, setGalleryDetailOpen] = useState(false);
@@ -106,136 +188,148 @@ const Popup = () => {
     setRange([1, galleryPageInfo.totalImages]);
   }, [galleryPageInfo.totalImages]);
 
-  const [startIndex, endIndex] = range;
-  const [start, end] = useMemo(() => {
-    const start = {
-      indexOfPage: (startIndex - 1) % galleryPageInfo.imagesPerPage,
-      page: Math.floor((startIndex - 1) / galleryPageInfo.imagesPerPage),
-    };
-    const end = {
-      indexOfPage: (endIndex - 1) % galleryPageInfo.imagesPerPage,
-      page: Math.floor((endIndex - 1) / galleryPageInfo.imagesPerPage),
-    };
-    return [start, end];
-  }, [galleryPageInfo.imagesPerPage, startIndex, endIndex]);
-
   const downloadCount = range[1] - range[0] + 1;
-  const trackedDownloadIdSet = useMemo(() => {
-    const currentDownloadPath = configLatest.current.intermediateDownloadPath;
-    return new Set(
-      Object.entries(downloadIndexMap)
-        .filter(([, entry]) => entry.downloadPath === currentDownloadPath)
-        .map(([id]) => Number(id))
-    );
-  }, [downloadIndexMap]);
-  const progressDownloadList = storedDownloadList.filter((item) =>
-    trackedDownloadIdSet.has(item.id)
-  );
-  const finishedList = progressDownloadList.filter((item) => item.state === 'complete');
+  const progressRange =
+    activeTask?.galleryUrl === galleryFrontPageUrl.current
+      ? { start: activeTask.rangeStart, end: activeTask.rangeEnd }
+      : { start: range[0], end: range[1] };
 
-  const downloadJob = {
-    processGalleryPage: async (pageIndex: number) => {
-      if (pageIndex < start.page || pageIndex > end.page) return;
-      const pageUrl = `${galleryFrontPageUrl.current}?p=${pageIndex}`;
-      const { data: pageHtml } = await axios.get(pageUrl);
-      const imagePageUrls = downloadJob.extractImagePageUrls(pageHtml);
-      if (imagePageUrls.length === 0) return;
-      downloadJob.downloadImage(imagePageUrls[0], pageIndex, 0);
-      let imageIndex = 1;
-      const imageInterval = setInterval(() => {
-        if (imageIndex === imagePageUrls.length) {
-          clearInterval(imageInterval);
-          return;
-        }
-        downloadJob.downloadImage(imagePageUrls[imageIndex], pageIndex, imageIndex);
-        imageIndex++;
-      }, configLatest.current.downloadInterval);
-      return imagePageUrls.length;
-    },
-    extractImagePageUrls: (html: string) => {
-      const doc = htmlStr2DOM(html);
-      return Array.from(doc.getElementById('gdt')?.childNodes || []).map(
-        (n) => (n as HTMLAnchorElement).href
-      );
-    },
-    downloadImage: async (url: string, pageIndex: number, imageIndex: number) => {
-      const currentIndex = pageIndex * galleryPageInfo.imagesPerPage + imageIndex + 1;
-      if (currentIndex < startIndex || currentIndex > endIndex) return;
-      const res = await axios.get(url);
-      const responseText = res.data;
-      const doc = htmlStr2DOM(responseText);
-      let imageUrl = (doc.getElementById('img') as HTMLImageElement).src;
-      if (configLatest.current.saveOriginalImages) {
-        try {
-          const originalImage = (
-            doc.getElementById('i6')?.childNodes?.[3] as HTMLDivElement
-          )?.getElementsByTagName('a')[0].href;
-          imageUrl = originalImage || imageUrl;
-        } catch (e) {
-          console.log('get original image failed@', e);
-        }
-      }
+  const { completeCount, failedCount, inProgressCount } = useMemo(() => {
+    const record = galleryRecords[galleryFrontPageUrl.current];
+    if (
+      activeTask?.galleryUrl === galleryFrontPageUrl.current &&
+      activeTask.targetIndices?.length
+    ) {
+      return countIndicesProgress(record, activeTask.targetIndices);
+    }
+    return countRangeProgress(record, progressRange.start, progressRange.end);
+  }, [galleryRecords, activeTask, progressRange.start, progressRange.end]);
 
-      const sourceImageUrl = imageUrl;
-      let downloadUrl = imageUrl;
-      let convertedObjectUrl: string | null = null;
-      const desiredFormat = configLatest.current.imageFormat;
-      if (desiredFormat && desiredFormat !== 'original') {
-        try {
-          convertedObjectUrl = await convertImageToFormat(imageUrl, desiredFormat);
-          downloadUrl = convertedObjectUrl;
-        } catch (e) {
-          console.warn('image format convert failed, fallback to original@', e);
-        }
-      }
-
-      chrome.downloads.download({ url: downloadUrl }, (id) => {
-        if (typeof id !== 'number') {
-          if (convertedObjectUrl) URL.revokeObjectURL(convertedObjectUrl);
-          return;
-        }
-        if (convertedObjectUrl) {
-          releaseConvertedUrlOnDownloadDone(id, convertedObjectUrl);
-        }
-        chrome.runtime.sendMessage({
-          type: 'register-download-index',
-          id,
-          index: currentIndex,
-          total: galleryPageInfoRef.current.totalImages,
-          downloadPath: configLatest.current.intermediateDownloadPath,
-          galleryUrl: galleryFrontPageUrl.current,
-          sourceUrl: sourceImageUrl,
-        });
-      });
-    },
-    downloadAllImages: () => {
-      let pageIndex = start.page;
-      downloadJob.processGalleryPage(pageIndex);
-      pageIndex++;
-      const pageInterval = setInterval(() => {
-        if (pageIndex === galleryPageInfo.numPages) {
-          clearInterval(pageInterval);
-          return;
-        }
-        downloadJob.processGalleryPage(pageIndex);
-        pageIndex++;
-      }, configLatest.current.downloadInterval * galleryPageInfo.imagesPerPage);
-    },
-  };
+  const progressTotal =
+    activeTask?.galleryUrl === galleryFrontPageUrl.current
+      ? activeTask.expectedCount
+      : downloadCount;
 
   useEffect(() => {
-    if (
-      status === StatusEnum.Downloading &&
-      downloadCount > 0 &&
-      downloadCount === finishedList.length
-    ) {
-      setStatus(StatusEnum.DownloadSuccess);
+    if (!activeTask || activeTask.galleryUrl !== galleryFrontPageUrl.current) return;
+    const next = taskStatusToUi(activeTask.status);
+    if (next === null) return;
+    setStatus(next);
+    if (lastNotifiedTaskStatus.current === activeTask.status) return;
+    if (activeTask.status === 'partial_success') {
+      toast.warning(t('partialSuccessToast', [String(completeCount), String(failedCount)]));
+      lastNotifiedTaskStatus.current = activeTask.status;
+    } else if (activeTask.status === 'failed') {
+      toast.error(t('downloadFailedToast', String(failedCount)));
+      lastNotifiedTaskStatus.current = activeTask.status;
     }
-  }, [status, downloadCount, finishedList.length]);
+  }, [activeTask, completeCount, failedCount]);
+
+  const buildJobPayload = (indices?: number[]): DownloadJobPayload => ({
+    galleryFrontPageUrl: galleryFrontPageUrl.current,
+    galleryName: galleryInfo?.name ?? '',
+    galleryId: galleryInfo?.id ?? '',
+    downloadPath: configLatest.current.intermediateDownloadPath,
+    rangeStart: range[0],
+    rangeEnd: range[1],
+    imagesPerPage: galleryPageInfoRef.current.imagesPerPage,
+    numPages: galleryPageInfoRef.current.numPages,
+    totalImages: galleryPageInfoRef.current.totalImages,
+    indices,
+  });
+
+  const launchDownload = async (mode: 'full' | 'resume' | 'retry', indices?: number[]) => {
+    if (!galleryInfo) return false;
+    lastNotifiedTaskStatus.current = null;
+    setStatus(StatusEnum.Downloading);
+
+    const payload = buildJobPayload(indices);
+    const fn =
+      mode === 'resume' ? resumeDownload : mode === 'retry' ? retryFailedDownload : startDownload;
+    const response = await fn(payload);
+
+    if (!response?.ok) {
+      toast.error('Failed to start download');
+      setStatus(StatusEnum.BeforeDownload);
+      return false;
+    }
+
+    if (mode === 'full' && configLatest.current.saveGalleryInfo) {
+      downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
+    }
+    return true;
+  };
+
+  const handleConfirmDownload = async () => {
+    try {
+      await downloadHistoryStorage.add({
+        url: galleryFrontPageUrl.current,
+        name: galleryInfo!.name,
+        range,
+        info: galleryInfo!,
+      });
+    } catch (e) {
+      console.error('add download history failed@', e);
+      toast.error('Failed to save download history');
+    }
+    await launchDownload('full');
+  };
+
+  const handleResumeMissing = async () => {
+    const record = galleryRecords[galleryFrontPageUrl.current];
+    const missing = computeMissingIndices(record, range[0], range[1]);
+    if (missing.length === 0) {
+      toast.info('Nothing to resume');
+      return;
+    }
+    await launchDownload('resume', missing);
+  };
+
+  const handleRetryFailed = async (indices?: number[]) => {
+    const record = galleryRecords[galleryFrontPageUrl.current];
+    const failed = indices ?? computeFailedIndices(record, progressRange.start, progressRange.end);
+    if (failed.length === 0) {
+      toast.info('No failed items');
+      return;
+    }
+    await launchDownload('retry', failed);
+  };
+
+  const reloadGallery = async () => {
+    setStatus(StatusEnum.Loading);
+    const url = await getCurrentTabUrl().catch(() => '');
+    tabUrlRef.current = url;
+    setCurrentPage(getCurrentPageFromUrl(url));
+    const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
+    if (!isGalleryPageHtml(galleryHtmlStr)) {
+      setStatus(StatusEnum.Fail);
+      return;
+    }
+    const pageInfo = extractGalleryPageInfo(galleryHtmlStr);
+    setGalleryPageInfo(pageInfo);
+    const galleryInfoResult = await extractGalleryInfo(galleryHtmlStr);
+    setGalleryInfo(galleryInfoResult);
+    configLatest.current = {
+      ...configLatest.current,
+      intermediateDownloadPath:
+        (config || DEFAULT_CONFIG).intermediateDownloadPath +
+        removeInvalidCharFromFilename(galleryInfoResult.name),
+    };
+    setStatus(StatusEnum.BeforeDownload);
+  };
+
+  const isDownloading =
+    status === StatusEnum.Downloading ||
+    activeTask?.status === 'running' ||
+    activeTask?.status === 'dispatch_complete';
+
+  const downloadsBadge = isDownloading && inProgressCount > 0 ? String(inProgressCount) : undefined;
 
   useMounted(() => {
     (async () => {
       const url = await getCurrentTabUrl().catch(() => '');
+      tabUrlRef.current = url;
+      setCurrentPage(getCurrentPageFromUrl(url));
       if (isEHentaiGalleryUrl(url)) {
         const items = configLatest.current ?? DEFAULT_CONFIG;
         configLatest.current = items;
@@ -261,6 +355,12 @@ const Popup = () => {
         };
 
         setStatus(StatusEnum.BeforeDownload);
+
+        const task = await downloadTaskStorage.get();
+        if (task?.galleryUrl === galleryFrontPageUrl.current) {
+          const restored = taskStatusToUi(task.status);
+          if (restored !== null) setStatus(restored);
+        }
         return;
       }
       if (isEHentaiPageUrl(url)) {
@@ -271,37 +371,33 @@ const Popup = () => {
     })();
   });
 
-  const handleClickDownload = async () => {
-    try {
-      await downloadHistoryStorage.add({
-        url: galleryFrontPageUrl.current,
-        name: galleryInfo.name,
-        range,
-        info: galleryInfo,
-      });
-    } catch (e) {
-      console.error('add download history failed@', e);
-    }
-    setStatus(StatusEnum.Downloading);
-    await sendRuntimeMessage({
-      type: 'clear-download-index-map',
-    });
-    await sendRuntimeMessage({
-      type: 'set-download-context',
-      downloadPath: configLatest.current.intermediateDownloadPath,
-      total: galleryPageInfoRef.current.totalImages,
-      galleryUrl: galleryFrontPageUrl.current,
-      galleryName: galleryInfo?.name ?? '',
-      galleryId: galleryInfo?.id ?? '',
-    });
-    downloadJob.downloadAllImages();
-    if (configLatest.current.saveGalleryInfo) {
-      downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
-    }
+  const handleClickDownload = () => {
+    if (!galleryInfo) return;
+    setConfirmOpen(true);
+  };
+
+  const openDownloadFolder = () => {
+    chrome.downloads.showDefaultFolder();
+  };
+
+  const resetToBeforeDownload = () => {
+    lastNotifiedTaskStatus.current = null;
+    void downloadTaskStorage.set(null);
+    setStatus(StatusEnum.BeforeDownload);
   };
 
   const isCenteredStatus = (CENTERED_STATUSES as readonly StatusEnum[]).includes(status);
-  const finishedCount = finishedList.length;
+
+  const progressPanel = (
+    <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
+      <DownloadProgress
+        downloadCount={progressTotal}
+        completeCount={completeCount}
+        failedCount={failedCount}
+        inProgressCount={inProgressCount}
+      />
+    </div>
+  );
 
   const statusContent = (() => {
     switch (status) {
@@ -319,32 +415,36 @@ const Popup = () => {
             icon={<InfoIcon />}
             title="Not on a Gallery Page"
             description="Open a gallery from the list or search to start downloading."
-          />
+          >
+            <Button size="sm" variant="flat" onPress={() => void reloadGallery()}>
+              {t('refreshPage')}
+            </Button>
+          </StatusCard>
         );
       case StatusEnum.OtherPage:
         return (
-          <StatusCard
-            variant="info"
-            icon={<LinkIcon />}
-            title="Start by Opening a Gallery"
-            description="Open any gallery on E-Hentai or ExHentai."
-          >
-            <div className="flex items-center justify-center gap-2 text-sm leading-relaxed text-body">
-              <Link
-                href="https://e-hentai.org/"
-                isExternal
-                className="font-medium text-brand-accent underline underline-offset-2"
-              >
-                E-Hentai
-              </Link>
-              <span className="text-[11px] text-muted-soft">·</span>
-              <Link
-                href="https://exhentai.org/"
-                isExternal
-                className="font-medium text-brand-accent underline underline-offset-2"
-              >
-                ExHentai
-              </Link>
+          <StatusCard variant="info" icon={<LinkIcon />} title="Start by Opening a Gallery">
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center justify-center gap-2 text-sm leading-relaxed text-body">
+                <Link
+                  href="https://e-hentai.org/"
+                  isExternal
+                  className="font-medium text-brand-accent underline underline-offset-2"
+                >
+                  E-Hentai
+                </Link>
+                <span className="text-[11px] text-muted-soft">·</span>
+                <Link
+                  href="https://exhentai.org/"
+                  isExternal
+                  className="font-medium text-brand-accent underline underline-offset-2"
+                >
+                  ExHentai
+                </Link>
+              </div>
+              <Button size="sm" variant="flat" onPress={() => void reloadGallery()}>
+                {t('refreshPage')}
+              </Button>
             </div>
           </StatusCard>
         );
@@ -353,9 +453,13 @@ const Popup = () => {
           <StatusCard
             variant="error"
             icon={<CloseIcon />}
-            title="Connection Failed"
-            description="Unable to fetch data from server. Please try again later."
-          />
+            title="Unable to Read Gallery"
+            description="Could not parse the current page. Refresh the gallery and try again."
+          >
+            <Button size="sm" color="primary" variant="flat" onPress={() => void reloadGallery()}>
+              {t('refreshPage')}
+            </Button>
+          </StatusCard>
         );
       case StatusEnum.BeforeDownload: {
         const currentGalleryRecord = galleryRecords[galleryFrontPageUrl.current];
@@ -372,37 +476,38 @@ const Popup = () => {
             )
           : null;
         const trackedTotal = counts ? counts.complete + counts.in_progress + counts.interrupted : 0;
+        const missingCount = computeMissingIndices(currentGalleryRecord, range[0], range[1]).length;
         return (
           <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
             {/* Gallery Info Widget - Bento Style */}
             <div className="glass-panel group flex min-h-[100px] flex-col justify-end gap-2.5 rounded-[20px] p-4">
-                <h2 className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo.name || ''}
-                </h2>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/80" />
-                    {galleryPageInfo.totalImages} Images
-                  </div>
-                  <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
-                    <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/50" />
-                    {galleryPageInfo.numPages} Pages
-                  </div>
+              <h2 className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink">
+                {galleryInfo.name || ''}
+              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
+                  <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/80" />
+                  {galleryPageInfo.totalImages} Images
                 </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
+                  <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/50" />
+                  {galleryPageInfo.numPages} Pages
+                </div>
+              </div>
             </div>
 
             {counts && trackedTotal > 0 && (
               <div className="glass-panel flex flex-col gap-2 rounded-[16px] px-4 py-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] font-semibold tracking-tight text-ink">
-                    Previously tracked
+                    {t('previouslyTracked')}
                   </span>
                   <button
                     type="button"
                     onClick={() => setGalleryDetailOpen(true)}
                     className="rounded-full border border-brand-accent/30 bg-brand-accent/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-brand-accent hover:bg-brand-accent/[0.15]"
                   >
-                    View details
+                    {t('viewDetails')}
                   </button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
@@ -415,6 +520,28 @@ const Popup = () => {
                   <span className="bg-error/15 rounded-full px-2 py-0.5 font-medium text-error">
                     {counts.interrupted} failed
                   </span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {missingCount > 0 && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      onPress={() => void handleResumeMissing()}
+                    >
+                      {t('continueMissing')} ({missingCount})
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => {
+                      setRange([1, galleryPageInfo.totalImages]);
+                      setConfirmOpen(true);
+                    }}
+                  >
+                    {t('redownloadAll')}
+                  </Button>
                 </div>
               </div>
             )}
@@ -436,6 +563,8 @@ const Popup = () => {
                       range={range}
                       setRange={setRange}
                       maxValue={galleryPageInfo.totalImages}
+                      imagesPerPage={galleryPageInfo.imagesPerPage}
+                      currentPage={currentPage}
                     />
                   </div>
                 </div>
@@ -463,7 +592,7 @@ const Popup = () => {
                   <DownloadIcon />
                 </div>
                 <span className="text-sm font-bold tracking-wide text-brand-accent">
-                  Start Download
+                  {t('startDownload')}
                 </span>
               </Button>
             </div>
@@ -476,7 +605,7 @@ const Popup = () => {
             <div className="glass-panel glass-panel-live relative flex flex-col justify-end rounded-[20px] p-5">
               <div>
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo.name || ''}
+                  {galleryInfo?.name || ''}
                 </h3>
                 <div className="mt-2.5 flex items-center gap-2">
                   <Spinner size="sm" color="primary" />
@@ -484,10 +613,31 @@ const Popup = () => {
                     Downloading images...
                   </span>
                 </div>
+                <p className="mt-2 text-[11px] text-muted-soft">{t('backgroundHint')}</p>
               </div>
             </div>
-            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-              <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
+            {progressPanel}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => {
+                  setSelectedTab('downloadList');
+                }}
+              >
+                {t('viewFileList')} →
+              </Button>
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={() => {
+                  void cancelDownload();
+                  toast.info(t('downloadCancelled'));
+                }}
+              >
+                {t('cancel')}
+              </Button>
             </div>
           </div>
         );
@@ -497,10 +647,10 @@ const Popup = () => {
             <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
               <div className="text-left">
                 <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo.name || ''}
+                  {galleryInfo?.name || ''}
                 </h3>
                 <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  All images downloaded successfully
+                  All {progressTotal} images downloaded successfully
                 </p>
               </div>
               <StatusCard
@@ -522,9 +672,86 @@ const Popup = () => {
                 }
               />
             </div>
-            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-              <DownloadProgress downloadCount={downloadCount} finishedCount={finishedCount} />
+            {progressPanel}
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="flat" onPress={openDownloadFolder}>
+                {t('openFolder')}
+              </Button>
+              <Button size="sm" variant="flat" onPress={resetToBeforeDownload}>
+                {t('downloadAgain')}
+              </Button>
             </div>
+          </div>
+        );
+      case StatusEnum.DownloadPartialSuccess:
+        return (
+          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
+            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
+              <div className="text-left">
+                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
+                  {galleryInfo?.name || ''}
+                </h3>
+                <p className="mt-1.5 text-[12px] font-medium text-muted">
+                  {completeCount} succeeded, {failedCount} failed
+                </p>
+              </div>
+              <StatusCard
+                embedded
+                variant="warning"
+                icon={<InfoIcon />}
+                title="Partially Completed"
+                description="Some images could not be downloaded. Check Details for failed items."
+              />
+              <Button size="sm" variant="flat" onPress={() => setGalleryDetailOpen(true)}>
+                View details
+              </Button>
+              <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                onPress={() => void handleRetryFailed()}
+              >
+                {t('retryFailed')}
+              </Button>
+              <Button size="sm" variant="flat" onPress={openDownloadFolder}>
+                {t('openFolder')}
+              </Button>
+            </div>
+            {progressPanel}
+          </div>
+        );
+      case StatusEnum.DownloadFailed:
+        return (
+          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
+            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
+              <div className="text-left">
+                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
+                  {galleryInfo?.name || ''}
+                </h3>
+                <p className="mt-1.5 text-[12px] font-medium text-muted">
+                  All {failedCount} images failed
+                </p>
+              </div>
+              <StatusCard
+                embedded
+                variant="error"
+                icon={<CloseIcon />}
+                title="Download Failed"
+                description="No images were saved. Check your connection and try again."
+              />
+              <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                onPress={() => void handleRetryFailed()}
+              >
+                {t('retryFailed')}
+              </Button>
+              <Button size="sm" variant="flat" onPress={resetToBeforeDownload}>
+                {t('downloadAgain')}
+              </Button>
+            </div>
+            {progressPanel}
           </div>
         );
       default:
@@ -539,7 +766,14 @@ const Popup = () => {
           <span className="text-[15px] font-semibold tracking-tight text-ink">
             E-Hentai <span className="text-brand-accent">Helper</span>
           </span>
-          <DownloadSettings />
+          <DownloadSettings
+            disabled={isDownloading}
+            pathPreview={
+              galleryInfo
+                ? `${(config || DEFAULT_CONFIG).intermediateDownloadPath}${removeInvalidCharFromFilename(galleryInfo.name)}`
+                : undefined
+            }
+          />
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3">
@@ -547,21 +781,35 @@ const Popup = () => {
             <Tabs
               aria-label="popup tabs"
               className="w-full"
+              selectedKey={selectedTab}
+              onSelectionChange={(key) => setSelectedTab(String(key))}
               classNames={{
                 base: 'flex justify-center',
               }}
             >
-              <Tab key="info" title="Info">
+              <Tab key="info" title={t('infoTab')}>
                 <div
                   className={`scrollbar-glass h-popup-content w-full overflow-y-auto overflow-x-hidden ${isCenteredStatus ? 'flex items-center justify-center px-4 py-2' : ''}`}
                 >
                   {statusContent}
                 </div>
               </Tab>
-              <Tab key="downloadList" title="Downloads">
-                <DownloadTable />
+              <Tab
+                key="downloadList"
+                title={
+                  <span className="inline-flex items-center gap-1.5">
+                    {t('downloadsTab')}
+                    {downloadsBadge ? (
+                      <span className="rounded-full bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
+                        {downloadsBadge}
+                      </span>
+                    ) : null}
+                  </span>
+                }
+              >
+                <DownloadTable taskId={activeTask?.taskId} />
               </Tab>
-              <Tab key="history" title="History">
+              <Tab key="history" title={t('historyTab')}>
                 <History />
               </Tab>
             </Tabs>
@@ -571,6 +819,17 @@ const Popup = () => {
           isOpen={galleryDetailOpen}
           onClose={() => setGalleryDetailOpen(false)}
           record={galleryRecords[galleryFrontPageUrl.current] ?? null}
+          onRetryIndex={(index) => void handleRetryFailed([index])}
+          onRetryAllFailed={() => void handleRetryFailed()}
+        />
+        <DownloadConfirmModal
+          isOpen={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() => void handleConfirmDownload()}
+          imageCount={downloadCount}
+          range={range}
+          downloadPath={configLatest.current.intermediateDownloadPath}
+          intervalMs={configLatest.current.downloadInterval}
         />
       </div>
     </AppShell>

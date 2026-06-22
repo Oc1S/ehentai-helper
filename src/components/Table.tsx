@@ -20,16 +20,23 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
+import { toast } from 'sonner';
 
-import { useCreation, useStorageSuspense } from '@/hooks';
-import { downloadIndexMapStorage, downloadListStorage } from '@/storage';
+import { retryFailedDownload } from '@/download/client';
+import { useStorage, useStorageSuspense } from '@/hooks';
+import {
+  downloadIndexMapStorage,
+  downloadListStorage,
+  downloadTaskStorage,
+  galleryRecordsStorage,
+} from '@/storage';
 
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
 
 const pageSize = 6;
 
-type DownloadItem = chrome.downloads.DownloadItem;
+type DownloadItem = chrome.downloads.DownloadItem & { displayIndex?: number };
 type DownloadState = DownloadItem['state'];
 
 const CellButton = ({ children, ...rest }: ButtonProps) => (
@@ -39,10 +46,10 @@ const CellButton = ({ children, ...rest }: ButtonProps) => (
 );
 
 const columns = [
-  { key: 'id', label: 'ID', width: 64 },
+  { key: 'displayIndex', label: '#', width: 48 },
   { key: 'state', label: 'STATE', width: 100 },
-  { key: 'filename', label: 'FILE', width: 300 },
-  { key: 'operation', label: 'ACTION', width: 156 },
+  { key: 'filename', label: 'FILE', width: 280 },
+  { key: 'operation', label: 'ACTION', width: 140 },
 ];
 
 const stateMap: Record<DownloadState, ReactNode> = {
@@ -57,13 +64,17 @@ const statusColorMap: Record<DownloadState, ChipProps['color']> = {
   interrupted: 'danger',
 };
 
-export const DownloadTable: FC = () => {
+export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
   const list = useStorageSuspense(downloadListStorage) || [];
   const indexMap = useStorageSuspense(downloadIndexMapStorage) || {};
+  const activeTask = useStorage(downloadTaskStorage);
+  const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
+  const filterTaskId = taskId ?? activeTask?.taskId ?? null;
+
   const [downloadList, setDownloadList] = useState(list);
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: 'id',
+    column: 'displayIndex',
     direction: 'ascending',
   });
   const [filterValue, setFilterValue] = useState('');
@@ -81,82 +92,73 @@ export const DownloadTable: FC = () => {
 
   const filteredList = useMemo(() => {
     let next = downloadList.map((item) => {
+      const entry = indexMap[String(item.id)];
       const localPathArr = item.filename.replace(/\\/g, '/').split('/');
       const filename =
         localPathArr[localPathArr.length - 1] ?? localPathArr[localPathArr.length - 2];
       return {
         ...item,
         filename,
-      };
+        displayIndex: entry?.index,
+      } as DownloadItem;
     });
+
+    if (filterTaskId) {
+      next = next.filter((item) => indexMap[String(item.id)]?.taskId === filterTaskId);
+    }
+
     next = filterValue ? next.filter((item) => item.filename.includes(filterValue)) : next;
     next = statusFilter === 'all' ? next : next.filter((item) => statusFilter.has(item.state));
     return next;
-  }, [downloadList, filterValue, statusFilter]);
+  }, [downloadList, filterValue, statusFilter, indexMap, filterTaskId]);
 
-  const pausedIdSet = useCreation(() => new Set<number>());
+  const retryViaOrchestrator = async (entry: (typeof indexMap)[string]) => {
+    const record = entry.galleryUrl ? galleryRecords[entry.galleryUrl] : undefined;
+    if (!entry.galleryUrl || !record) {
+      toast.error('Missing gallery context for retry');
+      return;
+    }
+    const imagesPerPage = 20;
+    const numPages = Math.ceil(record.total / imagesPerPage);
+    const res = await retryFailedDownload({
+      galleryFrontPageUrl: entry.galleryUrl,
+      galleryName: record.galleryName,
+      galleryId: record.galleryId,
+      downloadPath: entry.downloadPath ?? record.downloadPath,
+      rangeStart: entry.index,
+      rangeEnd: entry.index,
+      imagesPerPage,
+      numPages,
+      totalImages: record.total,
+      indices: [entry.index],
+    });
+    if (res?.ok) toast.success('Retry started');
+    else toast.error('Retry failed');
+  };
 
   const renderCell = (item: DownloadItem, key: string) => {
-    const { state, id, url } = item;
-    const paused = pausedIdSet.has(id);
-    const PauseButton = (
-      <CellButton
-        onClick={() => {
-          paused
-            ? chrome.downloads.resume(id, () => {
-                pausedIdSet.delete(id);
-              })
-            : chrome.downloads.pause(id, () => {
-                pausedIdSet.add(id);
-              });
-        }}
-      >
-        {paused ? 'Resume' : 'Pause'}
-      </CellButton>
-    );
+    const { state, id } = item;
+    const entry = indexMap[String(id)];
+
     const RestartButton = (
       <CellButton
         onClick={() => {
-          chrome.downloads.cancel(id, () => {
-            const entry = indexMap[String(id)];
-            const number = entry?.index;
-            const restartUrl = entry?.sourceUrl || url;
-            setDownloadList((list) => {
-              const newList = [...list];
-              const index = newList.findIndex((item) => item.id === id);
-              newList.splice(index, 1);
-              return newList;
-            });
-            chrome.downloads.download({ url: restartUrl }, (newId) => {
-              void chrome.runtime.sendMessage({
-                type: 'register-download-index',
-                id: newId,
-                index: number ?? 0,
-                total: entry?.total ?? 0,
-                downloadPath: entry?.downloadPath,
-                galleryUrl: entry?.galleryUrl,
-                sourceUrl: entry?.sourceUrl,
-              });
-            });
-          });
+          if (entry) void retryViaOrchestrator(entry);
         }}
       >
-        Restart
+        Retry
       </CellButton>
     );
 
     const operationMap = {
       interrupted: () => RestartButton,
-      in_progress: () => (
-        <div className="flex gap-1">
-          {PauseButton}
-          {RestartButton}
-        </div>
-      ),
+      in_progress: () => RestartButton,
       complete: () => null,
     };
 
     switch (key) {
+      case 'displayIndex':
+        return <span className="font-mono text-[11px] text-muted">{item.displayIndex ?? '—'}</span>;
       case 'state':
         return (
           <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">

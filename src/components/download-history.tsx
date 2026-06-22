@@ -2,9 +2,13 @@ import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import {
   Button,
-  Chip,
   Input,
   Link,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Table,
   TableBody,
   TableCell,
@@ -12,15 +16,19 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
+import { toast } from 'sonner';
 
+import { startDownload } from '@/download/client';
 import { useStorageSuspense } from '@/hooks';
 import {
+  configStorage,
   type DownloadHistoryItem,
   downloadHistoryStorage,
-  type GalleryImageState,
   type GalleryRecord,
   galleryRecordsStorage,
 } from '@/storage';
+import { removeInvalidCharFromFilename } from '@/utils';
+import { t } from '@/utils/i18n';
 
 import { GalleryDetailModal } from './gallery-detail-modal';
 
@@ -34,15 +42,35 @@ const columns = [
 
 const formatTime = (ts: number) => new Date(ts).toLocaleString();
 
-const computeCounts = (record: GalleryRecord | undefined) => {
-  const counts: Record<GalleryImageState, number> = {
-    complete: 0,
-    in_progress: 0,
-    interrupted: 0,
+const formatStatus = (record: GalleryRecord | undefined, range: [number, number]) => {
+  if (!record) return '—';
+  let complete = 0;
+  for (let i = range[0]; i <= range[1]; i++) {
+    if (record.images[String(i)]?.state === 'complete') complete++;
+  }
+  const total = range[1] - range[0] + 1;
+  return `${complete}/${total} complete`;
+};
+
+const buildPayloadFromHistory = async (item: DownloadHistoryItem) => {
+  const config = await configStorage.get();
+  const imagesPerPage = 20;
+  const totalImages = item.info.numImages;
+  const numPages = Math.ceil(totalImages / imagesPerPage);
+  const downloadPath =
+    config.intermediateDownloadPath + removeInvalidCharFromFilename(item.name) + '/';
+
+  return {
+    galleryFrontPageUrl: item.url,
+    galleryName: item.name,
+    galleryId: item.info.id,
+    downloadPath,
+    rangeStart: item.range[0],
+    rangeEnd: item.range[1],
+    imagesPerPage,
+    numPages,
+    totalImages,
   };
-  if (!record) return counts;
-  for (const img of Object.values(record.images)) counts[img.state] += 1;
-  return counts;
 };
 
 export const History: FC = () => {
@@ -53,6 +81,8 @@ export const History: FC = () => {
   }, [list]);
   const [keyword, setKeyword] = useState('');
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DownloadHistoryItem | null>(null);
 
   const filteredData = useMemo<DownloadHistoryItem[]>(() => {
     const kw = keyword.trim().toLowerCase();
@@ -61,6 +91,13 @@ export const History: FC = () => {
   }, [data, keyword]);
 
   const activeRecord = activeUrl ? galleryRecords[activeUrl] ?? null : null;
+
+  const handleRedownload = async (item: DownloadHistoryItem) => {
+    const payload = await buildPayloadFromHistory(item);
+    const res = await startDownload(payload);
+    if (res?.ok) toast.success('Download started');
+    else toast.error('Failed to start download');
+  };
 
   return (
     <div className="flex h-popup-content min-h-0 flex-col gap-3">
@@ -78,16 +115,8 @@ export const History: FC = () => {
           {filteredData.length} / {data.length} records
         </span>
         <div className="flex-1" />
-        <Button
-          size="sm"
-          color="danger"
-          variant="flat"
-          onPress={() => {
-            downloadHistoryStorage.clear();
-            galleryRecordsStorage.clear();
-          }}
-        >
-          Clear All
+        <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmClear(true)}>
+          {t('clearAll')}
         </Button>
       </div>
       <Table
@@ -107,13 +136,13 @@ export const History: FC = () => {
               key={col.key}
               width={
                 col.key === 'name'
-                  ? 240
+                  ? 200
                   : col.key === 'status'
-                    ? 160
+                    ? 120
                     : col.key === 'time'
-                      ? 150
+                      ? 140
                       : col.key === 'op'
-                        ? 110
+                        ? 160
                         : 70
               }
             >
@@ -122,70 +151,51 @@ export const History: FC = () => {
           )}
         </TableHeader>
         <TableBody items={filteredData} emptyContent="No history">
-          {(item) => {
-            const counts = computeCounts(galleryRecords[item.url]);
-            const tracked =
-              counts.complete + counts.in_progress + counts.interrupted;
-            return (
-              <TableRow key={item.timestamp}>
-                <TableCell title={item.name}>
-                  <Link
-                    href={item.url}
-                    isExternal
-                    className="line-clamp-1 text-xs text-primary underline underline-offset-2"
+          {(item) => (
+            <TableRow key={item.timestamp}>
+              <TableCell title={item.name}>
+                <Link
+                  href={item.url}
+                  isExternal
+                  className="line-clamp-1 text-xs text-primary underline underline-offset-2"
+                >
+                  {item.name}
+                </Link>
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-[11px] text-muted">
+                {formatStatus(galleryRecords[item.url], item.range)}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-default-400">
+                {item.range[0]}–{item.range[1]}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-default-400">
+                {formatTime(item.timestamp)}
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  <Button size="sm" variant="flat" onPress={() => void handleRedownload(item)}>
+                    Redownload
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isDisabled={!galleryRecords[item.url]}
+                    onPress={() => setActiveUrl(item.url)}
                   >
-                    {item.name}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {tracked === 0 ? (
-                    <span className="text-[11px] text-muted-soft">—</span>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-1">
-                      <Chip size="sm" color="success" variant="flat">
-                        {counts.complete}
-                      </Chip>
-                      <Chip size="sm" color="warning" variant="flat">
-                        {counts.in_progress}
-                      </Chip>
-                      <Chip size="sm" color="danger" variant="flat">
-                        {counts.interrupted}
-                      </Chip>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-default-400">
-                  {item.range[0]}–{item.range[1]}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-default-400">
-                  {formatTime(item.timestamp)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      isDisabled={tracked === 0}
-                      onPress={() => setActiveUrl(item.url)}
-                    >
-                      Detail
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="danger"
-                      onPress={() => {
-                        downloadHistoryStorage.remove(item.timestamp);
-                        galleryRecordsStorage.removeGallery(item.url);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          }}
+                    Detail
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="danger"
+                    onPress={() => setDeleteTarget(item)}
+                  >
+                    {t('delete')}
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
       <GalleryDetailModal
@@ -193,6 +203,58 @@ export const History: FC = () => {
         onClose={() => setActiveUrl(null)}
         record={activeRecord}
       />
+      <Modal isOpen={confirmClear} onClose={() => setConfirmClear(false)} size="sm">
+        <ModalContent>
+          {(close) => (
+            <>
+              <ModalHeader>{t('clearAll')}</ModalHeader>
+              <ModalBody className="text-sm text-muted">{t('confirmClearAll')}</ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={close}>
+                  {t('cancel')}
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={() => {
+                    downloadHistoryStorage.clear();
+                    galleryRecordsStorage.clear();
+                    close();
+                  }}
+                >
+                  {t('clearAll')}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={deleteTarget !== null} onClose={() => setDeleteTarget(null)} size="sm">
+        <ModalContent>
+          {(close) => (
+            <>
+              <ModalHeader>{t('delete')}</ModalHeader>
+              <ModalBody className="text-sm text-muted">{t('confirmDelete')}</ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={close}>
+                  {t('cancel')}
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={() => {
+                    if (deleteTarget) {
+                      downloadHistoryStorage.remove(deleteTarget.timestamp);
+                      galleryRecordsStorage.removeGallery(deleteTarget.url);
+                    }
+                    close();
+                  }}
+                >
+                  {t('delete')}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

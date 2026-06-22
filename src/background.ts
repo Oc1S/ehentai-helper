@@ -1,8 +1,14 @@
 import {
+  onGalleryRecordChanged,
+  requestCancelDownload,
+  runDownloadJob,
+} from './download/orchestrator';
+import {
   configStorage,
   downloadIndexMapStorage,
   downloadListStorage,
   downloadOwnerStorage,
+  downloadTaskStorage,
   galleryRecordsStorage,
 } from './storage';
 import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './utils';
@@ -156,10 +162,14 @@ const registerListeners = () => {
     if (downloadItem.mime === textMime) return;
 
     trackedExtensionDownloadIds.add(downloadItem.id);
-    void patchDownloadListNow(downloadItem);
-    void propagateImagePatchToGallery(downloadItem.id, {
+    patchDownloadListNow(downloadItem);
+    propagateImagePatchToGallery(downloadItem.id, {
       state: downloadItem.state,
       filename: downloadItem.filename,
+    }).then(() => {
+      const ownerMap = downloadOwnerStorage.getSnapshot();
+      const owner = ownerMap?.[String(downloadItem.id)];
+      if (owner?.galleryUrl) onGalleryRecordChanged(owner.galleryUrl);
     });
   });
 
@@ -189,7 +199,11 @@ const registerListeners = () => {
     if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
     if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
     if (Object.keys(galleryPatch).length > 0) {
-      void propagateImagePatchToGallery(id, galleryPatch);
+      propagateImagePatchToGallery(id, galleryPatch).then(() => {
+        const ownerMap = downloadOwnerStorage.getSnapshot();
+        const owner = ownerMap?.[String(id)];
+        if (owner?.galleryUrl) onGalleryRecordChanged(owner.galleryUrl);
+      });
     }
   });
 
@@ -241,11 +255,12 @@ const registerListeners = () => {
           downloadPath: message.downloadPath,
           galleryUrl: message.galleryUrl,
           sourceUrl: message.sourceUrl,
+          taskId: message.taskId,
         },
       }));
 
       if (message.galleryUrl) {
-        void downloadOwnerStorage.set(
+        downloadOwnerStorage.set(
           (map) =>
             trimOwnerMap({
               ...(map || {}),
@@ -255,15 +270,78 @@ const registerListeners = () => {
               },
             }) as Record<string, { galleryUrl: string; index: number }>
         );
-        void galleryRecordsStorage.upsertImage(message.galleryUrl, {
-          index: message.index,
-          sourceUrl: message.sourceUrl ?? '',
-          state: 'in_progress',
-          chromeDownloadId: message.id,
-          updatedAt: Date.now(),
-        });
+        galleryRecordsStorage
+          .upsertImage(message.galleryUrl, {
+            index: message.index,
+            sourceUrl: message.sourceUrl ?? '',
+            state: 'in_progress',
+            chromeDownloadId: message.id,
+            updatedAt: Date.now(),
+          })
+          .then(() => onGalleryRecordChanged(message.galleryUrl));
       }
 
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    const handleDownloadJob = (
+      payload: {
+        galleryFrontPageUrl: string;
+        galleryName: string;
+        galleryId: string;
+        downloadPath: string;
+        rangeStart: number;
+        rangeEnd: number;
+        imagesPerPage: number;
+        numPages: number;
+        totalImages: number;
+        indices?: number[];
+      },
+      mode: 'full' | 'resume' | 'retry'
+    ) => {
+      void (async () => {
+        currentDownloadContext = {
+          downloadPath: payload.downloadPath,
+          total: payload.totalImages,
+          galleryUrl: payload.galleryFrontPageUrl,
+          galleryName: payload.galleryName,
+          galleryId: payload.galleryId,
+        };
+        await galleryRecordsStorage.upsertGallery({
+          galleryUrl: payload.galleryFrontPageUrl,
+          galleryName: payload.galleryName,
+          galleryId: payload.galleryId,
+          downloadPath: payload.downloadPath,
+          total: payload.totalImages,
+        });
+        void runDownloadJob({ ...payload, mode });
+      })();
+    };
+
+    if (message.type === 'start-download') {
+      handleDownloadJob(message.payload, message.mode ?? 'full');
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === 'resume-download') {
+      handleDownloadJob(message.payload, 'resume');
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === 'retry-failed') {
+      handleDownloadJob(message.payload, 'retry');
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === 'cancel-download') {
+      requestCancelDownload();
+      void downloadTaskStorage.set((prev) =>
+        prev ? { ...prev, status: 'cancelled', updatedAt: Date.now() } : prev
+      );
       sendResponse({ ok: true });
       return true;
     }
@@ -310,6 +388,7 @@ const registerListeners = () => {
   await downloadListStorage.get().catch(() => []);
   await downloadOwnerStorage.get().catch(() => ({}));
   await galleryRecordsStorage.get().catch(() => ({}));
+  await downloadTaskStorage.get().catch(() => null);
   await syncDownloadList().catch(() => undefined);
 
   configStorage.subscribe(() => {

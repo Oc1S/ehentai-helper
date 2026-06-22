@@ -1,5 +1,6 @@
 import { type FC, useMemo, useState } from 'react';
 import {
+  Button,
   Chip,
   type ChipProps,
   Input,
@@ -53,7 +54,9 @@ export const GalleryDetailModal: FC<{
   isOpen: boolean;
   onClose: () => void;
   record?: GalleryRecord | null;
-}> = ({ isOpen, onClose, record }) => {
+  onRetryIndex?: (index: number) => void;
+  onRetryAllFailed?: () => void;
+}> = ({ isOpen, onClose, record, onRetryIndex, onRetryAllFailed }) => {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [keyword, setKeyword] = useState('');
 
@@ -143,6 +146,9 @@ export const GalleryDetailModal: FC<{
                   <TableColumn width={64}>#</TableColumn>
                   <TableColumn width={100}>STATE</TableColumn>
                   <TableColumn>FILE / URL</TableColumn>
+                  {(onRetryIndex || onRetryAllFailed) && (
+                    <TableColumn width={88}>ACTION</TableColumn>
+                  )}
                 </TableHeader>
                 <TableBody emptyContent="No records">
                   {filteredRows.map((row) => (
@@ -174,12 +180,32 @@ export const GalleryDetailModal: FC<{
                           ) : null}
                         </div>
                       </TableCell>
+                      {onRetryIndex && (
+                        <TableCell>
+                          {row.state === 'interrupted' ? (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={() => onRetryIndex(row.index)}
+                            >
+                              Retry
+                            </Button>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="gap-2">
+              {onRetryAllFailed && counts.interrupted > 0 && (
+                <Button size="sm" color="primary" variant="flat" onPress={onRetryAllFailed}>
+                  Retry all failed ({counts.interrupted})
+                </Button>
+              )}
               <button
                 type="button"
                 onClick={close}

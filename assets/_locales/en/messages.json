@@ -1,10 +1,104 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "ehentai helper"
+    "message": "Download E-Hentai galleries without credits or login"
   },
   "extensionName": {
     "description": "Extension name",
     "message": "E-Hentai Helper"
+  },
+  "startDownload": {
+    "message": "Start Download"
+  },
+  "confirmDownload": {
+    "message": "Confirm Download"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "continueMissing": {
+    "message": "Continue missing"
+  },
+  "redownloadAll": {
+    "message": "Redownload all"
+  },
+  "retryFailed": {
+    "message": "Retry failed"
+  },
+  "openFolder": {
+    "message": "Open download folder"
+  },
+  "downloadAgain": {
+    "message": "Download again"
+  },
+  "refreshPage": {
+    "message": "Refresh"
+  },
+  "clearAll": {
+    "message": "Clear All"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "confirmClearAll": {
+    "message": "Clear all history and gallery records?"
+  },
+  "confirmDelete": {
+    "message": "Delete this history entry and gallery record?"
+  },
+  "confirmDownloadBody": {
+    "message": "images · range"
+  },
+  "estimatedTime": {
+    "message": "Estimated"
+  },
+  "seconds": {
+    "message": "s"
+  },
+  "viewFileList": {
+    "message": "View file list"
+  },
+  "downloadsTab": {
+    "message": "Downloads"
+  },
+  "backgroundHint": {
+    "message": "You can close this popup — download continues in the background."
+  },
+  "pathPreviewExample": {
+    "message": "Gallery Name/"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "saveSettings": {
+    "message": "Save Settings"
+  },
+  "historyTab": {
+    "message": "History"
+  },
+  "infoTab": {
+    "message": "Info"
+  },
+  "previouslyTracked": {
+    "message": "Previously tracked"
+  },
+  "viewDetails": {
+    "message": "View details"
+  },
+  "downloadCancelled": {
+    "message": "Download cancelled"
+  },
+  "partialSuccessToast": {
+    "message": "$1 succeeded, $2 failed",
+    "placeholders": {
+      "1": { "content": "$1" },
+      "2": { "content": "$2" }
+    }
+  },
+  "downloadFailedToast": {
+    "message": "Download failed ($1 errors)",
+    "placeholders": {
+      "1": { "content": "$1" }
+    }
   }
 }

@@ -6,6 +6,8 @@ export enum StatusEnum {
   BeforeDownload = 4,
   Downloading = 5,
   DownloadSuccess = 6,
+  DownloadPartialSuccess = 7,
+  DownloadFailed = 8,
 }
 
 export const CENTERED_STATUSES = [
