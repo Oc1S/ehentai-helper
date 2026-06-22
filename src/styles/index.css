@@ -74,12 +74,155 @@
     background: var(--eh-scrollbar-thumb-hover);
   }
 
+  .popup-bg {
+    @apply relative isolate;
+    background: var(--eh-popup-ambient-top), var(--eh-popup-ambient-body), var(--eh-popup-bg);
+  }
+
+  .popup-bg > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .glass-panel {
-    @apply border border-hairline-soft bg-surface-card/50 shadow-card backdrop-blur-xl transition-colors;
+    @apply relative overflow-hidden backdrop-blur-md;
+    border: 1px solid var(--eh-glass-border);
+    background: var(--eh-glass-bg);
+    box-shadow: var(--eh-glass-elevation);
+    transition:
+      border-color 400ms ease-out,
+      box-shadow 400ms ease-out,
+      background 400ms ease-out;
+  }
+
+  .glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: var(--eh-glass-frost);
+    pointer-events: none;
+  }
+
+  .glass-panel::after {
+    content: '';
+    position: absolute;
+    top: -5rem;
+    right: -4rem;
+    z-index: 0;
+    width: 11rem;
+    height: 11rem;
+    border-radius: 9999px;
+    background: var(--eh-glass-ambient);
+    filter: blur(72px);
+    opacity: 0.55;
+    pointer-events: none;
+    transition:
+      opacity 500ms ease-out,
+      transform 700ms ease-out;
+  }
+
+  .glass-panel > * {
+    position: relative;
+    z-index: 1;
   }
 
   .glass-panel:hover {
-    @apply border-hairline shadow-card-elevated;
+    background: var(--eh-glass-bg-hover);
+    border-color: var(--eh-glass-border-hover);
+    box-shadow: var(--eh-glass-elevation-hover);
+  }
+
+  .glass-panel:hover::after {
+    opacity: 0.75;
+    background: var(--eh-glass-ambient-hover);
+    transform: scale(1.03);
+  }
+
+  .glass-panel-live::after {
+    animation: glass-ambient-pulse 3.5s ease-in-out infinite;
+  }
+
+  @keyframes glass-ambient-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.65;
+      transform: scale(1.02);
+    }
+  }
+
+  .glass-card {
+    @apply relative overflow-hidden backdrop-blur-md;
+    border: 1px solid var(--eh-glass-border);
+    background: var(--eh-glass-bg);
+    box-shadow: var(--eh-glass-elevation);
+    transition:
+      border-color 400ms ease-out,
+      box-shadow 400ms ease-out,
+      background 400ms ease-out;
+  }
+
+  .glass-card:hover {
+    background: var(--eh-glass-bg-hover);
+    border-color: var(--eh-glass-border-hover);
+    box-shadow: var(--eh-glass-elevation-hover);
+  }
+
+  .glass-card-static {
+    background: var(--eh-glass-bg-hover);
+    border-color: var(--eh-glass-border-hover);
+    box-shadow: var(--eh-glass-elevation-hover);
+    transition: none;
+  }
+
+  .glass-card-static:hover {
+    background: var(--eh-glass-bg-hover);
+    border-color: var(--eh-glass-border-hover);
+    box-shadow: var(--eh-glass-elevation-hover);
+  }
+
+  .glass-card-pool.glass-card-static {
+    background: var(--eh-glass-bg-pool);
+    border-color: var(--eh-glass-border-pool);
+  }
+
+  .glass-card-pool.glass-card-static:hover {
+    background: var(--eh-glass-bg-pool);
+    border-color: var(--eh-glass-border-pool);
+  }
+
+  .glass-frost-pool {
+    background: var(--eh-glass-frost-pool);
+  }
+
+  .glass-highlight-pool {
+    background: var(--eh-glass-highlight-pool);
+  }
+
+  .glass-ambient-cyan {
+    background: var(--eh-glass-ambient-cyan-strong);
+  }
+
+  .glass-frost {
+    background: var(--eh-glass-frost);
+  }
+
+  .glass-highlight {
+    background: var(--eh-glass-highlight);
+  }
+
+  .glass-ambient {
+    background: var(--eh-glass-ambient);
+  }
+
+  .glass-ambient-hover {
+    background: var(--eh-glass-ambient-hover);
   }
 
   .shadow-glow-dot {

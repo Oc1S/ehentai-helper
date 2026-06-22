@@ -2,55 +2,16 @@ import type { ReactNode } from 'react';
 
 type StatusVariant = 'info' | 'warning' | 'success' | 'error';
 
-const variantStyle: Record<
-  StatusVariant,
-  {
-    ambient: string;
-    cardShadow: string;
-    border: string;
-    iconGlow: string;
-    iconRing: string;
-    iconText: string;
-    glassBg: string;
-  }
-> = {
-  info: {
-    ambient: 'bg-brand-accent/10',
-    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]',
-    border: 'border-hairline',
-    iconGlow: 'bg-brand-accent/20',
-    iconRing: 'border-hairline bg-brand-accent/10',
-    iconText: 'text-brand-accent',
-    glassBg: 'bg-gradient-to-b from-brand-accent/[0.08] to-transparent',
-  },
-  warning: {
-    ambient: 'bg-warning/10',
-    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-hairline-soft',
-    iconGlow: 'bg-warning/20',
-    iconRing: 'border-white/[0.15] bg-warning/10',
-    iconText: 'text-warning',
-    glassBg: 'bg-gradient-to-b from-white/[0.08] to-white/[0.02]',
-  },
-  success: {
-    ambient: 'bg-success/10',
-    cardShadow: 'shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]',
-    border: 'border-hairline-soft',
-    iconGlow: 'bg-success/20',
-    iconRing: 'border-white/[0.15] bg-success/10',
-    iconText: 'text-success',
-    glassBg: 'bg-gradient-to-b from-white/[0.08] to-white/[0.02]',
-  },
-  error: {
-    ambient: 'bg-brand-accent/10',
-    cardShadow: 'shadow-[0_18px_54px_-28px_rgba(212,175,55,0.35)]',
-    border: 'border-hairline',
-    iconGlow: 'bg-brand-accent/10',
-    iconRing: 'border-hairline bg-surface-dark-elevated/80',
-    iconText: 'text-error',
-    glassBg: 'bg-gradient-to-b from-brand-accent/[0.06] via-surface-card/60 to-surface-card/40',
-  },
+const iconGlass = 'border-white/[0.04] bg-white/[0.025] backdrop-blur-sm';
+
+const variantAmbient: Record<StatusVariant, string> = {
+  info: 'glass-ambient-cyan',
+  warning: 'bg-warning/[0.04]',
+  success: 'bg-success/[0.04]',
+  error: 'bg-error/[0.03]',
 };
+
+const cardShell = 'glass-card glass-card-static glass-card-pool';
 
 export const StatusCard = ({
   variant,
@@ -69,17 +30,22 @@ export const StatusCard = ({
   embedded?: boolean;
   className?: string;
 }) => {
-  const style = variantStyle[variant];
+  const ambient = variantAmbient[variant];
 
   if (embedded) {
     return (
-      <div className={`flex w-full items-start gap-3 rounded-2xl border border-white/[0.04] bg-surface-soft/50 p-3 ${className}`.trim()}>
+      <div className={`${cardShell} flex w-full items-start gap-3 rounded-2xl p-3 ${className}`.trim()}>
+        <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
         <div
-          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border backdrop-blur-md ${style.iconRing} ${style.iconText} [&_svg]:h-5 [&_svg]:w-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]`}
+          className={`pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full opacity-70 blur-[64px] ${ambient}`}
+          aria-hidden
+        />
+        <div
+          className={`relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.03)] ${iconGlass} text-muted [&_svg]:h-5 [&_svg]:w-5`}
         >
           {icon}
         </div>
-        <div className="flex flex-col gap-1 text-left">
+        <div className="relative z-10 flex flex-col gap-1 text-left">
           <h3 className="text-[13px] font-semibold tracking-tight text-ink">{title}</h3>
           {description && <div className="text-[11px] leading-relaxed text-muted">{description}</div>}
           {children && <div className="mt-1">{children}</div>}
@@ -89,29 +55,27 @@ export const StatusCard = ({
   }
 
   return (
-    <div className={`group relative mx-auto w-full max-w-[400px] overflow-hidden rounded-[24px] border ${style.border} ${style.glassBg} ${style.cardShadow} bg-surface-card/50 p-6 backdrop-blur-xl transition-all hover:border-hairline hover:shadow-glow ${className}`.trim()}>
+    <div className={`${cardShell} mx-auto w-full max-w-[400px] rounded-[24px] p-6 ${className}`.trim()}>
+      <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
+      <div className="glass-highlight-pool pointer-events-none absolute inset-x-8 top-0 h-px" aria-hidden />
       <div
-        className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[80px] transition-transform duration-700 group-hover:scale-110 ${style.ambient}`}
+        className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full opacity-70 blur-[80px] ${ambient}`}
         aria-hidden
       />
-      {variant === 'error' && (
-        <div
-          className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/45 to-transparent"
-          aria-hidden
-        />
-      )}
 
       <div className="relative z-10 flex flex-col items-center gap-5 text-center">
         <div
-          className={`relative flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur-xl ${style.iconRing} ${style.iconText} [&_svg]:h-6 [&_svg]:w-6`}
+          className={`flex h-14 w-14 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.04)] ${iconGlass} ${
+            variant === 'warning'
+              ? 'text-warning/90'
+              : variant === 'success'
+                ? 'text-success/90'
+                : variant === 'error'
+                  ? 'text-error/90'
+                  : 'text-muted'
+          } [&_svg]:h-6 [&_svg]:w-6`}
         >
-          <span
-            className={`absolute inset-1 rounded-[14px] blur-md ${style.iconGlow}`}
-            aria-hidden
-          />
-          <span className="relative z-10 flex items-center justify-center">
-            {icon}
-          </span>
+          {icon}
         </div>
 
         <div className="flex w-full flex-col items-center gap-2">
