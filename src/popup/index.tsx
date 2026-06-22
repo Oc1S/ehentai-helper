@@ -37,6 +37,7 @@ import {
   downloadAsTxtFile,
   extractGalleryInfo,
   extractGalleryPageInfo,
+  formatGalleryInfoTxt,
   isGalleryPageHtml,
   removeInvalidCharFromFilename,
 } from '@/utils';
@@ -44,8 +45,8 @@ import { t } from '@/utils/i18n';
 
 import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
+import { DownloadTable } from '../components/download-table';
 import { GalleryDetailModal } from '../components/gallery-detail-modal';
-import { DownloadTable } from '../components/Table';
 import { CheckIcon, CloseIcon, InfoIcon, LinkIcon } from './components/icons';
 import { CENTERED_STATUSES, StatusEnum } from './status';
 
@@ -68,13 +69,13 @@ const DownloadProgress = ({
       <div className="flex items-end justify-between">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            Progress
+            {t('progress')}
           </p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">{percent}%</p>
         </div>
         <div className="text-right">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            Completed
+            {t('completed')}
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
             {completeCount}
@@ -83,7 +84,7 @@ const DownloadProgress = ({
         </div>
       </div>
       <Progress
-        aria-label="Download progress"
+        aria-label={t('downloadProgress')}
         value={settledCount}
         minValue={0}
         maxValue={downloadCount}
@@ -91,11 +92,11 @@ const DownloadProgress = ({
         size="sm"
       />
       <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-soft">
-        <span className="text-success">{completeCount} complete</span>
+        <span className="text-success">{t('badgeComplete', String(completeCount))}</span>
         <span>·</span>
-        <span className="text-warning">{inProgressCount} in progress</span>
+        <span className="text-warning">{t('badgeInProgress', String(inProgressCount))}</span>
         <span>·</span>
-        <span className="text-error">{failedCount} failed</span>
+        <span className="text-error">{t('badgeFailed', String(failedCount))}</span>
       </div>
     </div>
   );
@@ -249,13 +250,13 @@ const Popup = () => {
     const response = await fn(payload);
 
     if (!response?.ok) {
-      toast.error('Failed to start download');
+      toast.error(t('failedStartDownload'));
       setStatus(StatusEnum.BeforeDownload);
       return false;
     }
 
     if (mode === 'full' && configLatest.current.saveGalleryInfo) {
-      downloadAsTxtFile(JSON.stringify(galleryInfo, null, 2));
+      downloadAsTxtFile(formatGalleryInfoTxt(galleryInfo, galleryFrontPageUrl.current));
     }
     return true;
   };
@@ -270,7 +271,7 @@ const Popup = () => {
       });
     } catch (e) {
       console.error('add download history failed@', e);
-      toast.error('Failed to save download history');
+      toast.error(t('failedSaveHistory'));
     }
     await launchDownload('full');
   };
@@ -279,7 +280,7 @@ const Popup = () => {
     const record = galleryRecords[galleryFrontPageUrl.current];
     const missing = computeMissingIndices(record, range[0], range[1]);
     if (missing.length === 0) {
-      toast.info('Nothing to resume');
+      toast.info(t('nothingToResume'));
       return;
     }
     await launchDownload('resume', missing);
@@ -289,7 +290,7 @@ const Popup = () => {
     const record = galleryRecords[galleryFrontPageUrl.current];
     const failed = indices ?? computeFailedIndices(record, progressRange.start, progressRange.end);
     if (failed.length === 0) {
-      toast.info('No failed items');
+      toast.info(t('noFailedItems'));
       return;
     }
     await launchDownload('retry', failed);
@@ -405,7 +406,7 @@ const Popup = () => {
         return (
           <div className="flex h-popup-content flex-col items-center justify-center gap-3">
             <Spinner size="lg" color="primary" />
-            <p className="animate-pulse text-[13px] font-medium text-muted">Initializing...</p>
+            <p className="animate-pulse text-[13px] font-medium text-muted">{t('initializing')}</p>
           </div>
         );
       case StatusEnum.EHentaiOther:
@@ -413,8 +414,8 @@ const Popup = () => {
           <StatusCard
             variant="warning"
             icon={<InfoIcon />}
-            title="Not on a Gallery Page"
-            description="Open a gallery from the list or search to start downloading."
+            title={t('notOnGalleryPage')}
+            description={t('notOnGalleryDesc')}
           >
             <Button size="sm" variant="flat" onPress={() => void reloadGallery()}>
               {t('refreshPage')}
@@ -423,7 +424,7 @@ const Popup = () => {
         );
       case StatusEnum.OtherPage:
         return (
-          <StatusCard variant="info" icon={<LinkIcon />} title="Start by Opening a Gallery">
+          <StatusCard variant="info" icon={<LinkIcon />} title={t('openGalleryFirst')}>
             <div className="flex flex-col items-center gap-3">
               <div className="flex items-center justify-center gap-2 text-sm leading-relaxed text-body">
                 <Link
@@ -453,8 +454,8 @@ const Popup = () => {
           <StatusCard
             variant="error"
             icon={<CloseIcon />}
-            title="Unable to Read Gallery"
-            description="Could not parse the current page. Refresh the gallery and try again."
+            title={t('unableReadGallery')}
+            description={t('unableReadGalleryDesc')}
           >
             <Button size="sm" color="primary" variant="flat" onPress={() => void reloadGallery()}>
               {t('refreshPage')}
@@ -487,11 +488,11 @@ const Popup = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
                   <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/80" />
-                  {galleryPageInfo.totalImages} Images
+                  {galleryPageInfo.totalImages} {t('imagesLabel')}
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
                   <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/50" />
-                  {galleryPageInfo.numPages} Pages
+                  {galleryPageInfo.numPages} {t('pagesLabel')}
                 </div>
               </div>
             </div>
@@ -512,13 +513,13 @@ const Popup = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
                   <span className="bg-success/15 rounded-full px-2 py-0.5 font-medium text-success">
-                    {counts.complete} complete
+                    {t('badgeComplete', String(counts.complete))}
                   </span>
                   <span className="bg-warning/15 rounded-full px-2 py-0.5 font-medium text-warning">
-                    {counts.in_progress} in-progress
+                    {t('badgeInProgress', String(counts.in_progress))}
                   </span>
                   <span className="bg-error/15 rounded-full px-2 py-0.5 font-medium text-error">
-                    {counts.interrupted} failed
+                    {t('badgeFailed', String(counts.interrupted))}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -552,7 +553,7 @@ const Popup = () => {
                 <div className="glass-panel col-span-3 flex flex-col gap-1.5 rounded-[16px] px-4 py-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold tracking-tight text-ink">
-                      Download Range
+                      {t('downloadRange')}
                     </span>
                     <span className="flex h-5 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
                       {range[0]} - {range[1]}
@@ -573,7 +574,7 @@ const Popup = () => {
               {/* Selected Count Widget */}
               <div className="glass-panel col-span-1 flex flex-col items-center justify-center p-3 text-center">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-muted-soft">
-                  Selected
+                  {t('selected')}
                 </span>
                 <span className="mt-0.5 font-mono text-2xl font-black tracking-tighter text-brand-accent">
                   {downloadCount}
@@ -610,7 +611,7 @@ const Popup = () => {
                 <div className="mt-2.5 flex items-center gap-2">
                   <Spinner size="sm" color="primary" />
                   <span className="text-[13px] font-medium text-brand-accent">
-                    Downloading images...
+                    {t('downloadingImages')}
                   </span>
                 </div>
                 <p className="mt-2 text-[11px] text-muted-soft">{t('backgroundHint')}</p>
@@ -650,23 +651,23 @@ const Popup = () => {
                   {galleryInfo?.name || ''}
                 </h3>
                 <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  All {progressTotal} images downloaded successfully
+                  {t('allImagesSuccess', String(progressTotal))}
                 </p>
               </div>
               <StatusCard
                 embedded
                 variant="success"
                 icon={<CheckIcon />}
-                title="Download Completed!"
+                title={t('downloadCompleted')}
                 description={
                   <>
-                    Enjoying the extension?{' '}
+                    {t('enjoyingExtension')}{' '}
                     <Link
                       href="https://github.com/Oc1S/ehentai-helper"
                       isExternal
                       className="font-medium text-brand-accent underline underline-offset-2"
                     >
-                      Star it on GitHub
+                      {t('starGithubLink')}
                     </Link>
                   </>
                 }
@@ -692,18 +693,18 @@ const Popup = () => {
                   {galleryInfo?.name || ''}
                 </h3>
                 <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  {completeCount} succeeded, {failedCount} failed
+                  {t('partialSuccessSummary', [String(completeCount), String(failedCount)])}
                 </p>
               </div>
               <StatusCard
                 embedded
                 variant="warning"
                 icon={<InfoIcon />}
-                title="Partially Completed"
-                description="Some images could not be downloaded. Check Details for failed items."
+                title={t('partiallyCompleted')}
+                description={t('partialCompletedDesc')}
               />
               <Button size="sm" variant="flat" onPress={() => setGalleryDetailOpen(true)}>
-                View details
+                {t('viewDetails')}
               </Button>
               <Button
                 size="sm"
@@ -729,15 +730,15 @@ const Popup = () => {
                   {galleryInfo?.name || ''}
                 </h3>
                 <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  All {failedCount} images failed
+                  {t('allImagesFailed', String(failedCount))}
                 </p>
               </div>
               <StatusCard
                 embedded
                 variant="error"
                 icon={<CloseIcon />}
-                title="Download Failed"
-                description="No images were saved. Check your connection and try again."
+                title={t('downloadFailedTitle')}
+                description={t('downloadFailedDesc')}
               />
               <Button
                 size="sm"

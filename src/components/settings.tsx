@@ -2,6 +2,7 @@ import { type FC, type ReactNode } from 'react';
 import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
 import { type Config, type ImageFormat, type OutputMode, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
+import { t } from '@/utils/i18n';
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
@@ -53,9 +54,7 @@ export const Settings: FC<{
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
       label: (
-        <span title="For security reasons, you can only set a directory inside the default download folder.">
-          Download folder
-        </span>
+        <span title={t('downloadFolderHint')}>{t('downloadFolder')}</span>
       ),
       content: (
         <div className="flex flex-wrap items-center gap-2">
@@ -66,7 +65,7 @@ export const Settings: FC<{
               chrome.downloads.showDefaultFolder();
             }}
           >
-            [Default]/
+            {t('defaultFolder')}
           </button>
           <TextInput
             variant={variant}
@@ -77,7 +76,7 @@ export const Settings: FC<{
       ),
     },
     saveOriginalImages: {
-      label: 'Save original images',
+      label: t('saveOriginalImages'),
       content: (
         <Checkbox
           isSelected={config.saveOriginalImages}
@@ -88,7 +87,7 @@ export const Settings: FC<{
       ),
     },
     saveGalleryInfo: {
-      label: 'Save gallery information',
+      label: t('saveGalleryInfo'),
       content: (
         <Checkbox
           isSelected={config.saveGalleryInfo}
@@ -99,7 +98,7 @@ export const Settings: FC<{
       ),
     },
     filenameConflictAction: {
-      label: <Tooltip closeDelay={200}>Filename conflict Action</Tooltip>,
+      label: <Tooltip closeDelay={200}>{t('filenameConflictAction')}</Tooltip>,
       content: (
         <RadioGroup
           orientation="horizontal"
@@ -111,17 +110,13 @@ export const Settings: FC<{
             })
           }
         >
-          <Radio value="uniquify">Uniquify</Radio>
-          <Radio value="overwrite">Overwrite</Radio>
+          <Radio value="uniquify">{t('uniquify')}</Radio>
+          <Radio value="overwrite">{t('overwrite')}</Radio>
         </RadioGroup>
       ),
     },
     downloadInterval: {
-      label: (
-        <span title="The interval between each image download. This is to avoid blocking due to high QPS.">
-          Download interval
-        </span>
-      ),
+      label: <span title={t('downloadIntervalHint')}>{t('downloadInterval')}</span>,
       content: (
         <Input
           type="number"
@@ -139,7 +134,7 @@ export const Settings: FC<{
       ),
     },
     fileNameRule: {
-      label: 'File name rule',
+      label: t('fileNameRule'),
       content: (
         <RadioGroup
           orientation="horizontal"
@@ -158,11 +153,7 @@ export const Settings: FC<{
       ),
     },
     imageFormat: {
-      label: (
-        <span title="Convert downloaded images to the selected format on the fly.">
-          Image format
-        </span>
-      ),
+      label: <span title={t('imageFormatHint')}>{t('imageFormat')}</span>,
       content: (
         <RadioGroup
           orientation="horizontal"
@@ -174,7 +165,7 @@ export const Settings: FC<{
             })
           }
         >
-          <Radio value="original">Original</Radio>
+          <Radio value="original">{t('formatOriginal')}</Radio>
           <Radio value="jpg">JPG</Radio>
           <Radio value="png">PNG</Radio>
           <Radio value="webp">WebP</Radio>
@@ -182,11 +173,7 @@ export const Settings: FC<{
       ),
     },
     outputMode: {
-      label: (
-        <span title="CBZ mode caches images during download and packs one archive when finished.">
-          Output
-        </span>
-      ),
+      label: <span title={t('outputHint')}>{t('output')}</span>,
       content: (
         <RadioGroup
           orientation="horizontal"
@@ -198,9 +185,9 @@ export const Settings: FC<{
             })
           }
         >
-          <Radio value="files">Individual files</Radio>
-          <Radio value="cbz">CBZ only</Radio>
-          <Radio value="both">Both</Radio>
+          <Radio value="files">{t('outputModeFiles')}</Radio>
+          <Radio value="cbz">{t('outputModeCbz')}</Radio>
+          <Radio value="both">{t('outputModeBoth')}</Radio>
         </RadioGroup>
       ),
     },
@@ -215,7 +202,11 @@ export const Settings: FC<{
     <div className={panelClass}>
       {pathPreview ? (
         <p className="text-[11px] leading-relaxed text-muted">
-          Preview: <span className="font-mono text-brand-accent">[Default]/{pathPreview}</span>
+          {t('pathPreview')}{' '}
+          <span className="font-mono text-brand-accent">
+            {t('defaultFolder')}
+            {pathPreview}
+          </span>
         </p>
       ) : null}
       {Object.keys(formItemMap).map((key) => (

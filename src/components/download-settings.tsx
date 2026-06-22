@@ -48,7 +48,7 @@ export const DownloadSettings = ({
     const intermediateDownloadPath = formatDownloadDir(config.intermediateDownloadPath);
 
     if (!intermediateDownloadPath) {
-      toast.error('File path should not contain: * ? " < > |');
+      toast.error(t('invalidFilePath'));
       return;
     }
 
@@ -56,7 +56,7 @@ export const DownloadSettings = ({
     setConfig(updatedConfig);
 
     configStorage.set(updatedConfig).then(() => {
-      toast.success('Settings saved successfully!');
+      toast.success(t('settingsSaved'));
       onClose();
     });
   };
@@ -71,7 +71,7 @@ export const DownloadSettings = ({
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Download Settings</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">{t('downloadSettings')}</ModalHeader>
               <ModalBody className="space-y-6">
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>

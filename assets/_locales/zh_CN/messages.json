@@ -7,99 +7,40 @@
     "description": "扩展名称",
     "message": "E-Hentai Helper"
   },
-  "startDownload": {
-    "message": "开始下载"
-  },
-  "confirmDownload": {
-    "message": "确认下载"
-  },
-  "cancel": {
-    "message": "取消"
-  },
-  "continueMissing": {
-    "message": "继续下载缺失"
-  },
-  "redownloadAll": {
-    "message": "重新下载全部"
-  },
-  "retryFailed": {
-    "message": "重试失败项"
-  },
-  "openFolder": {
-    "message": "打开下载文件夹"
-  },
-  "downloadAgain": {
-    "message": "再次下载"
-  },
-  "refreshPage": {
-    "message": "刷新"
-  },
-  "clearAll": {
-    "message": "清空全部"
-  },
-  "delete": {
-    "message": "删除"
-  },
-  "confirmClearAll": {
-    "message": "清空全部历史记录与画廊记录？"
-  },
-  "confirmDelete": {
-    "message": "删除此历史记录及对应画廊记录？"
-  },
-  "confirmDownloadBody": {
-    "message": "张图片 · 范围"
-  },
-  "estimatedTime": {
-    "message": "预计耗时"
-  },
-  "seconds": {
-    "message": "秒"
-  },
-  "viewFileList": {
-    "message": "查看文件列表"
-  },
-  "downloadsTab": {
-    "message": "下载"
-  },
-  "backgroundHint": {
-    "message": "可以关闭此弹窗，下载会在后台继续。"
-  },
-  "pathPreviewExample": {
-    "message": "画廊名称/"
-  },
-  "settings": {
-    "message": "设置"
-  },
-  "saveSettings": {
-    "message": "保存设置"
-  },
-  "historyTab": {
-    "message": "历史"
-  },
-  "infoTab": {
-    "message": "信息"
-  },
-  "previouslyTracked": {
-    "message": "已有记录"
-  },
-  "viewDetails": {
-    "message": "查看详情"
-  },
-  "downloadCancelled": {
-    "message": "下载已取消"
-  },
+  "startDownload": { "message": "开始下载" },
+  "confirmDownload": { "message": "确认下载" },
+  "cancel": { "message": "取消" },
+  "continueMissing": { "message": "继续下载缺失" },
+  "redownloadAll": { "message": "重新下载全部" },
+  "retryFailed": { "message": "重试失败项" },
+  "openFolder": { "message": "打开下载文件夹" },
+  "downloadAgain": { "message": "再次下载" },
+  "refreshPage": { "message": "刷新" },
+  "clearAll": { "message": "清空全部" },
+  "delete": { "message": "删除" },
+  "confirmClearAll": { "message": "清空全部历史记录与画廊记录？" },
+  "confirmDelete": { "message": "删除此历史记录及对应画廊记录？" },
+  "confirmDownloadBody": { "message": "张图片 · 范围" },
+  "estimatedTime": { "message": "预计耗时" },
+  "seconds": { "message": "秒" },
+  "viewFileList": { "message": "查看文件列表" },
+  "downloadsTab": { "message": "下载" },
+  "backgroundHint": { "message": "可以关闭此弹窗，下载会在后台继续。" },
+  "pathPreviewExample": { "message": "画廊名称/" },
+  "settings": { "message": "设置" },
+  "saveSettings": { "message": "保存设置" },
+  "historyTab": { "message": "历史" },
+  "infoTab": { "message": "信息" },
+  "previouslyTracked": { "message": "已有记录" },
+  "viewDetails": { "message": "查看详情" },
+  "downloadCancelled": { "message": "下载已取消" },
   "partialSuccessToast": {
     "message": "成功 $1 张，失败 $2 张",
-    "placeholders": {
-      "1": { "content": "$1" },
-      "2": { "content": "$2" }
-    }
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "downloadFailedToast": {
     "message": "下载失败（$1 个错误）",
-    "placeholders": {
-      "1": { "content": "$1" }
-    }
+    "placeholders": { "1": { "content": "$1" } }
   },
   "storageLimitHint": {
     "message": "历史记录保留最新 $1 / $2 条 · 画廊跟踪保留 $3 / $4 本，超出后自动删除最旧记录。",
@@ -109,5 +50,147 @@
       "3": { "content": "$3" },
       "4": { "content": "$4" }
     }
-  }
+  },
+  "outputModeFiles": { "message": "逐张文件" },
+  "outputModeCbz": { "message": "仅 CBZ" },
+  "outputModeBoth": { "message": "两者都要" },
+  "initializing": { "message": "初始化中..." },
+  "notOnGalleryPage": { "message": "当前不在画廊页" },
+  "notOnGalleryDesc": { "message": "请从列表或搜索打开一个画廊后再下载。" },
+  "openGalleryFirst": { "message": "请先打开画廊" },
+  "unableReadGallery": { "message": "无法读取画廊" },
+  "unableReadGalleryDesc": { "message": "无法解析当前页面，请刷新画廊后重试。" },
+  "imagesLabel": { "message": "张图片" },
+  "pagesLabel": { "message": "页" },
+  "badgeComplete": {
+    "message": "已完成 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "badgeInProgress": {
+    "message": "进行中 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "badgeFailed": {
+    "message": "失败 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadRange": { "message": "下载范围" },
+  "selected": { "message": "已选" },
+  "downloadingImages": { "message": "正在下载图片..." },
+  "allImagesSuccess": {
+    "message": "全部 $1 张图片下载成功",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadCompleted": { "message": "下载完成！" },
+  "enjoyingExtension": { "message": "觉得好用？" },
+  "starGithubLink": { "message": "在 GitHub 点个 Star" },
+  "partialSuccessSummary": {
+    "message": "成功 $1 张，失败 $2 张",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "partiallyCompleted": { "message": "部分完成" },
+  "partialCompletedDesc": { "message": "部分图片未能下载，请在详情中查看失败项。" },
+  "allImagesFailed": {
+    "message": "全部 $1 张均失败",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadFailedTitle": { "message": "下载失败" },
+  "downloadFailedDesc": { "message": "未保存任何图片，请检查网络连接后重试。" },
+  "failedStartDownload": { "message": "启动下载失败" },
+  "failedSaveHistory": { "message": "保存下载历史失败" },
+  "nothingToResume": { "message": "没有可续传的内容" },
+  "noFailedItems": { "message": "没有失败项" },
+  "progress": { "message": "进度" },
+  "completed": { "message": "已完成" },
+  "downloadProgress": { "message": "下载进度" },
+  "downloadSettings": { "message": "下载设置" },
+  "invalidFilePath": { "message": "路径不能包含：* ? \" < > |" },
+  "settingsSaved": { "message": "设置已保存！" },
+  "saved": { "message": "已保存" },
+  "downloadFolder": { "message": "下载文件夹" },
+  "downloadFolderHint": { "message": "出于安全考虑，只能设置在浏览器默认下载目录下的子文件夹。" },
+  "saveOriginalImages": { "message": "保存原图" },
+  "saveGalleryInfo": { "message": "保存画廊信息" },
+  "filenameConflictAction": { "message": "文件名冲突处理" },
+  "uniquify": { "message": "自动重命名" },
+  "overwrite": { "message": "覆盖" },
+  "downloadInterval": { "message": "下载间隔" },
+  "downloadIntervalHint": { "message": "每张图片之间的等待时间，用于避免请求过快被限流。" },
+  "fileNameRule": { "message": "文件命名规则" },
+  "imageFormat": { "message": "图片格式" },
+  "imageFormatHint": { "message": "下载时实时转换为所选格式。" },
+  "output": { "message": "输出方式" },
+  "outputHint": { "message": "CBZ 模式会在下载过程中缓存图片，完成后打包为一个压缩包。" },
+  "formatOriginal": { "message": "原始" },
+  "pathPreview": { "message": "预览：" },
+  "defaultFolder": { "message": "[默认]/" },
+  "presetAll": { "message": "全部" },
+  "presetCurrentPage": { "message": "当前页" },
+  "presetFirst20": { "message": "前 20 张" },
+  "imageRange": { "message": "图片范围" },
+  "rangeFrom": { "message": "起始" },
+  "rangeTo": { "message": "结束" },
+  "colIndex": { "message": "#" },
+  "colState": { "message": "状态" },
+  "colFile": { "message": "文件" },
+  "colAction": { "message": "操作" },
+  "colName": { "message": "名称" },
+  "colStatus": { "message": "状态" },
+  "colRange": { "message": "范围" },
+  "colTime": { "message": "时间" },
+  "colOp": { "message": "操作" },
+  "colFileUrl": { "message": "文件 / 链接" },
+  "stateComplete": { "message": "完成" },
+  "stateInProgress": { "message": "进行中" },
+  "stateFailed": { "message": "失败" },
+  "stateInterrupted": { "message": "中断" },
+  "stateDownloading": { "message": "下载中" },
+  "filter": { "message": "筛选" },
+  "searchFilename": { "message": "搜索文件名..." },
+  "itemsCount": {
+    "message": "共 $1 项",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "retry": { "message": "重试" },
+  "retryStarted": { "message": "已开始重试" },
+  "retryFailedToast": { "message": "重试失败" },
+  "missingGalleryContext": { "message": "缺少画廊上下文，无法重试" },
+  "downloadStarted": { "message": "已开始下载" },
+  "searchByName": { "message": "按名称搜索..." },
+  "recordsCount": {
+    "message": "$1 / $2 条记录",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "noHistory": { "message": "暂无历史" },
+  "redownload": { "message": "重新下载" },
+  "detail": { "message": "详情" },
+  "statusCompleteRatio": {
+    "message": "完成 $1/$2",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "galleryDetails": { "message": "画廊详情" },
+  "total": { "message": "合计" },
+  "countDone": {
+    "message": "完成 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countInProgressShort": {
+    "message": "进行中 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countFailedShort": {
+    "message": "失败 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "filterAll": { "message": "全部" },
+  "searchDetail": { "message": "搜索序号 / 文件名 / 链接..." },
+  "noRecords": { "message": "暂无记录" },
+  "retryAllFailed": {
+    "message": "重试全部失败项（$1）",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "close": { "message": "关闭" },
+  "optionsSubtitle": { "message": "下载偏好设置" },
+  "saveChanges": { "message": "保存更改" },
+  "general": { "message": "常规" }
 }

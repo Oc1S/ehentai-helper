@@ -20,9 +20,12 @@ Take Google Chrome as an example:
 ## Features
 + Download the entire gallery with one click, without consuming credits or GP, and no need to log in to Ehentai.
 + Freely select the range of images to download.
-+ Extract and save gallery information and tag list.
++ Extract and save gallery information and tag list
 + Choose download file naming rules, such as naming by sequence or by the original image name.
 + Monitor download progress in real time, with the ability to retry if image download fails.
++ **Previously tracked**: if a gallery was downloaded before, resume missing pages or redownload from History without starting from scratch.
++ **CBZ export** (Settings → Output): pack images into a single `.cbz` after download (`CBZ only` or `Both` with individual files).
++ Close the popup while downloading — the task continues in the background.
 
 ## Preview
 ##### Before download

@@ -1,6 +1,8 @@
 import { type FC } from 'react';
 import { Button, Input, Slider, type SliderProps } from '@nextui-org/react';
 
+import { t } from '@/utils/i18n';
+
 type PageSelectorProps = {
   range: [number, number];
   setRange: (range: [number, number]) => void;
@@ -18,11 +20,11 @@ export const PageSelector: FC<PageSelectorProps> = ({
 }) => {
   const presets = [
     {
-      label: 'All',
+      label: t('presetAll'),
       onPress: () => setRange([1, maxValue]),
     },
     {
-      label: 'Current page',
+      label: t('presetCurrentPage'),
       onPress: () => {
         const start = currentPage * imagesPerPage + 1;
         const end = Math.min((currentPage + 1) * imagesPerPage, maxValue);
@@ -30,7 +32,7 @@ export const PageSelector: FC<PageSelectorProps> = ({
       },
     },
     {
-      label: 'First 20',
+      label: t('presetFirst20'),
       onPress: () => setRange([1, Math.min(20, maxValue)]),
     },
   ];
@@ -51,7 +53,7 @@ export const PageSelector: FC<PageSelectorProps> = ({
         ))}
       </div>
       <Slider
-        aria-label="Image range"
+        aria-label={t('imageRange')}
         size="sm"
         value={range}
         step={1}
@@ -82,7 +84,7 @@ export const PageSelector: FC<PageSelectorProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            From
+            {t('rangeFrom')}
           </span>
           <Input
             type="number"
@@ -102,7 +104,7 @@ export const PageSelector: FC<PageSelectorProps> = ({
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            To
+            {t('rangeTo')}
           </span>
           <Input
             type="number"

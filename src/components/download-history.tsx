@@ -34,12 +34,12 @@ import { t } from '@/utils/i18n';
 
 import { GalleryDetailModal } from './gallery-detail-modal';
 
-const columns = [
-  { key: 'name', label: 'NAME' },
-  { key: 'status', label: 'STATUS' },
-  { key: 'range', label: 'RANGE' },
-  { key: 'time', label: 'TIME' },
-  { key: 'op', label: 'OP' },
+const columns = () => [
+  { key: 'name', label: t('colName') },
+  { key: 'status', label: t('colStatus') },
+  { key: 'range', label: t('colRange') },
+  { key: 'time', label: t('colTime') },
+  { key: 'op', label: t('colOp') },
 ];
 
 const formatTime = (ts: number) => new Date(ts).toLocaleString();
@@ -51,7 +51,7 @@ const formatStatus = (record: GalleryRecord | undefined, range: [number, number]
     if (record.images[String(i)]?.state === 'complete') complete++;
   }
   const total = range[1] - range[0] + 1;
-  return `${complete}/${total} complete`;
+  return t('statusCompleteRatio', [String(complete), String(total)]);
 };
 
 const buildPayloadFromHistory = async (item: DownloadHistoryItem) => {
@@ -97,8 +97,8 @@ export const History: FC = () => {
   const handleRedownload = async (item: DownloadHistoryItem) => {
     const payload = await buildPayloadFromHistory(item);
     const res = await startDownload(payload);
-    if (res?.ok) toast.success('Download started');
-    else toast.error('Failed to start download');
+    if (res?.ok) toast.success(t('downloadStarted'));
+    else toast.error(t('failedStartDownload'));
   };
 
   const galleryCount = Object.keys(galleryRecords).length;
@@ -116,7 +116,7 @@ export const History: FC = () => {
       <div className="flex shrink-0 flex-wrap items-center gap-2.5">
         <Input
           size="sm"
-          placeholder="Search by name..."
+          placeholder={t('searchByName')}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           isClearable
@@ -124,7 +124,7 @@ export const History: FC = () => {
           className="max-w-[280px] flex-1"
         />
         <span className="text-xs text-muted">
-          {filteredData.length} / {data.length} records
+          {t('recordsCount', [String(filteredData.length), String(data.length)])}
         </span>
         <div className="flex-1" />
         <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmClear(true)}>
@@ -142,7 +142,7 @@ export const History: FC = () => {
           tr: 'h-9',
         }}
       >
-        <TableHeader columns={columns}>
+        <TableHeader columns={columns()}>
           {(col) => (
             <TableColumn
               key={col.key}
@@ -162,7 +162,7 @@ export const History: FC = () => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={filteredData} emptyContent="No history">
+        <TableBody items={filteredData} emptyContent={t('noHistory')}>
           {(item) => (
             <TableRow key={item.timestamp}>
               <TableCell title={item.name}>
@@ -186,7 +186,7 @@ export const History: FC = () => {
               <TableCell>
                 <div className="flex flex-wrap gap-1">
                   <Button size="sm" variant="flat" onPress={() => void handleRedownload(item)}>
-                    Redownload
+                    {t('redownload')}
                   </Button>
                   <Button
                     size="sm"
@@ -194,7 +194,7 @@ export const History: FC = () => {
                     isDisabled={!galleryRecords[item.url]}
                     onPress={() => setActiveUrl(item.url)}
                   >
-                    Detail
+                    {t('detail')}
                   </Button>
                   <Button
                     size="sm"

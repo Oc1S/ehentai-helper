@@ -20,6 +20,7 @@ import {
 } from '@nextui-org/react';
 
 import type { GalleryImageState, GalleryRecord } from '@/storage';
+import { t } from '@/utils/i18n';
 
 import { SearchIcon } from './icons/SearchIcon';
 
@@ -29,19 +30,24 @@ const STATE_COLOR: Record<GalleryImageState, ChipProps['color']> = {
   interrupted: 'danger',
 };
 
-const STATE_LABEL: Record<GalleryImageState, string> = {
-  complete: 'Complete',
-  in_progress: 'In progress',
-  interrupted: 'Failed',
+const stateLabel = (state: GalleryImageState) => {
+  switch (state) {
+    case 'complete':
+      return t('stateComplete');
+    case 'in_progress':
+      return t('stateInProgress');
+    case 'interrupted':
+      return t('stateFailed');
+  }
 };
 
 type FilterKey = 'all' | GalleryImageState;
 
-const SUMMARY_TABS: { id: FilterKey; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'complete', label: 'Complete' },
-  { id: 'in_progress', label: 'In progress' },
-  { id: 'interrupted', label: 'Failed' },
+const summaryTabs = (): { id: FilterKey; label: string }[] => [
+  { id: 'all', label: t('filterAll') },
+  { id: 'complete', label: t('stateComplete') },
+  { id: 'in_progress', label: t('stateInProgress') },
+  { id: 'interrupted', label: t('stateFailed') },
 ];
 
 const trimFilename = (filename?: string) => {
@@ -92,18 +98,20 @@ export const GalleryDetailModal: FC<{
           <>
             <ModalHeader className="flex flex-col gap-1.5">
               <span className="line-clamp-1 text-base font-semibold text-ink">
-                {record?.galleryName || 'Gallery details'}
+                {record?.galleryName || t('galleryDetails')}
               </span>
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
-                <span>Total: {record?.total ?? 0}</span>
+                <span>
+                  {t('total')}: {record?.total ?? 0}
+                </span>
                 <Chip color="success" size="sm" variant="flat">
-                  {counts.complete} done
+                  {t('countDone', String(counts.complete))}
                 </Chip>
                 <Chip color="warning" size="sm" variant="flat">
-                  {counts.in_progress} in-progress
+                  {t('countInProgressShort', String(counts.in_progress))}
                 </Chip>
                 <Chip color="danger" size="sm" variant="flat">
-                  {counts.interrupted} failed
+                  {t('countFailedShort', String(counts.interrupted))}
                 </Chip>
               </div>
             </ModalHeader>
@@ -112,7 +120,7 @@ export const GalleryDetailModal: FC<{
                 <Input
                   isClearable
                   size="sm"
-                  placeholder="Search index / filename / url..."
+                  placeholder={t('searchDetail')}
                   startContent={<SearchIcon />}
                   className="max-w-[320px] flex-1"
                   value={keyword}
@@ -125,11 +133,13 @@ export const GalleryDetailModal: FC<{
                   onSelectionChange={(k) => setFilter(k as FilterKey)}
                   aria-label="state filter"
                 >
-                  {SUMMARY_TABS.map((t) => (
-                    <Tab key={t.id} title={t.label} />
+                  {summaryTabs().map((tab) => (
+                    <Tab key={tab.id} title={tab.label} />
                   ))}
                 </Tabs>
-                <span className="text-[11px] text-muted">{filteredRows.length} items</span>
+                <span className="text-[11px] text-muted">
+                  {t('itemsCount', String(filteredRows.length))}
+                </span>
               </div>
               <Table
                 aria-label="gallery image records"
@@ -143,20 +153,20 @@ export const GalleryDetailModal: FC<{
                 }}
               >
                 <TableHeader>
-                  <TableColumn width={64}>#</TableColumn>
-                  <TableColumn width={100}>STATE</TableColumn>
-                  <TableColumn>FILE / URL</TableColumn>
+                  <TableColumn width={64}>{t('colIndex')}</TableColumn>
+                  <TableColumn width={100}>{t('colState')}</TableColumn>
+                  <TableColumn>{t('colFileUrl')}</TableColumn>
                   {(onRetryIndex || onRetryAllFailed) && (
-                    <TableColumn width={88}>ACTION</TableColumn>
+                    <TableColumn width={88}>{t('colAction')}</TableColumn>
                   )}
                 </TableHeader>
-                <TableBody emptyContent="No records">
+                <TableBody emptyContent={t('noRecords')}>
                   {filteredRows.map((row) => (
                     <TableRow key={row.index}>
                       <TableCell>{row.index}</TableCell>
                       <TableCell>
                         <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
-                          {STATE_LABEL[row.state]}
+                          {stateLabel(row.state)}
                         </Chip>
                       </TableCell>
                       <TableCell>
@@ -188,7 +198,7 @@ export const GalleryDetailModal: FC<{
                               variant="flat"
                               onPress={() => onRetryIndex(row.index)}
                             >
-                              Retry
+                              {t('retry')}
                             </Button>
                           ) : (
                             '—'
@@ -203,7 +213,7 @@ export const GalleryDetailModal: FC<{
             <ModalFooter className="gap-2">
               {onRetryAllFailed && counts.interrupted > 0 && (
                 <Button size="sm" color="primary" variant="flat" onPress={onRetryAllFailed}>
-                  Retry all failed ({counts.interrupted})
+                  {t('retryAllFailed', String(counts.interrupted))}
                 </Button>
               )}
               <button
@@ -211,7 +221,7 @@ export const GalleryDetailModal: FC<{
                 onClick={close}
                 className="rounded-md border border-hairline bg-surface-soft px-3 py-1.5 text-xs text-body hover:text-ink"
               >
-                Close
+                {t('close')}
               </button>
             </ModalFooter>
           </>

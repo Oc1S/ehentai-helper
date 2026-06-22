@@ -5,6 +5,13 @@ const normalizeUrl = (href: string) => {
   return href;
 };
 
+export type ImageUrlSource = 'preview' | 'i6' | 'fullimg';
+
+export type ParsedImageUrl = {
+  url: string;
+  source: ImageUrlSource;
+};
+
 export const extractImagePageUrlsFromHtml = (html: string): string[] => {
   const gdtIdx = html.indexOf('id="gdt"');
   if (gdtIdx === -1) return [];
@@ -20,19 +27,67 @@ export const extractImagePageUrlsFromHtml = (html: string): string[] => {
   return urls;
 };
 
+/** `#img` 展示图 — 不勾选原图时始终使用；原图解析失败时也可回退到此 */
+export const extractPreviewImageUrl = (html: string): string | null => {
+  const imgMatch = html.match(/id="img"[^>]*\ssrc="([^"]+)"/i);
+  return imgMatch ? normalizeUrl(imgMatch[1]) : null;
+};
+
+/** `/fullimg/...` 或 `fullimg.php?...` — EH 当前常见的原图入口 */
+const extractFullimgUrl = (html: string): string | null => {
+  const fullimgPath = html.match(/href="(https?:\/\/[^"]+\/fullimg\/[^"]+)"/i);
+  if (fullimgPath) return normalizeUrl(fullimgPath[1]);
+
+  const fullimgPhp = html.match(/href="(https?:\/\/[^"]+fullimg\.php[^"]+)"/i);
+  if (fullimgPhp) return normalizeUrl(fullimgPhp[1]);
+
+  return null;
+};
+
+/** `#i6` 区块内第一个链接 — 旧版/部分页面仍走此结构 */
+const extractI6Url = (html: string): string | null => {
+  const i6Idx = html.indexOf('id="i6"');
+  if (i6Idx === -1) return null;
+
+  const i6Section = html.slice(i6Idx, i6Idx + 8000);
+  const linkMatch = i6Section.match(/href="([^"]+)"/i);
+  return linkMatch ? normalizeUrl(linkMatch[1]) : null;
+};
+
+/** 原图 URL 追加 nl，尽量从常规图床拉取（EH 社区下载器通用做法） */
+export const appendNlIfNeeded = (url: string): string => {
+  if (!/\/fullimg(?:\/|\?)/i.test(url)) return url;
+  if (/[?&]nl(?:=|&|$)/.test(url)) return url;
+  return url.includes('?') ? `${url}&nl` : `${url}?nl`;
+};
+
+const resolveOriginalUrl = (html: string): { url: string; source: ImageUrlSource } | null => {
+  const fullimg = extractFullimgUrl(html);
+  if (fullimg) {
+    return { url: appendNlIfNeeded(fullimg), source: 'fullimg' };
+  }
+
+  const i6 = extractI6Url(html);
+  if (i6) {
+    return { url: appendNlIfNeeded(i6), source: 'i6' };
+  }
+
+  return null;
+};
+
 export const extractImageUrlFromPageHtml = (
   html: string,
   saveOriginalImages: boolean
-): string | null => {
-  const imgMatch = html.match(/id="img"[^>]*\ssrc="([^"]+)"/i);
-  if (!imgMatch) return null;
+): ParsedImageUrl | null => {
+  const preview = extractPreviewImageUrl(html);
+  if (!preview) return null;
 
-  if (!saveOriginalImages) return imgMatch[1];
+  if (!saveOriginalImages) {
+    return { url: preview, source: 'preview' };
+  }
 
-  const i6Idx = html.indexOf('id="i6"');
-  if (i6Idx === -1) return imgMatch[1];
+  const original = resolveOriginalUrl(html);
+  if (original) return original;
 
-  const i6Section = html.slice(i6Idx, i6Idx + 4000);
-  const linkMatch = i6Section.match(/href="([^"]+)"/i);
-  return linkMatch ? normalizeUrl(linkMatch[1]) : imgMatch[1];
+  return { url: preview, source: 'preview' };
 };

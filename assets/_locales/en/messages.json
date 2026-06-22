@@ -7,99 +7,42 @@
     "description": "Extension name",
     "message": "E-Hentai Helper"
   },
-  "startDownload": {
-    "message": "Start Download"
-  },
-  "confirmDownload": {
-    "message": "Confirm Download"
-  },
-  "cancel": {
-    "message": "Cancel"
-  },
-  "continueMissing": {
-    "message": "Continue missing"
-  },
-  "redownloadAll": {
-    "message": "Redownload all"
-  },
-  "retryFailed": {
-    "message": "Retry failed"
-  },
-  "openFolder": {
-    "message": "Open download folder"
-  },
-  "downloadAgain": {
-    "message": "Download again"
-  },
-  "refreshPage": {
-    "message": "Refresh"
-  },
-  "clearAll": {
-    "message": "Clear All"
-  },
-  "delete": {
-    "message": "Delete"
-  },
-  "confirmClearAll": {
-    "message": "Clear all history and gallery records?"
-  },
-  "confirmDelete": {
-    "message": "Delete this history entry and gallery record?"
-  },
-  "confirmDownloadBody": {
-    "message": "images · range"
-  },
-  "estimatedTime": {
-    "message": "Estimated"
-  },
-  "seconds": {
-    "message": "s"
-  },
-  "viewFileList": {
-    "message": "View file list"
-  },
-  "downloadsTab": {
-    "message": "Downloads"
-  },
+  "startDownload": { "message": "Start Download" },
+  "confirmDownload": { "message": "Confirm Download" },
+  "cancel": { "message": "Cancel" },
+  "continueMissing": { "message": "Continue missing" },
+  "redownloadAll": { "message": "Redownload all" },
+  "retryFailed": { "message": "Retry failed" },
+  "openFolder": { "message": "Open download folder" },
+  "downloadAgain": { "message": "Download again" },
+  "refreshPage": { "message": "Refresh" },
+  "clearAll": { "message": "Clear All" },
+  "delete": { "message": "Delete" },
+  "confirmClearAll": { "message": "Clear all history and gallery records?" },
+  "confirmDelete": { "message": "Delete this history entry and gallery record?" },
+  "confirmDownloadBody": { "message": "images · range" },
+  "estimatedTime": { "message": "Estimated" },
+  "seconds": { "message": "s" },
+  "viewFileList": { "message": "View file list" },
+  "downloadsTab": { "message": "Downloads" },
   "backgroundHint": {
     "message": "You can close this popup — download continues in the background."
   },
-  "pathPreviewExample": {
-    "message": "Gallery Name/"
-  },
-  "settings": {
-    "message": "Settings"
-  },
-  "saveSettings": {
-    "message": "Save Settings"
-  },
-  "historyTab": {
-    "message": "History"
-  },
-  "infoTab": {
-    "message": "Info"
-  },
-  "previouslyTracked": {
-    "message": "Previously tracked"
-  },
-  "viewDetails": {
-    "message": "View details"
-  },
-  "downloadCancelled": {
-    "message": "Download cancelled"
-  },
+  "pathPreviewExample": { "message": "Gallery Name/" },
+  "settings": { "message": "Settings" },
+  "saveSettings": { "message": "Save Settings" },
+  "historyTab": { "message": "History" },
+  "infoTab": { "message": "Info" },
+  "previouslyTracked": { "message": "Previously tracked" },
+  "viewDetails": { "message": "View details" },
+  "downloadCancelled": { "message": "Download cancelled" },
   "partialSuccessToast": {
     "message": "$1 succeeded, $2 failed",
-    "placeholders": {
-      "1": { "content": "$1" },
-      "2": { "content": "$2" }
-    }
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "downloadFailedToast": {
     "message": "Download failed ($1 errors)",
-    "placeholders": {
-      "1": { "content": "$1" }
-    }
+    "placeholders": { "1": { "content": "$1" } }
   },
   "storageLimitHint": {
     "message": "History keeps the latest $1 of $2 entries · Gallery tracking keeps $3 of $4 galleries. Older records are removed automatically.",
@@ -109,5 +52,157 @@
       "3": { "content": "$3" },
       "4": { "content": "$4" }
     }
-  }
+  },
+  "outputModeFiles": { "message": "Individual files" },
+  "outputModeCbz": { "message": "CBZ only" },
+  "outputModeBoth": { "message": "Both" },
+  "initializing": { "message": "Initializing..." },
+  "notOnGalleryPage": { "message": "Not on a Gallery Page" },
+  "notOnGalleryDesc": { "message": "Open a gallery from the list or search to start downloading." },
+  "openGalleryFirst": { "message": "Start by Opening a Gallery" },
+  "unableReadGallery": { "message": "Unable to Read Gallery" },
+  "unableReadGalleryDesc": {
+    "message": "Could not parse the current page. Refresh the gallery and try again."
+  },
+  "imagesLabel": { "message": "Images" },
+  "pagesLabel": { "message": "Pages" },
+  "badgeComplete": {
+    "message": "$1 complete",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "badgeInProgress": {
+    "message": "$1 in progress",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "badgeFailed": {
+    "message": "$1 failed",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadRange": { "message": "Download Range" },
+  "selected": { "message": "Selected" },
+  "downloadingImages": { "message": "Downloading images..." },
+  "allImagesSuccess": {
+    "message": "All $1 images downloaded successfully",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadCompleted": { "message": "Download Completed!" },
+  "enjoyingExtension": { "message": "Enjoying the extension?" },
+  "starGithubLink": { "message": "Star it on GitHub" },
+  "partialSuccessSummary": {
+    "message": "$1 succeeded, $2 failed",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "partiallyCompleted": { "message": "Partially Completed" },
+  "partialCompletedDesc": {
+    "message": "Some images could not be downloaded. Check Details for failed items."
+  },
+  "allImagesFailed": {
+    "message": "All $1 images failed",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "downloadFailedTitle": { "message": "Download Failed" },
+  "downloadFailedDesc": { "message": "No images were saved. Check your connection and try again." },
+  "failedStartDownload": { "message": "Failed to start download" },
+  "failedSaveHistory": { "message": "Failed to save download history" },
+  "nothingToResume": { "message": "Nothing to resume" },
+  "noFailedItems": { "message": "No failed items" },
+  "progress": { "message": "Progress" },
+  "completed": { "message": "Completed" },
+  "downloadProgress": { "message": "Download progress" },
+  "downloadSettings": { "message": "Download Settings" },
+  "invalidFilePath": { "message": "File path should not contain: * ? \" < > |" },
+  "settingsSaved": { "message": "Settings saved successfully!" },
+  "saved": { "message": "Saved" },
+  "downloadFolder": { "message": "Download folder" },
+  "downloadFolderHint": {
+    "message": "For security reasons, you can only set a directory inside the default download folder."
+  },
+  "saveOriginalImages": { "message": "Save original images" },
+  "saveGalleryInfo": { "message": "Save gallery information" },
+  "filenameConflictAction": { "message": "Filename conflict action" },
+  "uniquify": { "message": "Uniquify" },
+  "overwrite": { "message": "Overwrite" },
+  "downloadInterval": { "message": "Download interval" },
+  "downloadIntervalHint": {
+    "message": "The interval between each image download. This is to avoid blocking due to high QPS."
+  },
+  "fileNameRule": { "message": "File name rule" },
+  "imageFormat": { "message": "Image format" },
+  "imageFormatHint": { "message": "Convert downloaded images to the selected format on the fly." },
+  "output": { "message": "Output" },
+  "outputHint": {
+    "message": "CBZ mode caches images during download and packs one archive when finished."
+  },
+  "formatOriginal": { "message": "Original" },
+  "pathPreview": { "message": "Preview:" },
+  "defaultFolder": { "message": "[Default]/" },
+  "presetAll": { "message": "All" },
+  "presetCurrentPage": { "message": "Current page" },
+  "presetFirst20": { "message": "First 20" },
+  "imageRange": { "message": "Image range" },
+  "rangeFrom": { "message": "From" },
+  "rangeTo": { "message": "To" },
+  "colIndex": { "message": "#" },
+  "colState": { "message": "STATE" },
+  "colFile": { "message": "FILE" },
+  "colAction": { "message": "ACTION" },
+  "colName": { "message": "NAME" },
+  "colStatus": { "message": "STATUS" },
+  "colRange": { "message": "RANGE" },
+  "colTime": { "message": "TIME" },
+  "colOp": { "message": "OP" },
+  "colFileUrl": { "message": "FILE / URL" },
+  "stateComplete": { "message": "Complete" },
+  "stateInProgress": { "message": "In progress" },
+  "stateFailed": { "message": "Failed" },
+  "stateInterrupted": { "message": "Interrupted" },
+  "stateDownloading": { "message": "Downloading" },
+  "filter": { "message": "Filter" },
+  "searchFilename": { "message": "Search filename..." },
+  "itemsCount": {
+    "message": "$1 items",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "retry": { "message": "Retry" },
+  "retryStarted": { "message": "Retry started" },
+  "retryFailedToast": { "message": "Retry failed" },
+  "missingGalleryContext": { "message": "Missing gallery context for retry" },
+  "downloadStarted": { "message": "Download started" },
+  "searchByName": { "message": "Search by name..." },
+  "recordsCount": {
+    "message": "$1 / $2 records",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "noHistory": { "message": "No history" },
+  "redownload": { "message": "Redownload" },
+  "detail": { "message": "Detail" },
+  "statusCompleteRatio": {
+    "message": "$1/$2 complete",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "galleryDetails": { "message": "Gallery details" },
+  "total": { "message": "Total" },
+  "countDone": {
+    "message": "$1 done",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countInProgressShort": {
+    "message": "$1 in-progress",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countFailedShort": {
+    "message": "$1 failed",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "filterAll": { "message": "All" },
+  "searchDetail": { "message": "Search index / filename / url..." },
+  "noRecords": { "message": "No records" },
+  "retryAllFailed": {
+    "message": "Retry all failed ($1)",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "close": { "message": "Close" },
+  "optionsSubtitle": { "message": "Download preferences" },
+  "saveChanges": { "message": "Save changes" },
+  "general": { "message": "General" }
 }

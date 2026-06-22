@@ -21,12 +21,12 @@ export const OptionsPage = () => {
   const handleSave = () => {
     const intermediateDownloadPath = validateFilePath(config.intermediateDownloadPath);
     if (!intermediateDownloadPath) {
-      toast.error('File path should not contain: * ? " < > |');
+      toast.error(t('invalidFilePath'));
       return;
     }
     const updatedConfig = { ...config, intermediateDownloadPath };
     setConfig(updatedConfig);
-    configStorage.set(updatedConfig).then(() => toast.success('Saved'));
+    configStorage.set(updatedConfig).then(() => toast.success(t('saved')));
   };
 
   return (
@@ -35,18 +35,18 @@ export const OptionsPage = () => {
         <div className="options-shell">
           <header className="options-header">
             <div className="options-header__text">
-              <h1 className="options-header__title">Settings</h1>
+              <h1 className="options-header__title">{t('settings')}</h1>
               <p className="options-header__desc">
-                <span className="options-header__accent">E-Hentai Helper</span> · Download
-                preferences
+                <span className="options-header__accent">E-Hentai Helper</span> ·{' '}
+                {t('optionsSubtitle')}
               </p>
             </div>
             <Button color="primary" onPress={handleSave}>
-              Save changes
+              {t('saveChanges')}
             </Button>
           </header>
           <main className="options-main scrollbar-glass">
-            <p className="settings-section-title">General</p>
+            <p className="settings-section-title">{t('general')}</p>
             <Settings
               config={config}
               setConfig={setConfig}

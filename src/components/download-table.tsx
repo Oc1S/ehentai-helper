@@ -30,6 +30,7 @@ import {
   downloadTaskStorage,
   galleryRecordsStorage,
 } from '@/storage';
+import { t } from '@/utils/i18n';
 
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
@@ -45,17 +46,17 @@ const CellButton = ({ children, ...rest }: ButtonProps) => (
   </Button>
 );
 
-const columns = [
-  { key: 'displayIndex', label: '#', width: 48 },
-  { key: 'state', label: 'STATE', width: 100 },
-  { key: 'filename', label: 'FILE', width: 280 },
-  { key: 'operation', label: 'ACTION', width: 140 },
+const columns = () => [
+  { key: 'displayIndex', label: t('colIndex'), width: 48 },
+  { key: 'state', label: t('colState'), width: 100 },
+  { key: 'filename', label: t('colFile'), width: 280 },
+  { key: 'operation', label: t('colAction'), width: 140 },
 ];
 
 const stateMap: Record<DownloadState, ReactNode> = {
-  in_progress: <>Downloading</>,
-  interrupted: <>Interrupted</>,
-  complete: <>Complete</>,
+  in_progress: <>{t('stateDownloading')}</>,
+  interrupted: <>{t('stateInterrupted')}</>,
+  complete: <>{t('stateComplete')}</>,
 };
 
 const statusColorMap: Record<DownloadState, ChipProps['color']> = {
@@ -85,9 +86,9 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
   }, [list]);
 
   const stateSelections: { label: string; id: DownloadItem['state'] }[] = [
-    { id: 'complete', label: 'Complete' },
-    { id: 'in_progress', label: 'In Progress' },
-    { id: 'interrupted', label: 'Interrupted' },
+    { id: 'complete', label: t('stateComplete') },
+    { id: 'in_progress', label: t('stateInProgress') },
+    { id: 'interrupted', label: t('stateInterrupted') },
   ];
 
   const filteredList = useMemo(() => {
@@ -115,7 +116,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
   const retryViaOrchestrator = async (entry: (typeof indexMap)[string]) => {
     const record = entry.galleryUrl ? galleryRecords[entry.galleryUrl] : undefined;
     if (!entry.galleryUrl || !record) {
-      toast.error('Missing gallery context for retry');
+      toast.error(t('missingGalleryContext'));
       return;
     }
     const imagesPerPage = 20;
@@ -132,8 +133,8 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
       totalImages: record.total,
       indices: [entry.index],
     });
-    if (res?.ok) toast.success('Retry started');
-    else toast.error('Retry failed');
+    if (res?.ok) toast.success(t('retryStarted'));
+    else toast.error(t('retryFailedToast'));
   };
 
   const renderCell = (item: DownloadItem, key: string) => {
@@ -146,7 +147,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
           if (entry) void retryViaOrchestrator(entry);
         }}
       >
-        Retry
+        {t('retry')}
       </CellButton>
     );
 
@@ -180,7 +181,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
         <Input
           isClearable
           className="max-w-[320px] flex-1"
-          placeholder="Search filename..."
+          placeholder={t('searchFilename')}
           startContent={<SearchIcon />}
           size="sm"
           onClear={() => setFilterValue('')}
@@ -201,7 +202,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
               endContent={<ChevronDownIcon className="text-small" />}
               variant="flat"
             >
-              Filter
+              {t('filter')}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -218,7 +219,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
             ))}
           </DropdownMenu>
         </Dropdown>
-        <span className="text-xs text-muted">{filteredList.length} items</span>
+        <span className="text-xs text-muted">{t('itemsCount', String(filteredList.length))}</span>
       </div>
       <Table
         isHeaderSticky
@@ -233,7 +234,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
           tr: 'h-9',
         }}
       >
-        <TableHeader columns={columns}>
+        <TableHeader columns={columns()}>
           {(col) => (
             <TableColumn key={col.key} width={col.width}>
               {col.label}

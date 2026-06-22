@@ -198,8 +198,8 @@ const downloadImage = async (
     return;
   }
 
-  const imageUrl = extractImageUrlFromPageHtml(responseText, config.saveOriginalImages);
-  if (!imageUrl) {
+  const imageParsed = extractImageUrlFromPageHtml(responseText, config.saveOriginalImages);
+  if (!imageParsed) {
     await markImageFailed(
       params.galleryFrontPageUrl,
       currentIndex,
@@ -209,7 +209,13 @@ const downloadImage = async (
     return;
   }
 
-  const sourceImageUrl = imageUrl;
+  if (config.saveOriginalImages && imageParsed.source === 'preview') {
+    console.warn(
+      `original image unavailable, using preview@ index=${currentIndex} page=${imagePageUrl}`
+    );
+  }
+
+  const sourceImageUrl = imageParsed.url;
   let blob: Blob;
   let ext: string;
   try {

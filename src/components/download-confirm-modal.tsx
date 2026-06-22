@@ -40,7 +40,7 @@ export const DownloadConfirmModal = ({
               </span>
             </p>
             <p className="break-all">
-              <span className="text-muted-soft">[Default]/</span>
+              <span className="text-muted-soft">{t('defaultFolder')}</span>
               {downloadPath}
             </p>
             <p className="text-[12px] text-muted-soft">
