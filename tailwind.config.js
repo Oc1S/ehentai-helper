@@ -1,11 +1,49 @@
+const fs = require('fs');
+const path = require('path');
+const { createRequire } = require('module');
+
 const { nextui } = require('@nextui-org/react');
+
+const requireFromRoot = createRequire(path.join(__dirname, 'package.json'));
+
+/** NextUI 组件 class 定义在 @nextui-org/theme；pnpm 下常未提升到 node_modules 根目录，需显式解析。 */
+const resolveNextuiThemeContentGlobs = () => {
+  const globs = [];
+
+  try {
+    const themeRoot = path.dirname(requireFromRoot.resolve('@nextui-org/theme/package.json'));
+    globs.push(path.join(themeRoot, 'dist/**/*.{js,ts,jsx,tsx}').replace(/\\/g, '/'));
+    return globs;
+  } catch {
+    /* fall through to pnpm store scan */
+  }
+
+  const pnpmRoot = path.join(__dirname, 'node_modules/.pnpm');
+  if (!fs.existsSync(pnpmRoot)) return globs;
+
+  for (const entry of fs.readdirSync(pnpmRoot)) {
+    if (!entry.startsWith('@nextui-org+theme@')) continue;
+
+    const distDir = path.join(pnpmRoot, entry, 'node_modules/@nextui-org/theme/dist');
+    if (fs.existsSync(distDir)) {
+      globs.push(path.join(distDir, '**/*.{js,ts,jsx,tsx}').replace(/\\/g, '/'));
+    }
+  }
+
+  return globs;
+};
+
+const nextuiThemeGlobs = resolveNextuiThemeContentGlobs();
+
+if (nextuiThemeGlobs.length === 0) {
+  console.warn(
+    '[tailwind] @nextui-org/theme not found — NextUI component styles will be missing. Install @nextui-org/theme.'
+  );
+}
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './src/**/*.{js,ts,jsx,tsx}',
-    './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx}', ...nextuiThemeGlobs],
   darkMode: 'class',
   theme: {
     extend: {

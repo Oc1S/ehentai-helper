@@ -8,6 +8,7 @@ import {
   ModalHeader,
   useDisclosure,
 } from '@nextui-org/react';
+import { Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useMounted } from '@/hooks';
@@ -64,21 +65,24 @@ export const DownloadSettings = ({
   return (
     <>
       <Button
+        isIconOnly
         size="sm"
         variant="flat"
         onPress={onOpen}
         isDisabled={disabled}
-        className="h-7 min-w-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] px-3 text-[12px] font-medium text-muted backdrop-blur-sm hover:border-[var(--eh-glass-border-hover)] hover:bg-[rgb(12_12_13/0.45)] hover:text-body"
+        aria-label={t('settings')}
+        className="h-7 w-7 min-w-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] text-muted backdrop-blur-sm hover:border-[var(--eh-glass-border-hover)] hover:bg-[rgb(12_12_13/0.45)] hover:text-body"
       >
-        {t('settings')}
+        <SettingsIcon size={15} strokeWidth={1.75} />
       </Button>
 
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        size="2xl"
+        size="xl"
         scrollBehavior="inside"
         backdrop="blur"
+        hideCloseButton
         classNames={{
           backdrop: 'bg-[rgb(0_0_0/0.58)] backdrop-blur-md',
           wrapper: 'items-center px-4',
@@ -88,29 +92,24 @@ export const DownloadSettings = ({
         <ModalContent className="glass-panel my-3 max-h-[min(540px,88vh)] border border-[var(--eh-glass-border)] bg-transparent shadow-[var(--eh-glass-elevation)]">
           {(close) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 border-b border-[var(--eh-hairline-soft)] px-6 py-4">
-                <span className="text-base font-semibold tracking-tight text-ink">
-                  {t('downloadSettings')}
-                </span>
-                <span className="text-[11px] font-medium text-muted-soft">
-                  {t('optionsSubtitle')}
-                </span>
+              <ModalHeader className="border-b border-[var(--eh-hairline-soft)] px-5 py-3">
+                <span className="text-sm font-medium tracking-tight text-ink">{t('settings')}</span>
               </ModalHeader>
-              <ModalBody className="scrollbar-glass px-6 py-5">
+              <ModalBody className="scrollbar-glass px-5 py-4">
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
-              <ModalFooter className="gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-6 py-3 backdrop-blur-md">
+              <ModalFooter className="flex flex-row justify-end gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-5 py-2.5 backdrop-blur-md">
                 <Button
-                  variant="flat"
+                  variant="light"
                   onPress={close}
-                  className="border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.3)] font-medium text-muted hover:text-body"
+                  className="h-8 min-w-[68px] flex-none rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(12_12_13/0.4)] px-3.5 text-[12px] font-normal text-muted backdrop-blur-sm hover:bg-[rgb(16_16_18/0.5)] hover:text-body"
                 >
                   {t('cancel')}
                 </Button>
                 <Button
-                  color="primary"
+                  variant="light"
                   onPress={handleSave}
-                  className="font-semibold shadow-[var(--eh-shadow-card)]"
+                  className="bg-brand-accent/12 hover:bg-brand-accent/18 h-8 min-w-[68px] flex-none rounded-lg border border-brand-accent/30 px-3.5 text-[12px] font-normal text-brand-accent backdrop-blur-sm"
                 >
                   {t('saveSettings')}
                 </Button>

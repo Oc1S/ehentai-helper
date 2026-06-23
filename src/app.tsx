@@ -8,7 +8,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
       <div className="h-full w-full bg-transparent text-foreground">
         <Toaster
           theme="dark"
-          position="top-center"
+          position="bottom-right"
+          offset={{ bottom: 80, right: 16 }}
           closeButton
           richColors
           toastOptions={{

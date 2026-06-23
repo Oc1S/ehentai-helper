@@ -29,14 +29,14 @@
   "seconds": { "message": "s" },
   "viewFileList": { "message": "View file list" },
   "galleryTab": { "message": "Gallery" },
-  "filesTab": { "message": "Files" },
+  "filesTab": { "message": "File downloads" },
   "backgroundHint": {
     "message": "You can close this popup — download continues in the background."
   },
   "pathPreviewExample": { "message": "Gallery Name/" },
   "settings": { "message": "Settings" },
   "saveSettings": { "message": "Save Settings" },
-  "historyTab": { "message": "History" },
+  "historyTab": { "message": "History records" },
   "previouslyTracked": { "message": "Previously tracked" },
   "viewDetails": { "message": "View details" },
   "downloadCancelled": { "message": "Download cancelled" },
@@ -127,6 +127,9 @@
   "saveOriginalImages": { "message": "Save original images" },
   "saveGalleryInfo": { "message": "Save gallery information" },
   "filenameConflictAction": { "message": "Filename conflict action" },
+  "filenameConflictHint": {
+    "message": "When a file already exists: Uniquify adds a suffix; Overwrite replaces the existing file."
+  },
   "uniquify": { "message": "Uniquify" },
   "overwrite": { "message": "Overwrite" },
   "downloadInterval": { "message": "Download interval" },

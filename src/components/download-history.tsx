@@ -32,6 +32,7 @@ import {
 import { removeInvalidCharFromFilename } from '@/utils';
 import { t } from '@/utils/i18n';
 
+import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { GalleryDetailModal } from './gallery-detail-modal';
 
 const columns = () => [
@@ -131,31 +132,27 @@ export const History: FC = () => {
           {t('clearAll')}
         </Button>
       </div>
-      <Table
-        aria-label="download history"
-        isHeaderSticky
-        classNames={{
-          base: 'min-h-0 flex-1 overflow-hidden',
-          wrapper: 'min-h-0 h-full overflow-auto p-0',
-          th: 'text-[11px] h-8',
-          td: 'text-xs py-1.5',
-          tr: 'h-9',
-        }}
-      >
+      <EhTableFrame>
+        <Table
+          aria-label="download history"
+          isHeaderSticky
+          removeWrapper
+          classNames={ehTableClassNames()}
+        >
         <TableHeader columns={columns()}>
           {(col) => (
             <TableColumn
               key={col.key}
               width={
                 col.key === 'name'
-                  ? 200
+                  ? 180
                   : col.key === 'status'
-                    ? 120
+                    ? 108
                     : col.key === 'time'
-                      ? 140
+                      ? 128
                       : col.key === 'op'
-                        ? 160
-                        : 70
+                        ? 220
+                        : 64
               }
             >
               {col.label}
@@ -177,20 +174,26 @@ export const History: FC = () => {
               <TableCell className="whitespace-nowrap text-[11px] text-muted">
                 {formatStatus(galleryRecords[item.url], item.range)}
               </TableCell>
-              <TableCell className="whitespace-nowrap text-default-400">
+              <TableCell className="whitespace-nowrap text-muted-soft">
                 {item.range[0]}–{item.range[1]}
               </TableCell>
-              <TableCell className="whitespace-nowrap text-default-400">
+              <TableCell className="whitespace-nowrap text-muted-soft">
                 {formatTime(item.timestamp)}
               </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  <Button size="sm" variant="flat" onPress={() => void handleRedownload(item)}>
+              <TableCell className="py-1.5">
+                <div className="flex flex-nowrap items-center gap-0.5">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
+                    onPress={() => void handleRedownload(item)}
+                  >
                     {t('redownload')}
                   </Button>
                   <Button
                     size="sm"
                     variant="flat"
+                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
                     isDisabled={!galleryRecords[item.url]}
                     onPress={() => setActiveUrl(item.url)}
                   >
@@ -200,6 +203,7 @@ export const History: FC = () => {
                     size="sm"
                     variant="flat"
                     color="danger"
+                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
                     onPress={() => setDeleteTarget(item)}
                   >
                     {t('delete')}
@@ -209,7 +213,8 @@ export const History: FC = () => {
             </TableRow>
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </EhTableFrame>
       <GalleryDetailModal
         isOpen={activeUrl !== null}
         onClose={() => setActiveUrl(null)}

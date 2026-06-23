@@ -19,13 +19,25 @@ const Row = ({
   content,
   variant,
 }: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'page' }) => (
-  <div className={variant === 'page' ? 'settings-row settings-row--page' : 'settings-row'}>
-    <div className={variant === 'page' ? 'settings-label settings-label--page' : 'settings-label'}>
+  <div className={variant === 'page' ? 'settings-row settings-row--page' : 'settings-row settings-row--modal'}>
+    <div
+      className={
+        variant === 'page'
+          ? 'settings-label settings-label--page'
+          : variant === 'modal'
+            ? 'settings-label--modal'
+            : 'settings-label'
+      }
+    >
       {label}
     </div>
     <div
       className={
-        variant === 'page' ? 'settings-content settings-content--page' : 'settings-content'
+        variant === 'page'
+          ? 'settings-content settings-content--page'
+          : variant === 'modal'
+            ? 'settings-content--modal'
+            : 'settings-content'
       }
     >
       {content}
@@ -40,9 +52,15 @@ const TextInput = ({
 }: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
   <input
     type="text"
-    className={`flex-1 rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-2.5 py-1.5 text-sm text-ink outline-none backdrop-blur-sm transition-colors placeholder:text-muted-soft focus:border-brand-accent/35 focus:bg-[rgb(10_10_11/0.4)] ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
+    className={`flex-1 rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-2.5 py-1.5 text-ink outline-none backdrop-blur-sm transition-colors placeholder:text-muted-soft focus:border-brand-accent/35 focus:bg-[rgb(10_10_11/0.4)] ${variant === 'page' ? 'path-input--page text-sm' : variant === 'modal' ? 'text-[12px]' : 'text-sm'} ${className ?? ''}`.trim()}
     {...rest}
   />
+);
+
+const HintLabel = ({ label, hint }: { label: string; hint: string }) => (
+  <Tooltip content={hint} closeDelay={200} placement="top-start">
+    <span className="cursor-help border-b border-dotted border-muted-soft/80">{label}</span>
+  </Tooltip>
 );
 
 export const Settings: FC<{
@@ -54,13 +72,13 @@ export const Settings: FC<{
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
       label: (
-        <span title={t('downloadFolderHint')}>{t('downloadFolder')}</span>
+        <HintLabel label={t('downloadFolder')} hint={t('downloadFolderHint')} />
       ),
       content: (
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className={`shrink-0 font-medium text-ink underline underline-offset-2 ${variant === 'page' ? 'text-[13px]' : 'text-sm'}`}
+            className={`shrink-0 font-normal text-ink underline underline-offset-2 ${variant === 'page' ? 'text-[13px]' : 'text-[12px]'}`}
             onClick={() => {
               chrome.downloads.showDefaultFolder();
             }}
@@ -98,10 +116,16 @@ export const Settings: FC<{
       ),
     },
     filenameConflictAction: {
-      label: <Tooltip closeDelay={200}>{t('filenameConflictAction')}</Tooltip>,
+      label: (
+        <HintLabel
+          label={t('filenameConflictAction')}
+          hint={t('filenameConflictHint')}
+        />
+      ),
       content: (
         <RadioGroup
           orientation="horizontal"
+          size={variant === 'modal' ? 'sm' : 'md'}
           value={config.filenameConflictAction}
           onValueChange={(val: chrome.downloads.FilenameConflictAction) =>
             setConfig({
@@ -116,20 +140,21 @@ export const Settings: FC<{
       ),
     },
     downloadInterval: {
-      label: <span title={t('downloadIntervalHint')}>{t('downloadInterval')}</span>,
+      label: <HintLabel label={t('downloadInterval')} hint={t('downloadIntervalHint')} />,
       content: (
         <Input
           type="number"
           placeholder="300"
           value={String(config.downloadInterval)}
           endContent={<span className="text-xs text-muted-soft">ms</span>}
-          className="w-32"
-          size={variant === 'page' ? 'sm' : 'md'}
+          className="w-28"
+          size="sm"
           classNames={
             variant === 'modal'
               ? {
+                  input: 'text-[12px]',
                   inputWrapper:
-                    'border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] shadow-none backdrop-blur-sm data-[hover=true]:bg-[rgb(10_10_11/0.35)] group-data-[focus=true]:border-brand-accent/35',
+                    'h-8 min-h-8 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] shadow-none backdrop-blur-sm data-[hover=true]:bg-[rgb(10_10_11/0.35)] group-data-[focus=true]:border-brand-accent/35',
                 }
               : undefined
           }
@@ -146,6 +171,7 @@ export const Settings: FC<{
       content: (
         <RadioGroup
           orientation="horizontal"
+          size={variant === 'modal' ? 'sm' : 'md'}
           value={config.fileNameRule}
           onValueChange={(val) =>
             setConfig({
@@ -161,10 +187,11 @@ export const Settings: FC<{
       ),
     },
     imageFormat: {
-      label: <span title={t('imageFormatHint')}>{t('imageFormat')}</span>,
+      label: <HintLabel label={t('imageFormat')} hint={t('imageFormatHint')} />,
       content: (
         <RadioGroup
           orientation="horizontal"
+          size={variant === 'modal' ? 'sm' : 'md'}
           value={config.imageFormat}
           onValueChange={(val) =>
             setConfig({
@@ -181,10 +208,11 @@ export const Settings: FC<{
       ),
     },
     outputMode: {
-      label: <span title={t('outputHint')}>{t('output')}</span>,
+      label: <HintLabel label={t('output')} hint={t('outputHint')} />,
       content: (
         <RadioGroup
           orientation="horizontal"
+          size={variant === 'modal' ? 'sm' : 'md'}
           value={config.outputMode ?? 'files'}
           onValueChange={(val) =>
             setConfig({
@@ -204,12 +232,12 @@ export const Settings: FC<{
   const panelClass =
     variant === 'page'
       ? 'flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
-      : 'flex flex-col gap-3.5 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-4 backdrop-blur-sm';
+      : 'flex flex-col gap-3 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
 
   return (
     <div className={panelClass}>
       {pathPreview ? (
-        <p className="text-[11px] leading-relaxed text-muted">
+        <p className="text-[10px] leading-relaxed text-muted">
           {t('pathPreview')}{' '}
           <span className="font-mono text-brand-accent">
             {t('defaultFolder')}

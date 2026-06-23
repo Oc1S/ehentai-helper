@@ -42,12 +42,24 @@
     @apply flex flex-col gap-2 sm:flex-row sm:items-center;
   }
 
+  .settings-row--modal {
+    @apply gap-1.5 sm:gap-2.5;
+  }
+
   .settings-label {
     @apply w-full shrink-0 text-sm font-medium text-muted sm:w-[200px];
   }
 
+  .settings-label--modal {
+    @apply w-full shrink-0 text-[12px] font-normal text-muted sm:w-[148px];
+  }
+
   .settings-content {
     @apply w-full flex-1 text-sm text-body;
+  }
+
+  .settings-content--modal {
+    @apply w-full flex-1 text-[12px] text-body;
   }
 }
 

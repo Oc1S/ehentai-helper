@@ -1,7 +1,7 @@
 import '../styles/index.css';
 import '../styles/popup.css';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Link, Progress, Spinner } from '@nextui-org/react';
 import { toast } from 'sonner';
 
@@ -46,7 +46,7 @@ import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
 import { DownloadTable } from '../components/download-table';
 import { GalleryDetailModal } from '../components/gallery-detail-modal';
-import { CheckIcon, CloseIcon, InfoIcon, LinkIcon } from './components/icons';
+import { CloseIcon, InfoIcon, LinkIcon } from './components/icons';
 import { CENTERED_STATUSES, StatusEnum } from './status';
 
 const DownloadProgress = ({
@@ -227,7 +227,7 @@ const Popup = () => {
       toast.error(t('downloadFailedToast', String(failedCount)));
       lastNotifiedTaskStatus.current = activeTask.status;
     } else if (activeTask.status === 'completed') {
-      toast.success(t('downloadCompleted'), { position: 'bottom-right' });
+      toast.success(t('downloadCompleted'));
       lastNotifiedTaskStatus.current = activeTask.status;
     }
   }, [activeTask, completeCount, failedCount, status]);
@@ -281,6 +281,8 @@ const Popup = () => {
     if (!galleryInfo) return;
     const downloadRange = rangeOverride ?? range;
     if (rangeOverride) setRange(rangeOverride);
+
+    lastNotifiedTaskStatus.current = null;
 
     try {
       await downloadHistoryStorage.add({
@@ -390,11 +392,15 @@ const Popup = () => {
   const handleCancelDownload = async () => {
     await cancelDownload();
     resetToBeforeDownload();
-    toast.info(t('downloadCancelled'), { position: 'bottom-right' });
+    toast.info(t('downloadCancelled'));
   };
 
   const isCenteredStatus = (CENTERED_STATUSES as readonly StatusEnum[]).includes(status);
-  const isSelfScrollingLayout = status === StatusEnum.BeforeDownload;
+  const isTerminalDownload =
+    status === StatusEnum.DownloadSuccess ||
+    status === StatusEnum.DownloadPartialSuccess ||
+    status === StatusEnum.DownloadFailed;
+  const isSelfScrollingLayout = status === StatusEnum.BeforeDownload || isTerminalDownload;
 
   const progressPanel = (
     <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
@@ -404,6 +410,64 @@ const Popup = () => {
         failedCount={failedCount}
         inProgressCount={inProgressCount}
       />
+    </div>
+  );
+
+  const rangeSelectorPanel =
+    range[1] > 0 ? (
+      <div className="glass-panel flex flex-col gap-2.5 rounded-[16px] px-4 py-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[12px] font-semibold tracking-tight text-ink">
+            {t('downloadRange')}
+          </span>
+          <span className="flex h-5 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
+            {range[0]} - {range[1]}
+          </span>
+        </div>
+        <PageSelector
+          range={range}
+          setRange={setRange}
+          maxValue={galleryPageInfo.totalImages}
+          imagesPerPage={galleryPageInfo.imagesPerPage}
+          currentPage={currentPage}
+        />
+      </div>
+    ) : null;
+
+  const startDownloadButton = (
+    <Button
+      type="button"
+      variant="flat"
+      className="group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-[14px] border border-brand-accent/25 bg-brand-accent/10 px-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),var(--eh-shadow-card)] backdrop-blur-xl transition-[transform,background-color,box-shadow,border-color] duration-300 ease-out hover:border-brand-accent/35 hover:bg-brand-accent/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),var(--eh-glow)] active:scale-[0.98]"
+      onPress={handleClickDownload}
+      disableRipple
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.06] text-brand-accent backdrop-blur-md">
+        <DownloadIcon />
+      </div>
+      <span className="text-sm font-bold tracking-wide text-brand-accent">
+        {t('startDownloadWithCount', String(downloadCount))}
+      </span>
+    </Button>
+  );
+
+  const startDownloadFooter = (
+    <div className="shrink-0 border-t border-[var(--eh-hairline-soft)] pt-3">
+      {startDownloadButton}
+    </div>
+  );
+
+  const postDownloadShell = (summary: ReactNode, extraActions?: ReactNode) => (
+    <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
+      <div className="scrollbar-glass flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
+        {summary}
+        {progressPanel}
+        {rangeSelectorPanel}
+      </div>
+      <div className="shrink-0 space-y-2 border-t border-[var(--eh-hairline-soft)] pt-3">
+        {extraActions}
+        {startDownloadButton}
+      </div>
     </div>
   );
 
@@ -557,43 +621,10 @@ const Popup = () => {
                 </div>
               )}
 
-              {range[1] > 0 && (
-                <div className="glass-panel flex flex-col gap-2.5 rounded-[16px] px-4 py-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[12px] font-semibold tracking-tight text-ink">
-                      {t('downloadRange')}
-                    </span>
-                    <span className="flex h-5 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
-                      {range[0]} - {range[1]}
-                    </span>
-                  </div>
-                  <PageSelector
-                    range={range}
-                    setRange={setRange}
-                    maxValue={galleryPageInfo.totalImages}
-                    imagesPerPage={galleryPageInfo.imagesPerPage}
-                    currentPage={currentPage}
-                  />
-                </div>
-              )}
+              {rangeSelectorPanel}
             </div>
 
-            <div className="shrink-0 border-t border-[var(--eh-hairline-soft)] pt-3">
-              <Button
-                type="button"
-                variant="flat"
-                className="group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-[14px] border border-brand-accent/25 bg-brand-accent/10 px-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),var(--eh-shadow-card)] backdrop-blur-xl transition-[transform,background-color,box-shadow,border-color] duration-300 ease-out hover:border-brand-accent/35 hover:bg-brand-accent/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),var(--eh-glow)] active:scale-[0.98]"
-                onPress={handleClickDownload}
-                disableRipple
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.06] text-brand-accent backdrop-blur-md">
-                  <DownloadIcon />
-                </div>
-                <span className="text-sm font-bold tracking-wide text-brand-accent">
-                  {t('startDownloadWithCount', String(downloadCount))}
-                </span>
-              </Button>
-            </div>
+            {startDownloadFooter}
           </div>
         );
       }
@@ -637,116 +668,96 @@ const Popup = () => {
           </div>
         );
       case StatusEnum.DownloadSuccess:
-        return (
-          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-              <div className="text-left">
-                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo?.name || ''}
-                </h3>
-                <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  {t('allImagesSuccess', String(progressTotal))}
-                </p>
-              </div>
-              <StatusCard
-                embedded
-                variant="success"
-                icon={<CheckIcon />}
-                title={t('downloadCompleted')}
-                description={
-                  <>
-                    {t('enjoyingExtension')}{' '}
-                    <Link
-                      href="https://github.com/Oc1S/ehentai-helper"
-                      isExternal
-                      className="font-medium text-brand-accent underline underline-offset-2"
-                    >
-                      {t('starGithubLink')}
-                    </Link>
-                  </>
-                }
-              />
+        return postDownloadShell(
+          <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-[20px] p-5">
+            <div className="min-w-0 text-left">
+              <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
+                {galleryInfo?.name || ''}
+              </h3>
+              <p className="mt-1.5 text-[12px] font-medium text-muted">
+                {t('allImagesSuccess', String(progressTotal))}
+              </p>
             </div>
-            {progressPanel}
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="flat" onPress={openDownloadFolder}>
-                {t('openFolder')}
-              </Button>
-              <Button size="sm" variant="flat" onPress={resetToBeforeDownload}>
-                {t('downloadAgain')}
-              </Button>
+            <div className="rounded-xl border border-success/20 bg-success/[0.06] px-3.5 py-3">
+              <p className="text-[13px] font-semibold text-success">{t('downloadCompleted')}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-muted">
+                {t('enjoyingExtension')}{' '}
+                <Link
+                  href="https://github.com/Oc1S/ehentai-helper"
+                  isExternal
+                  className="font-medium text-brand-accent underline underline-offset-2"
+                >
+                  {t('starGithubLink')}
+                </Link>
+              </p>
             </div>
+          </div>,
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="flat" onPress={openDownloadFolder}>
+              {t('openFolder')}
+            </Button>
           </div>
         );
       case StatusEnum.DownloadPartialSuccess:
-        return (
-          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-              <div className="text-left">
-                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo?.name || ''}
-                </h3>
-                <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  {t('partialSuccessSummary', [String(completeCount), String(failedCount)])}
-                </p>
-              </div>
-              <StatusCard
-                embedded
-                variant="warning"
-                icon={<InfoIcon />}
-                title={t('partiallyCompleted')}
-                description={t('partialCompletedDesc')}
-              />
-              <Button size="sm" variant="flat" onPress={() => setGalleryDetailOpen(true)}>
-                {t('viewDetails')}
-              </Button>
-              <Button
-                size="sm"
-                color="primary"
-                variant="flat"
-                onPress={() => void handleRetryFailed()}
-              >
-                {t('retryFailed')}
-              </Button>
-              <Button size="sm" variant="flat" onPress={openDownloadFolder}>
-                {t('openFolder')}
-              </Button>
+        return postDownloadShell(
+          <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-[20px] p-5">
+            <div className="min-w-0 text-left">
+              <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
+                {galleryInfo?.name || ''}
+              </h3>
+              <p className="mt-1.5 text-[12px] font-medium text-muted">
+                {t('partialSuccessSummary', [String(completeCount), String(failedCount)])}
+              </p>
             </div>
-            {progressPanel}
+            <div className="rounded-xl border border-warning/20 bg-warning/[0.06] px-3.5 py-3">
+              <p className="text-[13px] font-semibold text-warning">{t('partiallyCompleted')}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-muted">
+                {t('partialCompletedDesc')}
+              </p>
+            </div>
+          </div>,
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="flat" onPress={() => setGalleryDetailOpen(true)}>
+              {t('viewDetails')}
+            </Button>
+            <Button
+              size="sm"
+              color="primary"
+              variant="flat"
+              onPress={() => void handleRetryFailed()}
+            >
+              {t('retryFailed')}
+            </Button>
+            <Button size="sm" variant="flat" onPress={openDownloadFolder}>
+              {t('openFolder')}
+            </Button>
           </div>
         );
       case StatusEnum.DownloadFailed:
-        return (
-          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-              <div className="text-left">
-                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo?.name || ''}
-                </h3>
-                <p className="mt-1.5 text-[12px] font-medium text-muted">
-                  {t('allImagesFailed', String(failedCount))}
-                </p>
-              </div>
-              <StatusCard
-                embedded
-                variant="error"
-                icon={<CloseIcon />}
-                title={t('downloadFailedTitle')}
-                description={t('downloadFailedDesc')}
-              />
-              <Button
-                size="sm"
-                color="primary"
-                variant="flat"
-                onPress={() => void handleRetryFailed()}
-              >
-                {t('retryFailed')}
-              </Button>
-              <Button size="sm" variant="flat" onPress={resetToBeforeDownload}>
-                {t('downloadAgain')}
-              </Button>
+        return postDownloadShell(
+          <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-[20px] p-5">
+            <div className="min-w-0 text-left">
+              <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
+                {galleryInfo?.name || ''}
+              </h3>
+              <p className="mt-1.5 text-[12px] font-medium text-muted">
+                {t('allImagesFailed', String(failedCount))}
+              </p>
             </div>
-            {progressPanel}
+            <div className="rounded-xl border border-error/20 bg-error/[0.06] px-3.5 py-3">
+              <p className="text-[13px] font-semibold text-error">{t('downloadFailedTitle')}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-muted">{t('downloadFailedDesc')}</p>
+            </div>
+          </div>,
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              color="primary"
+              variant="flat"
+              onPress={() => void handleRetryFailed()}
+            >
+              {t('retryFailed')}
+            </Button>
           </div>
         );
       default:
@@ -790,7 +801,7 @@ const Popup = () => {
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setSelectedTab(tab.key)}
-                    className={`flex h-7 items-center gap-1 rounded-full px-3 text-[12px] font-medium transition-colors ${
+                    className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-normal transition-colors ${
                       isActive
                         ? 'bg-surface-card text-ink shadow-card'
                         : 'text-muted hover:text-body'

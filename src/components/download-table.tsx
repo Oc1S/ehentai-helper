@@ -32,6 +32,7 @@ import {
 } from '@/storage';
 import { t } from '@/utils/i18n';
 
+import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
 
@@ -221,19 +222,14 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
         </Dropdown>
         <span className="text-xs text-muted">{t('itemsCount', String(filteredList.length))}</span>
       </div>
-      <Table
-        isHeaderSticky
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-        removeWrapper={false}
-        classNames={{
-          base: 'min-h-0 flex-1 overflow-hidden',
-          wrapper: 'min-h-0 h-full overflow-auto p-0',
-          th: 'text-[11px] font-medium h-8',
-          td: 'text-xs py-1.5',
-          tr: 'h-9',
-        }}
-      >
+      <EhTableFrame>
+        <Table
+          isHeaderSticky
+          sortDescriptor={sortDescriptor}
+          onSortChange={setSortDescriptor}
+          removeWrapper
+          classNames={ehTableClassNames()}
+        >
         <TableHeader columns={columns()}>
           {(col) => (
             <TableColumn key={col.key} width={col.width}>
@@ -248,7 +244,8 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
             </TableRow>
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </EhTableFrame>
       <div className="flex shrink-0 items-center justify-center pt-1">
         <Pagination
           isCompact

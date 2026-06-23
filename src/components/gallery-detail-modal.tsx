@@ -22,6 +22,7 @@ import {
 import type { GalleryImageState, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
 
+import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { SearchIcon } from './icons/SearchIcon';
 
 const STATE_COLOR: Record<GalleryImageState, ChipProps['color']> = {
@@ -67,13 +68,15 @@ export const GalleryDetailModal: FC<{
   const [keyword, setKeyword] = useState('');
 
   const rows = useMemo(() => {
-    if (!record) return [];
+    if (!record?.images) return [];
     return Object.values(record.images).sort((a, b) => a.index - b.index);
   }, [record]);
 
   const counts = useMemo(() => {
     const c = { complete: 0, in_progress: 0, interrupted: 0 };
-    for (const r of rows) c[r.state] += 1;
+    for (const r of rows) {
+      if (r.state in c) c[r.state] += 1;
+    }
     return c;
   }, [rows]);
 
@@ -130,7 +133,9 @@ export const GalleryDetailModal: FC<{
                 <Tabs
                   size="sm"
                   selectedKey={filter}
-                  onSelectionChange={(k) => setFilter(k as FilterKey)}
+                  onSelectionChange={(k) => {
+                    if (typeof k === 'string') setFilter(k as FilterKey);
+                  }}
                   aria-label="state filter"
                 >
                   {summaryTabs().map((tab) => (
@@ -141,17 +146,13 @@ export const GalleryDetailModal: FC<{
                   {t('itemsCount', String(filteredRows.length))}
                 </span>
               </div>
-              <Table
-                aria-label="gallery image records"
-                isHeaderSticky
-                classNames={{
-                  base: 'max-h-[420px]',
-                  wrapper: 'min-h-0 overflow-auto p-0',
-                  th: 'text-[11px] h-8',
-                  td: 'text-xs py-1.5',
-                  tr: 'h-9',
-                }}
-              >
+              <EhTableFrame className="max-h-[420px] flex-none">
+                <Table
+                  aria-label="gallery image records"
+                  isHeaderSticky
+                  removeWrapper
+                  classNames={ehTableClassNames()}
+                >
                 <TableHeader>
                   <TableColumn width={64}>{t('colIndex')}</TableColumn>
                   <TableColumn width={100}>{t('colState')}</TableColumn>
@@ -160,8 +161,8 @@ export const GalleryDetailModal: FC<{
                     <TableColumn width={88}>{t('colAction')}</TableColumn>
                   )}
                 </TableHeader>
-                <TableBody emptyContent={t('noRecords')}>
-                  {filteredRows.map((row) => (
+                <TableBody items={filteredRows} emptyContent={t('noRecords')}>
+                  {(row) => (
                     <TableRow key={row.index}>
                       <TableCell>{row.index}</TableCell>
                       <TableCell>
@@ -190,9 +191,9 @@ export const GalleryDetailModal: FC<{
                           ) : null}
                         </div>
                       </TableCell>
-                      {onRetryIndex && (
+                      {(onRetryIndex || onRetryAllFailed) ? (
                         <TableCell>
-                          {row.state === 'interrupted' ? (
+                          {onRetryIndex && row.state === 'interrupted' ? (
                             <Button
                               size="sm"
                               variant="flat"
@@ -204,11 +205,12 @@ export const GalleryDetailModal: FC<{
                             '—'
                           )}
                         </TableCell>
-                      )}
+                      ) : null}
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
-              </Table>
+                </Table>
+              </EhTableFrame>
             </ModalBody>
             <ModalFooter className="gap-2">
               {onRetryAllFailed && counts.interrupted > 0 && (
