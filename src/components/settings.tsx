@@ -40,7 +40,7 @@ const TextInput = ({
 }: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
   <input
     type="text"
-    className={`flex-1 border-b border-hairline bg-transparent px-2 py-1 text-sm text-ink outline-none focus:border-ink ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
+    className={`flex-1 rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-2.5 py-1.5 text-sm text-ink outline-none backdrop-blur-sm transition-colors placeholder:text-muted-soft focus:border-brand-accent/35 focus:bg-[rgb(10_10_11/0.4)] ${variant === 'page' ? 'path-input--page' : ''} ${className ?? ''}`.trim()}
     {...rest}
   />
 );
@@ -125,6 +125,14 @@ export const Settings: FC<{
           endContent={<span className="text-xs text-muted-soft">ms</span>}
           className="w-32"
           size={variant === 'page' ? 'sm' : 'md'}
+          classNames={
+            variant === 'modal'
+              ? {
+                  inputWrapper:
+                    'border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] shadow-none backdrop-blur-sm data-[hover=true]:bg-[rgb(10_10_11/0.35)] group-data-[focus=true]:border-brand-accent/35',
+                }
+              : undefined
+          }
           onChange={(e) => {
             const val = +e.target.value;
             if (Number.isNaN(val) || val < 0) return;
@@ -196,7 +204,7 @@ export const Settings: FC<{
   const panelClass =
     variant === 'page'
       ? 'flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
-      : 'flex flex-col gap-3 rounded-cal-lg border border-hairline bg-surface-card p-4 shadow-card';
+      : 'flex flex-col gap-3.5 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-4 backdrop-blur-sm';
 
   return (
     <div className={panelClass}>

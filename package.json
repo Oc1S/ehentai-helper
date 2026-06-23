@@ -52,6 +52,7 @@
     "permissions": [
       "activeTab",
       "downloads",
+      "offscreen",
       "scripting",
       "storage",
       "tabs"

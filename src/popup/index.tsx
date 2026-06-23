@@ -226,6 +226,9 @@ const Popup = () => {
     } else if (activeTask.status === 'failed') {
       toast.error(t('downloadFailedToast', String(failedCount)));
       lastNotifiedTaskStatus.current = activeTask.status;
+    } else if (activeTask.status === 'completed') {
+      toast.success(t('downloadCompleted'), { position: 'bottom-right' });
+      lastNotifiedTaskStatus.current = activeTask.status;
     }
   }, [activeTask, completeCount, failedCount, status]);
 

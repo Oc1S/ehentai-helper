@@ -7,6 +7,12 @@ import {
   normalizeDownloadDir,
 } from './download/download-filename';
 import {
+  clearTrackedDownloads,
+  mapChromeDownloadState,
+  registerDownloadIndex,
+  trackedDownloadIds,
+} from './download/download-registry';
+import {
   onGalleryRecordChanged,
   requestCancelDownload,
   runDownloadJob,
@@ -17,6 +23,7 @@ import {
   downloadListStorage,
   downloadOwnerStorage,
   downloadTaskStorage,
+  type GalleryImageState,
   galleryRecordsStorage,
 } from './storage';
 import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './utils';
@@ -26,7 +33,6 @@ const textMime = 'text/plain';
 const extensionId = chrome.runtime.id;
 
 /** 仅跟踪本扩展发起的下载，避免监听全局 downloads 导致 storage 与内存暴涨 */
-const trackedExtensionDownloadIds = new Set<number>();
 
 let listenersRegistered = false;
 let patchFlushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -38,20 +44,20 @@ const isOurExtensionDownload = (item: { byExtensionId?: string }) =>
   item.byExtensionId === extensionId;
 
 const rebuildTrackedIdsFromIndexMap = (map: Record<string, unknown> | null | undefined) => {
-  trackedExtensionDownloadIds.clear();
+  clearTrackedDownloads();
   if (!map) return;
   for (const id of Object.keys(map)) {
-    trackedExtensionDownloadIds.add(Number(id));
+    trackedDownloadIds.add(Number(id));
   }
 };
 
 const syncDownloadList = async () => {
-  if (trackedExtensionDownloadIds.size === 0) {
+  if (trackedDownloadIds.size === 0) {
     await downloadListStorage.set([]);
     return;
   }
   const results = await Promise.all(
-    [...trackedExtensionDownloadIds].map((id) => chrome.downloads.search({ id }))
+    [...trackedDownloadIds].map((id) => chrome.downloads.search({ id }))
   );
   await downloadListStorage.set(results.flat());
 };
@@ -71,12 +77,12 @@ const flushPendingDownloadPatches = async () => {
         next[index] = { ...next[index], ...patch };
       }
     }
-    return next.filter((item) => trackedExtensionDownloadIds.has(item.id));
+    return next.filter((item) => trackedDownloadIds.has(item.id));
   });
 };
 
 const scheduleDownloadPatch = (patch: DownloadPatch) => {
-  if (!trackedExtensionDownloadIds.has(patch.id)) return;
+  if (!trackedDownloadIds.has(patch.id)) return;
 
   const existing = pendingDownloadPatches.get(patch.id);
   pendingDownloadPatches.set(patch.id, existing ? { ...existing, ...patch } : patch);
@@ -89,9 +95,9 @@ const scheduleDownloadPatch = (patch: DownloadPatch) => {
 };
 
 const patchDownloadListNow = async (downloadItem: chrome.downloads.DownloadItem) => {
-  if (!trackedExtensionDownloadIds.has(downloadItem.id)) return;
+  if (!trackedDownloadIds.has(downloadItem.id)) return;
 
-  trackedExtensionDownloadIds.add(downloadItem.id);
+  trackedDownloadIds.add(downloadItem.id);
   await downloadListStorage.set((list) => {
     const next = [...(Array.isArray(list) ? list : [])];
     const index = next.findIndex((item) => item.id === downloadItem.id);
@@ -121,19 +127,6 @@ let currentDownloadContext: {
   galleryId?: string;
 } | null = null;
 
-const MAX_OWNER_ENTRIES = 5000;
-
-const trimOwnerMap = (map: Record<string, unknown>): Record<string, unknown> => {
-  const keys = Object.keys(map);
-  if (keys.length <= MAX_OWNER_ENTRIES) return map;
-  // chrome download ids are monotonically increasing → keep the newest IDs
-  const sorted = keys.map(Number).sort((a, b) => a - b);
-  const toDrop = sorted.slice(0, keys.length - MAX_OWNER_ENTRIES);
-  const next = { ...map };
-  for (const id of toDrop) delete next[String(id)];
-  return next;
-};
-
 const getFormatOverrideExtension = (): string | null => {
   const fmt = currentConfig.imageFormat;
   if (!fmt || fmt === 'original') return null;
@@ -153,11 +146,26 @@ const propagateImagePatchToGallery = async (
   const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
   const owner = ownerMap?.[String(chromeDownloadId)];
   if (!owner) return;
+
+  const galleryPatch: {
+    state?: GalleryImageState;
+    filename?: string;
+    error?: string;
+    bytesReceived?: number;
+    totalBytes?: number;
+  } = { ...patch };
+
+  if (patch.state) {
+    const mapped = mapChromeDownloadState(patch.state);
+    if (mapped) galleryPatch.state = mapped;
+    else delete galleryPatch.state;
+  }
+
   await galleryRecordsStorage.patchImageByDownloadId(
     chromeDownloadId,
     owner.galleryUrl,
     owner.index,
-    patch
+    galleryPatch
   );
 };
 
@@ -169,7 +177,7 @@ const registerListeners = () => {
     if (!isOurExtensionDownload(downloadItem)) return;
     if (downloadItem.mime === textMime) return;
 
-    trackedExtensionDownloadIds.add(downloadItem.id);
+    trackedDownloadIds.add(downloadItem.id);
     patchDownloadListNow(downloadItem);
     propagateImagePatchToGallery(downloadItem.id, {
       state: downloadItem.state,
@@ -183,7 +191,7 @@ const registerListeners = () => {
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
-    if (!trackedExtensionDownloadIds.has(id)) return;
+    if (!trackedDownloadIds.has(id)) return;
 
     const next: DownloadPatch = { id };
     for (const key in downloadDelta) {
@@ -286,40 +294,17 @@ const registerListeners = () => {
     }
 
     if (message.type === 'register-download-index') {
-      trackedExtensionDownloadIds.add(message.id);
-      void downloadIndexMapStorage.set((map) => ({
-        ...(map || {}),
-        [String(message.id)]: {
-          index: message.index,
-          total: message.total,
-          downloadPath: message.downloadPath,
-          galleryUrl: message.galleryUrl,
-          sourceUrl: message.sourceUrl,
-          taskId: message.taskId,
-        },
-      }));
-
-      if (message.galleryUrl) {
-        downloadOwnerStorage.set(
-          (map) =>
-            trimOwnerMap({
-              ...(map || {}),
-              [String(message.id)]: {
-                galleryUrl: message.galleryUrl,
-                index: message.index,
-              },
-            }) as Record<string, { galleryUrl: string; index: number }>
-        );
-        galleryRecordsStorage
-          .upsertImage(message.galleryUrl, {
-            index: message.index,
-            sourceUrl: message.sourceUrl ?? '',
-            state: 'in_progress',
-            chromeDownloadId: message.id,
-            updatedAt: Date.now(),
-          })
-          .then(() => onGalleryRecordChanged(message.galleryUrl));
-      }
+      void registerDownloadIndex({
+        id: message.id,
+        index: message.index,
+        total: message.total,
+        downloadPath: message.downloadPath,
+        galleryUrl: message.galleryUrl,
+        sourceUrl: message.sourceUrl,
+        taskId: message.taskId ?? null,
+      }).then(() => {
+        if (message.galleryUrl) onGalleryRecordChanged(message.galleryUrl);
+      });
 
       sendResponse({ ok: true });
       return true;
@@ -412,7 +397,7 @@ const registerListeners = () => {
     if (message.type === 'clear-download-index-map') {
       void downloadIndexMapStorage.set({});
       currentDownloadContext = null;
-      trackedExtensionDownloadIds.clear();
+      clearTrackedDownloads();
       clearPendingPatches();
       void downloadListStorage.set([]);
       sendResponse({ ok: true });

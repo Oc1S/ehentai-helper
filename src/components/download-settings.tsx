@@ -63,23 +63,55 @@ export const DownloadSettings = ({
 
   return (
     <>
-      <Button size="sm" variant="flat" onPress={onOpen} isDisabled={disabled}>
+      <Button
+        size="sm"
+        variant="flat"
+        onPress={onOpen}
+        isDisabled={disabled}
+        className="h-7 min-w-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] px-3 text-[12px] font-medium text-muted backdrop-blur-sm hover:border-[var(--eh-glass-border-hover)] hover:bg-[rgb(12_12_13/0.45)] hover:text-body"
+      >
         {t('settings')}
       </Button>
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside">
-        <ModalContent>
-          {(onClose) => (
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        size="2xl"
+        scrollBehavior="inside"
+        backdrop="blur"
+        classNames={{
+          backdrop: 'bg-[rgb(0_0_0/0.58)] backdrop-blur-md',
+          wrapper: 'items-center px-4',
+          base: 'border-0 bg-transparent shadow-none',
+        }}
+      >
+        <ModalContent className="glass-panel my-3 max-h-[min(540px,88vh)] border border-[var(--eh-glass-border)] bg-transparent shadow-[var(--eh-glass-elevation)]">
+          {(close) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">{t('downloadSettings')}</ModalHeader>
-              <ModalBody className="space-y-6">
+              <ModalHeader className="flex flex-col gap-1 border-b border-[var(--eh-hairline-soft)] px-6 py-4">
+                <span className="text-base font-semibold tracking-tight text-ink">
+                  {t('downloadSettings')}
+                </span>
+                <span className="text-[11px] font-medium text-muted-soft">
+                  {t('optionsSubtitle')}
+                </span>
+              </ModalHeader>
+              <ModalBody className="scrollbar-glass px-6 py-5">
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
-              <ModalFooter className="gap-3">
-                <Button variant="light" onPress={onClose}>
+              <ModalFooter className="gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-6 py-3 backdrop-blur-md">
+                <Button
+                  variant="flat"
+                  onPress={close}
+                  className="border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.3)] font-medium text-muted hover:text-body"
+                >
                   {t('cancel')}
                 </Button>
-                <Button color="primary" onPress={handleSave}>
+                <Button
+                  color="primary"
+                  onPress={handleSave}
+                  className="font-semibold shadow-[var(--eh-shadow-card)]"
+                >
                   {t('saveSettings')}
                 </Button>
               </ModalFooter>
