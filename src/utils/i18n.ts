@@ -1,5 +1,6 @@
 const fallbackMessages: Record<string, string> = {
   startDownload: 'Start Download',
+  startDownloadWithCount: 'Start Download · $1 images',
   confirmDownload: 'Confirm Download',
   cancel: 'Cancel',
   continueMissing: 'Continue missing',

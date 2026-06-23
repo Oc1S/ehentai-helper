@@ -8,6 +8,10 @@
     "message": "E-Hentai Helper"
   },
   "startDownload": { "message": "Start Download" },
+  "startDownloadWithCount": {
+    "message": "Start Download · $1 images",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "confirmDownload": { "message": "Confirm Download" },
   "cancel": { "message": "Cancel" },
   "continueMissing": { "message": "Continue missing" },

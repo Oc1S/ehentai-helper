@@ -106,18 +106,18 @@
     transparent 100%
   );
 
-  /* Popup · 炭黑微光 */
+  /* Popup · 暖碳微光 */
   --eh-popup-bg: linear-gradient(180deg, #090807 0%, #060504 46%, #030302 100%);
   --eh-popup-ambient-top: radial-gradient(
     ellipse 115% 52% at 50% 0%,
-    rgba(120, 140, 145, 0.042) 0%,
-    rgba(90, 98, 102, 0.014) 48%,
+    rgba(224, 192, 88, 0.07) 0%,
+    rgba(204, 168, 66, 0.028) 42%,
     transparent 76%
   );
   --eh-popup-ambient-body: radial-gradient(
-    ellipse 92% 72% at 50% 58%,
-    rgba(110, 120, 122, 0.03) 0%,
-    rgba(72, 76, 78, 0.012) 44%,
+    ellipse 92% 72% at 50% 54%,
+    rgba(204, 168, 66, 0.045) 0%,
+    rgba(184, 145, 42, 0.016) 44%,
     transparent 78%
   );
   --eh-glass-elevation:

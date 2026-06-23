@@ -38,8 +38,8 @@ export const PageSelector: FC<PageSelectorProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-1.5">
         {presets.map((preset) => (
           <Button
             key={preset.label}
@@ -81,7 +81,7 @@ export const PageSelector: FC<PageSelectorProps> = ({
         )}
         {...rest}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <label className="flex flex-col gap-1.5">
           <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
             {t('rangeFrom')}

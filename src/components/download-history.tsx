@@ -104,7 +104,7 @@ export const History: FC = () => {
   const galleryCount = Object.keys(galleryRecords).length;
 
   return (
-    <div className="flex h-popup-content min-h-0 flex-col gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       <p className="shrink-0 text-[11px] leading-relaxed text-muted-soft">
         {t('storageLimitHint', [
           String(data.length),

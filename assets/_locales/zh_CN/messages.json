@@ -8,6 +8,10 @@
     "message": "E-Hentai Helper"
   },
   "startDownload": { "message": "开始下载" },
+  "startDownloadWithCount": {
+    "message": "开始下载 · $1 张",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "confirmDownload": { "message": "确认下载" },
   "cancel": { "message": "取消" },
   "continueMissing": { "message": "继续下载缺失" },

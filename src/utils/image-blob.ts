@@ -32,12 +32,6 @@ export const resolveImageBlob = async (
     return { blob, ext: MIME_EXT[blob.type] ?? extFromUrl(sourceUrl) };
   }
 
-  const objectUrl = await convertImageToFormatInWorker(sourceUrl, format);
-  try {
-    const res = await fetch(objectUrl);
-    const blob = await res.blob();
-    return { blob, ext: format };
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
+  const blob = await convertImageToFormatInWorker(sourceUrl, format);
+  return { blob, ext: format };
 };

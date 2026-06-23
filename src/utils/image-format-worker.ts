@@ -10,7 +10,7 @@ const MIME_MAP: Record<Exclude<ImageFormat, 'original'>, string> = {
 export const convertImageToFormatInWorker = async (
   sourceUrl: string,
   format: Exclude<ImageFormat, 'original'>
-): Promise<string> => {
+): Promise<Blob> => {
   const response = await fetch(sourceUrl, { credentials: 'omit' });
   if (!response.ok) {
     throw new Error(`Failed to fetch image (${response.status})`);
@@ -30,10 +30,8 @@ export const convertImageToFormatInWorker = async (
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
 
-  const targetBlob = await canvas.convertToBlob({
+  return canvas.convertToBlob({
     type: MIME_MAP[format],
     quality: format === 'png' ? undefined : 0.92,
   });
-
-  return URL.createObjectURL(targetBlob);
 };

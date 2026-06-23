@@ -176,7 +176,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
   };
 
   return (
-    <div className="flex h-popup-content min-h-0 flex-col gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="flex shrink-0 flex-wrap items-center gap-2.5">
         <Input
           isClearable

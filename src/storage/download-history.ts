@@ -37,6 +37,7 @@ export interface GalleryInfo {
   ratingTimes: number;
   averageScore: number;
   tags: GalleryTag[];
+  coverUrl?: string;
 }
 
 const storage = createStorage<DownloadHistoryItem[]>('download-history', [], {

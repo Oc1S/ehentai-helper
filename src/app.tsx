@@ -5,7 +5,7 @@ import { Toaster } from 'sonner';
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <NextUIProvider>
-      <div className="h-full w-full bg-background text-foreground">
+      <div className="h-full w-full bg-transparent text-foreground">
         <Toaster
           theme="dark"
           position="top-center"

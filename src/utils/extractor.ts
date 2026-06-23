@@ -15,6 +15,18 @@ const getTextContent = (node: Node | null | undefined): string => {
   return node?.textContent || '';
 };
 
+const normalizeImageUrl = (href: string | null | undefined): string => {
+  if (!href) return '';
+  if (href.startsWith('//')) return `https:${href}`;
+  return href;
+};
+
+const extractGalleryCoverUrl = (doc: Document): string => {
+  const coverImg = doc.querySelector('#gd1 img');
+  if (!coverImg) return '';
+  return normalizeImageUrl(coverImg.getAttribute('src') || coverImg.getAttribute('data-src'));
+};
+
 export const extractGalleryInfo = async (htmlOrDoc: string | Document): Promise<GalleryInfo> => {
   const doc = getDocument(htmlOrDoc);
 
@@ -51,6 +63,7 @@ export const extractGalleryInfo = async (htmlOrDoc: string | Document): Promise<
     ratingTimes: ratingTimes ? parseInt(ratingTimes) : 0,
     averageScore: averageScore ? parseFloat(averageScore.replace(/Average: (\S+)/, '$1')) : 0.0,
     tags,
+    coverUrl: extractGalleryCoverUrl(doc),
   };
   return info;
 };

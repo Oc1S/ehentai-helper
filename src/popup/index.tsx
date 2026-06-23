@@ -2,11 +2,10 @@ import '../styles/index.css';
 import '../styles/popup.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Link, Progress, Spinner, Tab, Tabs } from '@nextui-org/react';
+import { Button, Link, Progress, Spinner } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
-import { DownloadConfirmModal } from '@/components/download-confirm-modal';
 import { DownloadIcon } from '@/components/icons/DownloadIcon';
 import { PageSelector } from '@/components/page-selector';
 import { StatusCard } from '@/components/status-card';
@@ -171,7 +170,6 @@ const Popup = () => {
   const galleryFrontPageUrl = useRef('');
   const tabUrlRef = useRef('');
   const lastNotifiedTaskStatus = useRef<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('info');
   const [currentPage, setCurrentPage] = useState(0);
   const config = useStorage(configStorage);
@@ -212,7 +210,12 @@ const Popup = () => {
       : downloadCount;
 
   useEffect(() => {
-    if (!activeTask || activeTask.galleryUrl !== galleryFrontPageUrl.current) return;
+    if (!activeTask || activeTask.galleryUrl !== galleryFrontPageUrl.current) {
+      if (status === StatusEnum.Downloading && !activeTask) {
+        setStatus(StatusEnum.BeforeDownload);
+      }
+      return;
+    }
     const next = taskStatusToUi(activeTask.status);
     if (next === null) return;
     setStatus(next);
@@ -224,27 +227,37 @@ const Popup = () => {
       toast.error(t('downloadFailedToast', String(failedCount)));
       lastNotifiedTaskStatus.current = activeTask.status;
     }
-  }, [activeTask, completeCount, failedCount]);
+  }, [activeTask, completeCount, failedCount, status]);
 
-  const buildJobPayload = (indices?: number[]): DownloadJobPayload => ({
-    galleryFrontPageUrl: galleryFrontPageUrl.current,
-    galleryName: galleryInfo?.name ?? '',
-    galleryId: galleryInfo?.id ?? '',
-    downloadPath: configLatest.current.intermediateDownloadPath,
-    rangeStart: range[0],
-    rangeEnd: range[1],
-    imagesPerPage: galleryPageInfoRef.current.imagesPerPage,
-    numPages: galleryPageInfoRef.current.numPages,
-    totalImages: galleryPageInfoRef.current.totalImages,
-    indices,
-  });
+  const buildJobPayload = (
+    indices?: number[],
+    rangeOverride?: [number, number]
+  ): DownloadJobPayload => {
+    const r = rangeOverride ?? range;
+    return {
+      galleryFrontPageUrl: galleryFrontPageUrl.current,
+      galleryName: galleryInfo?.name ?? '',
+      galleryId: galleryInfo?.id ?? '',
+      downloadPath: configLatest.current.intermediateDownloadPath,
+      rangeStart: r[0],
+      rangeEnd: r[1],
+      imagesPerPage: galleryPageInfoRef.current.imagesPerPage,
+      numPages: galleryPageInfoRef.current.numPages,
+      totalImages: galleryPageInfoRef.current.totalImages,
+      indices,
+    };
+  };
 
-  const launchDownload = async (mode: 'full' | 'resume' | 'retry', indices?: number[]) => {
+  const launchDownload = async (
+    mode: 'full' | 'resume' | 'retry',
+    indices?: number[],
+    rangeOverride?: [number, number]
+  ) => {
     if (!galleryInfo) return false;
     lastNotifiedTaskStatus.current = null;
     setStatus(StatusEnum.Downloading);
 
-    const payload = buildJobPayload(indices);
+    const payload = buildJobPayload(indices, rangeOverride);
     const fn =
       mode === 'resume' ? resumeDownload : mode === 'retry' ? retryFailedDownload : startDownload;
     const response = await fn(payload);
@@ -261,19 +274,23 @@ const Popup = () => {
     return true;
   };
 
-  const handleConfirmDownload = async () => {
+  const handleStartDownload = async (rangeOverride?: [number, number]) => {
+    if (!galleryInfo) return;
+    const downloadRange = rangeOverride ?? range;
+    if (rangeOverride) setRange(rangeOverride);
+
     try {
       await downloadHistoryStorage.add({
         url: galleryFrontPageUrl.current,
-        name: galleryInfo!.name,
-        range,
-        info: galleryInfo!,
+        name: galleryInfo.name,
+        range: downloadRange,
+        info: galleryInfo,
       });
     } catch (e) {
       console.error('add download history failed@', e);
       toast.error(t('failedSaveHistory'));
     }
-    await launchDownload('full');
+    await launchDownload('full', undefined, downloadRange);
   };
 
   const handleResumeMissing = async () => {
@@ -354,8 +371,7 @@ const Popup = () => {
   });
 
   const handleClickDownload = () => {
-    if (!galleryInfo) return;
-    setConfirmOpen(true);
+    void handleStartDownload();
   };
 
   const openDownloadFolder = () => {
@@ -368,7 +384,14 @@ const Popup = () => {
     setStatus(StatusEnum.BeforeDownload);
   };
 
+  const handleCancelDownload = async () => {
+    await cancelDownload();
+    resetToBeforeDownload();
+    toast.info(t('downloadCancelled'), { position: 'bottom-right' });
+  };
+
   const isCenteredStatus = (CENTERED_STATUSES as readonly StatusEnum[]).includes(status);
+  const isSelfScrollingLayout = status === StatusEnum.BeforeDownload;
 
   const progressPanel = (
     <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
@@ -385,7 +408,7 @@ const Popup = () => {
     switch (status) {
       case StatusEnum.Loading:
         return (
-          <div className="flex h-popup-content flex-col items-center justify-center gap-3">
+          <div className="flex h-full flex-col items-center justify-center gap-3">
             <Spinner size="lg" color="primary" />
             <p className="animate-pulse text-[13px] font-medium text-muted">{t('initializing')}</p>
           </div>
@@ -463,121 +486,108 @@ const Popup = () => {
         const trackedTotal = counts ? counts.complete + counts.in_progress + counts.interrupted : 0;
         const missingCount = computeMissingIndices(currentGalleryRecord, range[0], range[1]).length;
         return (
-          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            {/* Gallery Info Widget - Bento Style */}
-            <div className="glass-panel group flex min-h-[100px] flex-col justify-end gap-2.5 rounded-[20px] p-4">
-              <h2 className="line-clamp-2 text-[16px] font-bold leading-tight tracking-tight text-ink">
-                {galleryInfo.name || ''}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
-                  <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/80" />
-                  {galleryPageInfo.totalImages} {t('imagesLabel')}
-                </div>
-                <div className="flex items-center gap-1.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.2)] px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-sm">
-                  <div className="h-1.5 w-1.5 rounded-full bg-brand-accent/50" />
-                  {galleryPageInfo.numPages} {t('pagesLabel')}
+          <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
+            <div className="scrollbar-glass flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
+              <div className="glass-panel rounded-[20px] p-4">
+                <div className="flex gap-3">
+                  {galleryInfo.coverUrl ? (
+                    <img
+                      src={galleryInfo.coverUrl}
+                      alt=""
+                      className="h-[84px] w-[60px] shrink-0 rounded-lg border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
+                    />
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="line-clamp-2 text-[15px] font-bold leading-snug tracking-tight text-ink">
+                      {galleryInfo.name || ''}
+                    </h2>
+                    <p className="mt-1.5 text-[11px] font-medium text-muted">
+                      {galleryPageInfo.totalImages} {t('imagesLabel')} · {galleryPageInfo.numPages}{' '}
+                      {t('pagesLabel')}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {counts && trackedTotal > 0 && (
-              <div className="glass-panel flex flex-col gap-2 rounded-[16px] px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-semibold tracking-tight text-ink">
+              {counts && trackedTotal > 0 && (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-[12px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] px-3 py-2.5">
+                  <span className="text-[11px] font-semibold text-ink">
                     {t('previouslyTracked')}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setGalleryDetailOpen(true)}
-                    className="rounded-full border border-brand-accent/30 bg-brand-accent/[0.08] px-2.5 py-0.5 text-[11px] font-medium text-brand-accent hover:bg-brand-accent/[0.15]"
-                  >
-                    {t('viewDetails')}
-                  </button>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
-                  <span className="bg-success/15 rounded-full px-2 py-0.5 font-medium text-success">
+                  <span className="bg-success/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-success">
                     {t('badgeComplete', String(counts.complete))}
                   </span>
-                  <span className="bg-warning/15 rounded-full px-2 py-0.5 font-medium text-warning">
+                  <span className="bg-warning/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-warning">
                     {t('badgeInProgress', String(counts.in_progress))}
                   </span>
-                  <span className="bg-error/15 rounded-full px-2 py-0.5 font-medium text-error">
+                  <span className="bg-error/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-error">
                     {t('badgeFailed', String(counts.interrupted))}
                   </span>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {missingCount > 0 && (
+                  <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                    {missingCount > 0 && (
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        className="h-7 min-w-0 px-2 text-[11px]"
+                        onPress={() => void handleResumeMissing()}
+                      >
+                        {t('continueMissing')} ({missingCount})
+                      </Button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setGalleryDetailOpen(true)}
+                      className="rounded-full border border-brand-accent/30 bg-brand-accent/[0.08] px-2 py-0.5 text-[10px] font-medium text-brand-accent hover:bg-brand-accent/[0.15]"
+                    >
+                      {t('viewDetails')}
+                    </button>
                     <Button
                       size="sm"
-                      color="primary"
                       variant="flat"
-                      onPress={() => void handleResumeMissing()}
+                      className="h-7 min-w-0 px-2 text-[11px]"
+                      onPress={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
                     >
-                      {t('continueMissing')} ({missingCount})
+                      {t('redownloadAll')}
                     </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => {
-                      setRange([1, galleryPageInfo.totalImages]);
-                      setConfirmOpen(true);
-                    }}
-                  >
-                    {t('redownloadAll')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-3">
-              {/* Range Selector Widget */}
-              {range[1] > 0 && (
-                <div className="glass-panel col-span-3 flex flex-col gap-1.5 rounded-[16px] px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold tracking-tight text-ink">
-                      {t('downloadRange')}
-                    </span>
-                    <span className="flex h-5 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
-                      {range[0]} - {range[1]}
-                    </span>
-                  </div>
-                  <div className="px-1 pb-1">
-                    <PageSelector
-                      range={range}
-                      setRange={setRange}
-                      maxValue={galleryPageInfo.totalImages}
-                      imagesPerPage={galleryPageInfo.imagesPerPage}
-                      currentPage={currentPage}
-                    />
                   </div>
                 </div>
               )}
 
-              {/* Selected Count Widget */}
-              <div className="glass-panel col-span-1 flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-soft">
-                  {t('selected')}
-                </span>
-                <span className="mt-0.5 font-mono text-2xl font-black tracking-tighter text-brand-accent">
-                  {downloadCount}
-                </span>
-              </div>
+              {range[1] > 0 && (
+                <div className="glass-panel flex flex-col gap-2.5 rounded-[16px] px-4 py-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[12px] font-semibold tracking-tight text-ink">
+                      {t('downloadRange')}
+                    </span>
+                    <span className="flex h-5 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
+                      {range[0]} - {range[1]}
+                    </span>
+                  </div>
+                  <PageSelector
+                    range={range}
+                    setRange={setRange}
+                    maxValue={galleryPageInfo.totalImages}
+                    imagesPerPage={galleryPageInfo.imagesPerPage}
+                    currentPage={currentPage}
+                  />
+                </div>
+              )}
+            </div>
 
-              {/* Action Button Widget */}
+            <div className="shrink-0 border-t border-[var(--eh-hairline-soft)] pt-3">
               <Button
                 type="button"
                 variant="flat"
-                className="group relative col-span-2 flex h-full min-h-[72px] flex-row items-center justify-center gap-3 overflow-hidden rounded-[16px] border border-brand-accent/25 bg-brand-accent/10 px-5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),var(--eh-shadow-card)] backdrop-blur-xl transition-[transform,background-color,box-shadow,border-color] duration-300 ease-out hover:border-brand-accent/35 hover:bg-brand-accent/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),var(--eh-glow)] active:scale-[0.98]"
+                className="group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-[14px] border border-brand-accent/25 bg-brand-accent/10 px-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),var(--eh-shadow-card)] backdrop-blur-xl transition-[transform,background-color,box-shadow,border-color] duration-300 ease-out hover:border-brand-accent/35 hover:bg-brand-accent/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),var(--eh-glow)] active:scale-[0.98]"
                 onPress={handleClickDownload}
                 disableRipple
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] text-brand-accent backdrop-blur-md">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.06] text-brand-accent backdrop-blur-md">
                   <DownloadIcon />
                 </div>
                 <span className="text-sm font-bold tracking-wide text-brand-accent">
-                  {t('startDownload')}
+                  {t('startDownloadWithCount', String(downloadCount))}
                 </span>
               </Button>
             </div>
@@ -616,10 +626,7 @@ const Popup = () => {
                 size="sm"
                 color="danger"
                 variant="flat"
-                onPress={() => {
-                  void cancelDownload();
-                  toast.info(t('downloadCancelled'));
-                }}
+                onPress={() => void handleCancelDownload()}
               >
                 {t('cancel')}
               </Button>
@@ -744,60 +751,76 @@ const Popup = () => {
     }
   })();
 
+  const popupTabs: { key: string; label: string; badge?: string }[] = [
+    { key: 'info', label: t('galleryTab') },
+    { key: 'downloadList', label: t('filesTab'), badge: downloadsBadge },
+    { key: 'history', label: t('historyTab') },
+  ];
+
+  const tabContentClassName = `scrollbar-glass h-full min-h-0 w-full overflow-x-hidden ${
+    isCenteredStatus
+      ? 'flex flex-col items-center justify-center px-4 py-2 -translate-y-4'
+      : isSelfScrollingLayout
+        ? 'flex min-h-0 flex-col overflow-hidden'
+        : 'overflow-y-auto'
+  }`;
+
   return (
     <AppShell>
       <div className="popup-bg flex h-popup w-popup flex-col overflow-hidden">
-        <header className="flex h-popup-header shrink-0 items-center justify-between px-5">
-          <span className="text-[15px] font-semibold tracking-tight text-ink">
+        <header className="flex h-popup-header shrink-0 items-center gap-3 px-4">
+          <span className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">
             E-Hentai <span className="text-brand-accent">Helper</span>
           </span>
-          <DownloadSettings
-            disabled={isDownloading}
-            pathPreview={
-              galleryInfo
-                ? `${(config || DEFAULT_CONFIG).intermediateDownloadPath}${removeInvalidCharFromFilename(galleryInfo.name)}`
-                : undefined
-            }
-          />
-        </header>
-
-        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3">
-          <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col">
-            <Tabs
-              aria-label="popup tabs"
-              className="w-full"
-              selectedKey={selectedTab}
-              onSelectionChange={(key) => setSelectedTab(String(key))}
-              classNames={{
-                base: 'flex justify-center',
-              }}
-            >
-              <Tab key="info" title={t('galleryTab')}>
-                <div
-                  className={`scrollbar-glass h-popup-content w-full overflow-y-auto overflow-x-hidden ${isCenteredStatus ? 'flex flex-col items-center justify-center px-4 py-2 -translate-y-4' : ''}`}
-                >
-                  {statusContent}
-                </div>
-              </Tab>
-              <Tab
-                key="downloadList"
-                title={
-                  <span className="inline-flex items-center gap-1.5">
-                    {t('filesTab')}
-                    {downloadsBadge ? (
+          <nav
+            role="tablist"
+            aria-label="popup tabs"
+            className="flex min-w-0 flex-1 items-center justify-center"
+          >
+            <div className="flex items-center gap-0.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] p-0.5">
+              {popupTabs.map((tab) => {
+                const isActive = selectedTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setSelectedTab(tab.key)}
+                    className={`flex h-7 items-center gap-1 rounded-full px-3 text-[12px] font-medium transition-colors ${
+                      isActive
+                        ? 'bg-surface-card text-ink shadow-card'
+                        : 'text-muted hover:text-body'
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.badge ? (
                       <span className="rounded-full bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
-                        {downloadsBadge}
+                        {tab.badge}
                       </span>
                     ) : null}
-                  </span>
-                }
-              >
-                <DownloadTable taskId={activeTask?.taskId} />
-              </Tab>
-              <Tab key="history" title={t('historyTab')}>
-                <History />
-              </Tab>
-            </Tabs>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+          <div className="shrink-0">
+            <DownloadSettings
+              disabled={isDownloading}
+              pathPreview={
+                galleryInfo
+                  ? `${(config || DEFAULT_CONFIG).intermediateDownloadPath}${removeInvalidCharFromFilename(galleryInfo.name)}`
+                  : undefined
+              }
+            />
+          </div>
+        </header>
+
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
+          <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col">
+            {selectedTab === 'info' && <div className={tabContentClassName}>{statusContent}</div>}
+            {selectedTab === 'downloadList' && <DownloadTable taskId={activeTask?.taskId} />}
+            {selectedTab === 'history' && <History />}
           </div>
         </div>
         <GalleryDetailModal
@@ -806,15 +829,6 @@ const Popup = () => {
           record={galleryRecords[galleryFrontPageUrl.current] ?? null}
           onRetryIndex={(index) => void handleRetryFailed([index])}
           onRetryAllFailed={() => void handleRetryFailed()}
-        />
-        <DownloadConfirmModal
-          isOpen={confirmOpen}
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={() => void handleConfirmDownload()}
-          imageCount={downloadCount}
-          range={range}
-          downloadPath={configLatest.current.intermediateDownloadPath}
-          intervalMs={configLatest.current.downloadInterval}
         />
       </div>
     </AppShell>

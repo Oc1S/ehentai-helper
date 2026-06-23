@@ -1,6 +1,12 @@
 import { clearCbzTask } from './download/cbz-cache';
 import { consumePendingCbzFilename } from './download/cbz-download';
 import {
+  buildStorageRelativeFilename,
+  consumePendingDownloadFilename,
+  extensionFromDownloadItem,
+  normalizeDownloadDir,
+} from './download/download-filename';
+import {
   onGalleryRecordChanged,
   requestCancelDownload,
   runDownloadJob,
@@ -215,7 +221,19 @@ const registerListeners = () => {
     const cbzPath = consumePendingCbzFilename();
     if (cbzPath) {
       suggest({
-        filename: cbzPath,
+        filename: cbzPath.replace(/\\/g, '/'),
+        conflictAction: currentConfig.filenameConflictAction,
+      });
+      return;
+    }
+
+    const pending = consumePendingDownloadFilename();
+    if (pending) {
+      suggest({
+        filename: buildStorageRelativeFilename(
+          { fileNameRule: currentConfig.fileNameRule },
+          pending
+        ),
         conflictAction: currentConfig.filenameConflictAction,
       });
       return;
@@ -230,13 +248,24 @@ const registerListeners = () => {
       currentConfig.intermediateDownloadPath;
 
     let { filename } = downloadItem;
-    const [name, originalFileType] = splitFilename(filename);
     if (downloadItem.mime === textMime) {
-      filename = `${downloadPath}/info.txt`;
+      filename = `${normalizeDownloadDir(downloadPath)}info.txt`;
     } else {
       const overrideExt = getFormatOverrideExtension();
-      const fileType = overrideExt || originalFileType || 'jpg';
-      filename = `${downloadPath}/${fileNameRule
+      const fileType = extensionFromDownloadItem(downloadItem, overrideExt);
+      const name =
+        entry?.sourceUrl != null
+          ? (() => {
+              try {
+                const base = new URL(entry.sourceUrl).pathname.split('/').pop() ?? 'image';
+                return splitFilename(base)[0] || 'image';
+              } catch {
+                return 'image';
+              }
+            })()
+          : splitFilename(downloadItem.filename ?? '')[0] || 'image';
+
+      filename = `${normalizeDownloadDir(downloadPath)}${fileNameRule
         .replace('[index]', String(entry?.index ?? ''))
         .replace('[name]', name)
         .replace(
@@ -353,9 +382,7 @@ const registerListeners = () => {
       void (async () => {
         const prev = await downloadTaskStorage.get();
         if (prev?.taskId) await clearCbzTask(prev.taskId);
-        await downloadTaskStorage.set((task) =>
-          task ? { ...task, status: 'cancelled', updatedAt: Date.now() } : task
-        );
+        await downloadTaskStorage.set(null);
       })();
       sendResponse({ ok: true });
       return true;

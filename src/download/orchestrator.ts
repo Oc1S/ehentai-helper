@@ -1,5 +1,9 @@
 import { clearCbzTask, putCbzImage } from '@/download/cbz-cache';
 import { packAndDownloadCbz } from '@/download/cbz-pack';
+import {
+  buildStorageRelativeFilename,
+  enqueuePendingDownloadFilename,
+} from '@/download/download-filename';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
 import {
@@ -9,12 +13,12 @@ import {
   galleryRecordsStorage,
 } from '@/storage';
 import type { Config } from '@/utils';
+import { createDownloadUrl, releaseDownloadUrlOnDownloadDone } from '@/utils/blob-download-url';
 import {
   extractImagePageUrlsFromHtml,
   extractImageUrlFromPageHtml,
 } from '@/utils/gallery-html-parse';
 import { resolveImageBlob } from '@/utils/image-blob';
-import { releaseConvertedUrlOnDownloadDone } from '@/utils/image-format';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -242,32 +246,48 @@ const downloadImage = async (
   }
 
   if (needsFileDownload(config)) {
-    const objectUrl = URL.createObjectURL(blob);
+    const filenameHint = {
+      downloadPath: params.downloadPath,
+      index: currentIndex,
+      total: params.totalImages,
+      ext,
+      sourceUrl: sourceImageUrl,
+    };
+    enqueuePendingDownloadFilename(filenameHint);
+    const relativeFilename = buildStorageRelativeFilename(config, filenameHint);
+    const { url, revoke } = await createDownloadUrl(blob);
     await new Promise<void>((resolve) => {
-      chrome.downloads.download({ url: objectUrl }, (id) => {
-        if (chrome.runtime.lastError || typeof id !== 'number') {
-          URL.revokeObjectURL(objectUrl);
-          void markImageFailed(
-            params.galleryFrontPageUrl,
-            currentIndex,
-            chrome.runtime.lastError?.message ?? 'Download API rejected request',
-            sourceImageUrl
-          ).then(resolve);
-          return;
+      chrome.downloads.download(
+        {
+          url,
+          filename: relativeFilename,
+          conflictAction: config.filenameConflictAction,
+        },
+        (id) => {
+          if (chrome.runtime.lastError || typeof id !== 'number') {
+            revoke?.();
+            void markImageFailed(
+              params.galleryFrontPageUrl,
+              currentIndex,
+              chrome.runtime.lastError?.message ?? 'Download API rejected request',
+              sourceImageUrl
+            ).then(resolve);
+            return;
+          }
+          releaseDownloadUrlOnDownloadDone(id, revoke);
+          chrome.runtime.sendMessage({
+            type: 'register-download-index',
+            id,
+            index: currentIndex,
+            total: params.totalImages,
+            downloadPath: params.downloadPath,
+            galleryUrl: params.galleryFrontPageUrl,
+            sourceUrl: sourceImageUrl,
+            taskId: activeTaskId,
+          });
+          resolve();
         }
-        releaseConvertedUrlOnDownloadDone(id, objectUrl);
-        chrome.runtime.sendMessage({
-          type: 'register-download-index',
-          id,
-          index: currentIndex,
-          total: params.totalImages,
-          downloadPath: params.downloadPath,
-          galleryUrl: params.galleryFrontPageUrl,
-          sourceUrl: sourceImageUrl,
-          taskId: activeTaskId,
-        });
-        resolve();
-      });
+      );
     });
     return;
   }

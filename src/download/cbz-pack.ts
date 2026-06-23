@@ -1,9 +1,11 @@
 import { clearCbzTask, listCbzImages } from '@/download/cbz-cache';
 import { consumePendingCbzFilename, setPendingCbzFilename } from '@/download/cbz-download';
+import { normalizeDownloadDir } from '@/download/download-filename';
 import { zipStore } from '@/download/zip-store';
 import { type ActiveDownloadTask, galleryRecordsStorage } from '@/storage';
 import type { Config } from '@/utils';
 import { removeInvalidCharFromFilename } from '@/utils';
+import { createDownloadUrl, releaseDownloadUrlOnDownloadDone } from '@/utils/blob-download-url';
 import { buildImageEntryName } from '@/utils/filename-rule';
 import { resolveImageBlob } from '@/utils/image-blob';
 
@@ -57,25 +59,25 @@ export const packAndDownloadCbz = async (
   const archiveBuffer = new ArrayBuffer(archive.byteLength);
   new Uint8Array(archiveBuffer).set(archive);
   const blob = new Blob([archiveBuffer], { type: 'application/vnd.comicbook+zip' });
-  const objectUrl = URL.createObjectURL(blob);
+  const { url, revoke } = await createDownloadUrl(blob);
   const cbzName = `${removeInvalidCharFromFilename(task.galleryName)}.cbz`;
-  const cbzPath = `${task.downloadPath}${cbzName}`;
+  const cbzPath = `${normalizeDownloadDir(task.downloadPath)}${cbzName}`;
 
   setPendingCbzFilename(cbzPath);
 
   const ok = await new Promise<boolean>((resolve) => {
-    chrome.downloads.download({ url: objectUrl, saveAs: false }, (id) => {
+    chrome.downloads.download({ url, saveAs: false }, (id) => {
       if (chrome.runtime.lastError || typeof id !== 'number') {
         consumePendingCbzFilename();
-        URL.revokeObjectURL(objectUrl);
+        revoke?.();
         resolve(false);
         return;
       }
+      releaseDownloadUrlOnDownloadDone(id, revoke);
       const onChanged = (delta: chrome.downloads.DownloadDelta) => {
         if (delta.id !== id) return;
         const next = delta.state?.current;
         if (next === 'complete' || next === 'interrupted') {
-          URL.revokeObjectURL(objectUrl);
           chrome.downloads.onChanged.removeListener(onChanged);
           resolve(next === 'complete');
         }

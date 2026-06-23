@@ -79,6 +79,20 @@
     background: var(--eh-popup-ambient-top), var(--eh-popup-ambient-body), var(--eh-popup-bg);
   }
 
+  .popup-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 68% 42% at 50% -6%,
+      rgba(204, 168, 66, 0.11) 0%,
+      rgba(184, 145, 42, 0.035) 48%,
+      transparent 72%
+    );
+  }
+
   .popup-bg > * {
     position: relative;
     z-index: 1;
