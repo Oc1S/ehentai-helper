@@ -43,7 +43,7 @@
   }
 
   .settings-row--modal {
-    @apply gap-1.5 sm:gap-2.5;
+    @apply gap-2.5 sm:gap-3;
   }
 
   .settings-label {
@@ -60,6 +60,37 @@
 
   .settings-content--modal {
     @apply w-full flex-1 text-[12px] text-body;
+  }
+
+  .settings-modal-footer {
+    @apply flex flex-row justify-end gap-2 px-5 py-2.5 backdrop-blur-md;
+    border-top: 1px solid var(--eh-hairline-soft);
+    background: rgb(8 8 9 / 0.28);
+  }
+
+  .settings-modal-btn {
+    @apply h-8 min-w-[68px] cursor-pointer rounded-lg px-3.5 text-[12px] font-normal backdrop-blur-sm transition-colors;
+  }
+
+  .settings-modal-btn--cancel {
+    border: 1px solid var(--eh-glass-border);
+    background: rgb(12 12 13 / 0.4);
+    color: var(--eh-muted-hex);
+  }
+
+  .settings-modal-btn--cancel:hover {
+    background: rgb(16 16 18 / 0.5);
+    color: var(--eh-body-hex);
+  }
+
+  .settings-modal-btn--save {
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.3);
+    background: rgb(var(--eh-brand-accent) / 0.12);
+    color: var(--eh-brand-accent-hex);
+  }
+
+  .settings-modal-btn--save:hover {
+    background: rgb(var(--eh-brand-accent) / 0.18);
   }
 }
 

@@ -22,7 +22,8 @@ const formatDownloadDir = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
   }
-  path = path.replace(/\\/g, '/');
+  path = path.replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!path) return null;
   if (path[path.length - 1] !== '/') {
     path += '/';
   }

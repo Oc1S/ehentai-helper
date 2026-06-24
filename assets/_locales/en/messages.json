@@ -62,7 +62,9 @@
   "outputModeBoth": { "message": "Both" },
   "initializing": { "message": "Initializing..." },
   "notOnGalleryPage": { "message": "Not on a Gallery Page" },
-  "notOnGalleryDesc": { "message": "Open a gallery from the list or search to start downloading." },
+  "notOnGalleryDesc": {
+    "message": "Open a gallery from the list/search page to start downloading."
+  },
   "openGalleryFirst": { "message": "No Gallery Open" },
   "openGalleryDesc": {
     "message": "Visit E-Hentai or ExHentai and open a gallery to start downloading."
@@ -211,6 +213,10 @@
     "message": "Retry all failed ($1)",
     "placeholders": { "1": { "content": "$1" } }
   },
+  "thisDownloadRange": { "message": "This download" },
+  "adjustRangeAndDownload": { "message": "Download with new range" },
+  "collapseRange": { "message": "Hide range selector" },
+  "backToInitial": { "message": "Back to download setup" },
   "close": { "message": "Close" },
   "optionsSubtitle": { "message": "Download preferences" },
   "saveChanges": { "message": "Save changes" },

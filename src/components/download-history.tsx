@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 
 import { startDownload } from '@/download/client';
+import { resolveGalleryDownloadPath } from '@/download/download-filename';
 import { useStorageSuspense } from '@/hooks';
 import {
   configStorage,
@@ -29,7 +30,6 @@ import {
   MAX_DOWNLOAD_HISTORY,
   MAX_GALLERY_RECORDS,
 } from '@/storage';
-import { removeInvalidCharFromFilename } from '@/utils';
 import { t } from '@/utils/i18n';
 
 import { ehTableClassNames, EhTableFrame } from './eh-table';
@@ -60,8 +60,7 @@ const buildPayloadFromHistory = async (item: DownloadHistoryItem) => {
   const imagesPerPage = 20;
   const totalImages = item.info.numImages;
   const numPages = Math.ceil(totalImages / imagesPerPage);
-  const downloadPath =
-    config.intermediateDownloadPath + removeInvalidCharFromFilename(item.name) + '/';
+  const downloadPath = resolveGalleryDownloadPath(config.intermediateDownloadPath, item.name);
 
   return {
     galleryFrontPageUrl: item.url,
@@ -139,80 +138,80 @@ export const History: FC = () => {
           removeWrapper
           classNames={ehTableClassNames()}
         >
-        <TableHeader columns={columns()}>
-          {(col) => (
-            <TableColumn
-              key={col.key}
-              width={
-                col.key === 'name'
-                  ? 180
-                  : col.key === 'status'
-                    ? 108
-                    : col.key === 'time'
-                      ? 128
-                      : col.key === 'op'
-                        ? 220
-                        : 64
-              }
-            >
-              {col.label}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody items={filteredData} emptyContent={t('noHistory')}>
-          {(item) => (
-            <TableRow key={item.timestamp}>
-              <TableCell title={item.name}>
-                <Link
-                  href={item.url}
-                  isExternal
-                  className="line-clamp-1 text-xs text-primary underline underline-offset-2"
-                >
-                  {item.name}
-                </Link>
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-[11px] text-muted">
-                {formatStatus(galleryRecords[item.url], item.range)}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-muted-soft">
-                {item.range[0]}–{item.range[1]}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-muted-soft">
-                {formatTime(item.timestamp)}
-              </TableCell>
-              <TableCell className="py-1.5">
-                <div className="flex flex-nowrap items-center gap-0.5">
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
-                    onPress={() => void handleRedownload(item)}
+          <TableHeader columns={columns()}>
+            {(col) => (
+              <TableColumn
+                key={col.key}
+                width={
+                  col.key === 'name'
+                    ? 180
+                    : col.key === 'status'
+                      ? 108
+                      : col.key === 'time'
+                        ? 128
+                        : col.key === 'op'
+                          ? 220
+                          : 64
+                }
+              >
+                {col.label}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody items={filteredData} emptyContent={t('noHistory')}>
+            {(item) => (
+              <TableRow key={item.timestamp}>
+                <TableCell title={item.name}>
+                  <Link
+                    href={item.url}
+                    isExternal
+                    className="line-clamp-1 text-xs text-primary underline underline-offset-2"
                   >
-                    {t('redownload')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
-                    isDisabled={!galleryRecords[item.url]}
-                    onPress={() => setActiveUrl(item.url)}
-                  >
-                    {t('detail')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    color="danger"
-                    className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
-                    onPress={() => setDeleteTarget(item)}
-                  >
-                    {t('delete')}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
+                    {item.name}
+                  </Link>
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-[11px] text-muted">
+                  {formatStatus(galleryRecords[item.url], item.range)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-muted-soft">
+                  {item.range[0]}–{item.range[1]}
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-muted-soft">
+                  {formatTime(item.timestamp)}
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <div className="flex flex-nowrap items-center gap-0.5">
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
+                      onPress={() => void handleRedownload(item)}
+                    >
+                      {t('redownload')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
+                      isDisabled={!galleryRecords[item.url]}
+                      onPress={() => setActiveUrl(item.url)}
+                    >
+                      {t('detail')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="danger"
+                      className="h-6 min-w-0 shrink-0 px-1.5 text-xs font-normal"
+                      onPress={() => setDeleteTarget(item)}
+                    >
+                      {t('delete')}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </EhTableFrame>
       <GalleryDetailModal

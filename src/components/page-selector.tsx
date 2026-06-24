@@ -1,57 +1,21 @@
 import { type FC } from 'react';
-import { Button, Input, Slider, type SliderProps } from '@nextui-org/react';
+import { Input, Slider, type SliderProps } from '@nextui-org/react';
 
 import { t } from '@/utils/i18n';
 
 type PageSelectorProps = {
   range: [number, number];
   setRange: (range: [number, number]) => void;
-  imagesPerPage?: number;
-  currentPage?: number;
 } & SliderProps;
 
 export const PageSelector: FC<PageSelectorProps> = ({
   range,
   maxValue,
   setRange,
-  imagesPerPage = 1,
-  currentPage = 0,
   ...rest
 }) => {
-  const presets = [
-    {
-      label: t('presetAll'),
-      onPress: () => setRange([1, maxValue]),
-    },
-    {
-      label: t('presetCurrentPage'),
-      onPress: () => {
-        const start = currentPage * imagesPerPage + 1;
-        const end = Math.min((currentPage + 1) * imagesPerPage, maxValue);
-        setRange([start, end]);
-      },
-    },
-    {
-      label: t('presetFirst20'),
-      onPress: () => setRange([1, Math.min(20, maxValue)]),
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-1.5">
-        {presets.map((preset) => (
-          <Button
-            key={preset.label}
-            size="sm"
-            variant="flat"
-            className="h-7 min-w-0 px-2.5 text-[11px] font-medium"
-            onPress={preset.onPress}
-          >
-            {preset.label}
-          </Button>
-        ))}
-      </div>
       <Slider
         aria-label={t('imageRange')}
         size="sm"

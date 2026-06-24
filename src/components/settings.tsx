@@ -1,13 +1,19 @@
 import { type FC, type ReactNode } from 'react';
 import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
-import { type Config, type ImageFormat, type OutputMode, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
+import {
+  type Config,
+  type ImageFormat,
+  type OutputMode,
+  PATTERN_INVALID_FILE_PATH_CHAR,
+} from '@/utils';
 import { t } from '@/utils/i18n';
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
   }
-  path = path.replace(/\\/g, '/');
+  path = path.replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!path) return null;
   if (path[path.length - 1] !== '/') {
     path += '/';
   }
@@ -19,7 +25,11 @@ const Row = ({
   content,
   variant,
 }: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'page' }) => (
-  <div className={variant === 'page' ? 'settings-row settings-row--page' : 'settings-row settings-row--modal'}>
+  <div
+    className={
+      variant === 'page' ? 'settings-row settings-row--page' : 'settings-row settings-row--modal'
+    }
+  >
     <div
       className={
         variant === 'page'
@@ -71,9 +81,7 @@ export const Settings: FC<{
 }> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
-      label: (
-        <HintLabel label={t('downloadFolder')} hint={t('downloadFolderHint')} />
-      ),
+      label: <HintLabel label={t('downloadFolder')} hint={t('downloadFolderHint')} />,
       content: (
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -116,12 +124,7 @@ export const Settings: FC<{
       ),
     },
     filenameConflictAction: {
-      label: (
-        <HintLabel
-          label={t('filenameConflictAction')}
-          hint={t('filenameConflictHint')}
-        />
-      ),
+      label: <HintLabel label={t('filenameConflictAction')} hint={t('filenameConflictHint')} />,
       content: (
         <RadioGroup
           orientation="horizontal"
@@ -232,12 +235,12 @@ export const Settings: FC<{
   const panelClass =
     variant === 'page'
       ? 'flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
-      : 'flex flex-col gap-3 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
+      : 'flex flex-col gap-5 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
 
   return (
     <div className={panelClass}>
       {pathPreview ? (
-        <p className="text-[10px] leading-relaxed text-muted">
+        <p className="text-[12px] leading-relaxed text-muted">
           {t('pathPreview')}{' '}
           <span className="font-mono text-brand-accent">
             {t('defaultFolder')}

@@ -224,7 +224,10 @@ const registerListeners = () => {
   });
 
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
-    if (downloadItem.byExtensionName !== EXTENSION_NAME) return;
+    const isOurDownload =
+      downloadItem.byExtensionId === extensionId ||
+      downloadItem.byExtensionName === EXTENSION_NAME;
+    if (!isOurDownload) return;
 
     const cbzPath = consumePendingCbzFilename();
     if (cbzPath) {
@@ -282,8 +285,11 @@ const registerListeners = () => {
         )}.${fileType}`;
     }
 
+    const normalized =
+      filename.replace(/\\/g, '/').replace(/^\/+/, '') || 'download.bin';
+
     suggest({
-      filename,
+      filename: normalized,
       conflictAction,
     });
   });

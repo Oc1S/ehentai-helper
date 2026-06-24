@@ -60,7 +60,7 @@
   "outputModeBoth": { "message": "两者都要" },
   "initializing": { "message": "初始化中..." },
   "notOnGalleryPage": { "message": "当前不在画廊页" },
-  "notOnGalleryDesc": { "message": "请从列表或搜索打开一个画廊后再下载。" },
+  "notOnGalleryDesc": { "message": "请从 列表/搜索 页打开一个画廊后开始下载。" },
   "openGalleryFirst": { "message": "未打开画廊" },
   "openGalleryDesc": {
     "message": "前往 E-Hentai 或 ExHentai 打开任意画廊即可开始下载。"
@@ -199,6 +199,10 @@
     "message": "重试全部失败项（$1）",
     "placeholders": { "1": { "content": "$1" } }
   },
+  "thisDownloadRange": { "message": "本次下载范围" },
+  "adjustRangeAndDownload": { "message": "调整范围后重新下载" },
+  "collapseRange": { "message": "收起范围选择" },
+  "backToInitial": { "message": "返回下载设置" },
   "close": { "message": "关闭" },
   "optionsSubtitle": { "message": "下载偏好设置" },
   "saveChanges": { "message": "保存更改" },

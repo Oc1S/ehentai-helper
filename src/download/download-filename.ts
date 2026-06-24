@@ -1,5 +1,6 @@
 import type { Config } from '@/utils';
-import { splitFilename } from '@/utils';
+import { DEFAULT_CONFIG, splitFilename } from '@/utils';
+import { removeInvalidCharFromFilename } from '@/utils/download';
 
 export type PendingDownloadFilename = {
   downloadPath: string;
@@ -18,8 +19,17 @@ export const enqueuePendingDownloadFilename = (item: PendingDownloadFilename) =>
 export const consumePendingDownloadFilename = () => pendingQueue.shift();
 
 export const normalizeDownloadDir = (path: string) => {
-  const normalized = path.replace(/\\/g, '/').replace(/\/+/g, '/');
+  const trimmed = path.trim().replace(/\\/g, '/');
+  if (!trimmed) return DEFAULT_CONFIG.intermediateDownloadPath;
+  const withoutLeading = trimmed.replace(/^\/+/, '');
+  const normalized = withoutLeading.replace(/\/+/g, '/');
   return normalized.endsWith('/') ? normalized : `${normalized}/`;
+};
+
+export const resolveGalleryDownloadPath = (basePath: string, galleryName: string) => {
+  const base = normalizeDownloadDir(basePath || DEFAULT_CONFIG.intermediateDownloadPath);
+  if (!galleryName.trim()) return base;
+  return `${base}${removeInvalidCharFromFilename(galleryName)}/`.replace(/\/+/g, '/');
 };
 
 export const safeFileExtension = (ext: string) => {
