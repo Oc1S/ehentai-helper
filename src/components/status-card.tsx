@@ -35,7 +35,7 @@ export const StatusCard = ({
   if (embedded) {
     return (
       <div
-        className={`${cardShell} flex w-full items-start gap-3 rounded-2xl p-3 ${className}`.trim()}
+        className={`${cardShell} flex w-full items-start gap-3 rounded-eh-xl p-3 ${className}`.trim()}
       >
         <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
         <div
@@ -60,7 +60,7 @@ export const StatusCard = ({
 
   return (
     <div
-      className={`${cardShell} mx-auto w-full max-w-[400px] rounded-[24px] p-5 ${className}`.trim()}
+      className={`${cardShell} mx-auto w-full max-w-[400px] rounded-eh-3xl p-5 ${className}`.trim()}
     >
       <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
       <div
@@ -88,7 +88,7 @@ export const StatusCard = ({
         </div>
 
         <div className="flex w-full flex-col items-center gap-2">
-          <h3 className="text-xl font-bold tracking-tight text-ink">{title}</h3>
+          <h3 className="text-lg font-bold tracking-tight text-ink">{title}</h3>
           {description && (
             <div className="max-w-[300px] text-[13px] leading-relaxed text-muted">
               {description}

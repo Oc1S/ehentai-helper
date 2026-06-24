@@ -1,5 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/roboto-mono/400.css';
 @import './tokens.css';
 
 @tailwind base;
@@ -92,6 +94,120 @@
   .settings-modal-btn--save:hover {
     background: rgb(var(--eh-brand-accent) / 0.18);
   }
+
+  .eh-accent-action-btn {
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.3);
+    background: rgb(var(--eh-brand-accent) / 0.12);
+    color: var(--eh-brand-accent-hex);
+    backdrop-filter: blur(12px);
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  .eh-accent-action-btn:hover {
+    background: rgb(var(--eh-brand-accent) / 0.18);
+    border-color: rgb(var(--eh-brand-accent) / 0.38);
+  }
+
+  .eh-accent-action-btn:active {
+    transform: scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eh-accent-action-btn:active {
+      transform: none;
+    }
+  }
+
+  .eh-text-input {
+    @apply flex-1 rounded-eh-md border px-2.5 py-1.5 text-ink outline-none transition-colors placeholder:text-muted-soft;
+  }
+
+  .eh-text-input--modal {
+    border-color: var(--eh-glass-border);
+    background: rgb(8 8 9 / 0.28);
+    backdrop-filter: blur(4px);
+  }
+
+  .eh-text-input--modal:focus {
+    border-color: rgb(var(--eh-brand-accent) / 0.35);
+    background: rgb(10 10 11 / 0.4);
+  }
+
+  .eh-text-input--page {
+    width: 100%;
+    max-width: 420px;
+    padding: 8px 10px;
+    border-color: var(--eh-hairline);
+    background-color: var(--eh-surface-card-hex);
+  }
+
+  .eh-text-input--page:focus {
+    border-color: var(--eh-brand-accent-hex);
+  }
+
+  .eh-accent-action-btn__icon {
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.22);
+    background: rgb(var(--eh-brand-accent) / 0.1);
+    color: var(--eh-brand-accent-bright-hex);
+  }
+
+  .eh-footer-secondary-btn {
+    border: 1px solid var(--eh-glass-border);
+    background: rgb(12 12 13 / 0.58);
+    color: var(--eh-body-hex);
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .eh-footer-secondary-btn:hover {
+    background: rgb(18 18 20 / 0.72);
+    border-color: rgb(var(--eh-brand-accent) / 0.18);
+  }
+
+  .eh-github-star-link {
+    @apply relative flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 no-underline transition-[background-color,border-color,box-shadow,transform] duration-200;
+    border-color: rgb(var(--eh-brand-accent) / 0.32);
+    background: rgb(var(--eh-brand-accent) / 0.1);
+    color: var(--eh-body-hex);
+  }
+
+  .eh-github-star-link__text {
+    @apply flex-1 text-[12px] leading-relaxed;
+    color: var(--eh-body-hex);
+  }
+
+  .eh-github-star-link__icon {
+    color: var(--eh-brand-accent-hex);
+    transition: transform 0.2s ease;
+  }
+
+  .eh-github-star-link:hover {
+    border-color: rgb(var(--eh-brand-accent) / 0.48);
+    background: rgb(var(--eh-brand-accent) / 0.16);
+    box-shadow: 0 0 18px rgb(var(--eh-brand-accent) / 0.2);
+  }
+
+  .eh-github-star-link:active {
+    transform: scale(0.99);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eh-github-star-link:active {
+      transform: none;
+    }
+
+    .eh-github-star-link:hover .eh-github-star-link__icon {
+      transform: none;
+    }
+  }
+
+  .eh-github-star-link:hover .eh-github-star-link__icon {
+    transform: translate(1px, -1px);
+  }
 }
 
 @layer utilities {
@@ -171,7 +287,7 @@
     width: 11rem;
     height: 11rem;
     border-radius: 9999px;
-    background: var(--eh-glass-ambient);
+    background: var(--eh-glass-ambient-gold);
     filter: blur(72px);
     opacity: 0.55;
     pointer-events: none;
@@ -193,12 +309,18 @@
 
   .glass-panel:hover::after {
     opacity: 0.75;
-    background: var(--eh-glass-ambient-hover);
+    background: var(--eh-glass-ambient-gold-hover);
     transform: scale(1.03);
   }
 
   .glass-panel-live::after {
     animation: glass-ambient-pulse 3.5s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass-panel-live::after {
+      animation: none;
+    }
   }
 
   @keyframes glass-ambient-pulse {

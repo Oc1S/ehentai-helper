@@ -89,20 +89,6 @@
   color: var(--eh-body-hex);
 }
 
-.options-shell .path-input--page {
-  width: 100%;
-  max-width: 420px;
-  padding: 8px 10px;
-  border: 1px solid var(--eh-hairline);
-  border-radius: 8px;
-  background-color: var(--eh-surface-card-hex);
-}
-
-.options-shell .path-input--page:focus {
-  border-color: var(--eh-brand-accent-hex);
-  outline: none;
-}
-
 .options-shell .settings-section-title {
   margin-bottom: 4px;
   padding: 0 4px;

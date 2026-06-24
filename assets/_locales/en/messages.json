@@ -31,7 +31,7 @@
   "galleryTab": { "message": "Gallery" },
   "filesTab": { "message": "File downloads" },
   "backgroundHint": {
-    "message": "You can close this popup — download continues in the background."
+    "message": "You can close this popup. Download continues in the background."
   },
   "pathPreviewExample": { "message": "Gallery Name/" },
   "settings": { "message": "Settings" },
@@ -95,8 +95,8 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "downloadCompleted": { "message": "Download Completed!" },
-  "enjoyingExtension": { "message": "Enjoying the extension?" },
-  "starGithubLink": { "message": "Star it on GitHub" },
+  "enjoyingExtension": { "message": "If you find this extension helpful, " },
+  "starGithubLink": { "message": "please leave a star ✨ on GitHub" },
   "partialSuccessSummary": {
     "message": "$1 succeeded, $2 failed",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
@@ -192,6 +192,7 @@
     "message": "$1/$2 complete",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
+  "statusUnknown": { "message": "Unknown" },
   "galleryDetails": { "message": "Gallery details" },
   "total": { "message": "Total" },
   "countDone": {

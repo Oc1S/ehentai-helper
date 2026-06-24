@@ -46,7 +46,7 @@ const columns = () => [
 const formatTime = (ts: number) => new Date(ts).toLocaleString();
 
 const formatStatus = (record: GalleryRecord | undefined, range: [number, number]) => {
-  if (!record) return '—';
+  if (!record) return t('statusUnknown');
   let complete = 0;
   for (let i = range[0]; i <= range[1]; i++) {
     if (record.images[String(i)]?.state === 'complete') complete++;
@@ -174,7 +174,7 @@ export const History: FC = () => {
                   {formatStatus(galleryRecords[item.url], item.range)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-muted-soft">
-                  {item.range[0]}–{item.range[1]}
+                  {item.range[0]}-{item.range[1]}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-muted-soft">
                   {formatTime(item.timestamp)}

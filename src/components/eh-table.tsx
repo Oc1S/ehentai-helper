@@ -11,7 +11,7 @@ const EH_TABLE_CLASS_NAMES: EhTableClassNames = {
   thead: '[&>tr]:first:shadow-none',
   tr: 'border-b border-[var(--eh-hairline-soft)] last:border-b-0 transition-colors data-[hover=true]:bg-[rgb(204_168_66/0.04)]',
   th: 'sticky top-0 z-10 h-8 border-b border-[var(--eh-hairline-soft)] bg-[rgb(12_12_13/0.72)] text-[11px] font-medium uppercase tracking-wide text-muted-soft first:rounded-tl-lg last:rounded-tr-lg',
-  td: 'py-1.5 text-xs',
+  td: 'py-2 text-xs',
   emptyWrapper: 'py-10 text-xs text-muted-soft',
 };
 

@@ -2,11 +2,13 @@ import '../styles/index.css';
 import '../styles/popup.css';
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Link, Progress, Spinner } from '@nextui-org/react';
-import { ChevronDown, Download } from 'lucide-react';
+import { Button, Spinner } from '@nextui-org/react';
+import { ChevronDown, Download, ExternalLink, Info, Link2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
+import { EhButton } from '@/components/eh-button';
+import { EhDownloadProgressPanel, EhDownloadResultProgress } from '@/components/eh-progress';
 import { PageSelector } from '@/components/page-selector';
 import { StatusCard } from '@/components/status-card';
 import {
@@ -45,60 +47,9 @@ import { t } from '@/utils/i18n';
 import { History } from '../components/download-history';
 import { DownloadSettings } from '../components/download-settings';
 import { GalleryDetailModal } from '../components/gallery-detail-modal';
-import { CloseIcon, InfoIcon, LinkIcon } from './components/icons';
 import { CENTERED_STATUSES, StatusEnum } from './status';
 
-const DownloadProgress = ({
-  downloadCount,
-  completeCount,
-  failedCount,
-  inProgressCount,
-}: {
-  downloadCount: number;
-  completeCount: number;
-  failedCount: number;
-  inProgressCount: number;
-}) => {
-  const settledCount = completeCount + failedCount;
-  const percent = downloadCount > 0 ? Math.round((settledCount / downloadCount) * 100) : 0;
-
-  return (
-    <div className="w-full space-y-4">
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            {t('progress')}
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">{percent}%</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
-            {t('completed')}
-          </p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
-            {completeCount}
-            <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
-          </p>
-        </div>
-      </div>
-      <Progress
-        aria-label={t('downloadProgress')}
-        value={settledCount}
-        minValue={0}
-        maxValue={downloadCount}
-        color="primary"
-        size="sm"
-      />
-      <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-soft">
-        <span className="text-success">{t('badgeComplete', String(completeCount))}</span>
-        <span>·</span>
-        <span className="text-warning">{t('badgeInProgress', String(inProgressCount))}</span>
-        <span>·</span>
-        <span className="text-error">{t('badgeFailed', String(failedCount))}</span>
-      </div>
-    </div>
-  );
-};
+const ICON_STROKE = 1.5;
 
 type ResultVariant = 'success' | 'partial' | 'failed';
 
@@ -121,9 +72,6 @@ const DownloadResultSummary = ({
   rangeEnd: number;
   children?: ReactNode;
 }) => {
-  const successWidth = downloadCount > 0 ? (completeCount / downloadCount) * 100 : 0;
-  const failedWidth = downloadCount > 0 ? (failedCount / downloadCount) * 100 : 0;
-
   const statusLabel =
     variant === 'success'
       ? t('downloadCompleted')
@@ -132,7 +80,11 @@ const DownloadResultSummary = ({
         : t('downloadFailedTitle');
 
   const statusClass =
-    variant === 'success' ? 'text-success' : variant === 'partial' ? 'text-warning' : 'text-error';
+    variant === 'success'
+      ? 'text-brand-accent'
+      : variant === 'partial'
+        ? 'text-warning'
+        : 'text-error';
 
   const desc =
     variant === 'success'
@@ -142,7 +94,7 @@ const DownloadResultSummary = ({
         : t('downloadFailedDesc');
 
   return (
-    <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-[20px] p-5">
+    <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-eh-2xl p-5">
       <div className="min-w-0 text-left">
         <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
           {galleryName}
@@ -150,7 +102,7 @@ const DownloadResultSummary = ({
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-soft">
           <span>{t('thisDownloadRange')}</span>
           <span className="rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 py-0.5 font-mono text-[10px] font-bold text-brand-accent">
-            {rangeStart} – {rangeEnd}
+            {rangeStart} - {rangeEnd}
           </span>
           <span>
             · {downloadCount} {t('imagesLabel')}
@@ -178,27 +130,11 @@ const DownloadResultSummary = ({
         ) : null}
       </div>
 
-      <div
-        className="flex h-2 w-full overflow-hidden rounded-full bg-[rgb(8_8_9/0.45)]"
-        role="progressbar"
-        aria-valuenow={completeCount}
-        aria-valuemin={0}
-        aria-valuemax={downloadCount}
-        aria-label={t('downloadProgress')}
-      >
-        {successWidth > 0 ? (
-          <div
-            className="h-full bg-success transition-[width] duration-300"
-            style={{ width: `${successWidth}%` }}
-          />
-        ) : null}
-        {failedWidth > 0 ? (
-          <div
-            className="h-full bg-error transition-[width] duration-300"
-            style={{ width: `${failedWidth}%` }}
-          />
-        ) : null}
-      </div>
+      <EhDownloadResultProgress
+        downloadCount={downloadCount}
+        completeCount={completeCount}
+        failedCount={failedCount}
+      />
 
       <p className="text-[12px] leading-relaxed text-muted">{desc}</p>
       {children}
@@ -254,6 +190,8 @@ const taskStatusToUi = (taskStatus: string): StatusEnum | null => {
       return StatusEnum.DownloadPartialSuccess;
     case 'failed':
       return StatusEnum.DownloadFailed;
+    case 'cancelled':
+      return StatusEnum.BeforeDownload;
     default:
       return null;
   }
@@ -322,15 +260,15 @@ const Popup = () => {
 
   useEffect(() => {
     if (!activeTask || activeTask.galleryUrl !== galleryFrontPageUrl.current) {
-      if (status === StatusEnum.Downloading && !activeTask) {
-        setStatus(StatusEnum.BeforeDownload);
-      }
+      setStatus((prev) =>
+        prev === StatusEnum.Downloading ? StatusEnum.BeforeDownload : prev
+      );
       return;
     }
     const next = taskStatusToUi(activeTask.status);
     if (next === null) return;
     setStatus(next);
-  }, [activeTask, status]);
+  }, [activeTask]);
 
   const buildJobPayload = (
     indices?: number[],
@@ -473,17 +411,17 @@ const Popup = () => {
     chrome.downloads.showDefaultFolder();
   };
 
-  const resetToBeforeDownload = () => {
+  const resetToBeforeDownload = async () => {
     if (activeTask?.galleryUrl === galleryFrontPageUrl.current) {
       setRange([activeTask.rangeStart, activeTask.rangeEnd]);
     }
-    void downloadTaskStorage.set(null);
+    await downloadTaskStorage.set(null);
     setStatus(StatusEnum.BeforeDownload);
   };
 
   const handleCancelDownload = async () => {
     await cancelDownload();
-    resetToBeforeDownload();
+    await resetToBeforeDownload();
     toast.info(t('downloadCancelled'));
   };
 
@@ -492,11 +430,14 @@ const Popup = () => {
     status === StatusEnum.DownloadSuccess ||
     status === StatusEnum.DownloadPartialSuccess ||
     status === StatusEnum.DownloadFailed;
-  const isSelfScrollingLayout = status === StatusEnum.BeforeDownload || isTerminalDownload;
+  const isSelfScrollingLayout =
+    status === StatusEnum.BeforeDownload ||
+    status === StatusEnum.Downloading ||
+    isTerminalDownload;
 
   const progressPanel = (
-    <div className="glass-panel flex flex-col gap-3 rounded-[20px] p-5">
-      <DownloadProgress
+    <div className="glass-panel flex flex-col gap-3 rounded-eh-2xl p-5">
+      <EhDownloadProgressPanel
         downloadCount={progressTotal}
         completeCount={completeCount}
         failedCount={failedCount}
@@ -521,7 +462,7 @@ const Popup = () => {
     ) : null;
 
   const rangeSelectorPanel = rangeSelectorContent ? (
-    <div className="glass-panel flex flex-col gap-2.5 rounded-[16px] px-4 py-3.5">
+    <div className="glass-panel flex flex-col gap-2.5 rounded-eh-xl px-4 py-3.5">
       {rangeSelectorContent}
     </div>
   ) : null;
@@ -530,14 +471,14 @@ const Popup = () => {
     <Button
       type="button"
       variant="light"
-      className="group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-[14px] border border-[rgba(88,158,140,0.18)] bg-[rgba(14,42,38,0.22)] px-5 font-normal shadow-[inset_0_1px_0_rgba(142,196,180,0.08),var(--eh-shadow-card)] backdrop-blur-xl transition-[transform,background-color,box-shadow,border-color] duration-300 ease-out hover:border-[rgba(100,170,150,0.26)] hover:bg-[rgba(18,50,44,0.28)] active:scale-[0.98]"
+      className="eh-accent-action-btn group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-eh-cta px-5 font-normal shadow-[inset_0_1px_0_rgba(204,168,66,0.08),var(--eh-shadow-card)]"
       onPress={handleClickDownload}
       disableRipple
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(88,158,140,0.14)] bg-[rgba(88,158,140,0.1)] text-[#8ec4b4] backdrop-blur-md">
+      <div className="eh-accent-action-btn__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg backdrop-blur-md">
         <Download size={17} strokeWidth={1.75} />
       </div>
-      <span className="text-sm font-medium tracking-wide text-[#9fd4c4]">
+      <span className="text-sm font-medium tracking-wide text-brand-accent">
         {t('startDownloadWithCount', String(downloadCount))}
       </span>
     </Button>
@@ -561,14 +502,14 @@ const Popup = () => {
     variant,
     footerActions,
     primaryAction,
-    showRangeByDefault = false,
+    hideRangeControls = false,
   }: {
     variant: ResultVariant;
     footerActions?: ReactNode;
     primaryAction?: ReactNode;
-    showRangeByDefault?: boolean;
+    hideRangeControls?: boolean;
   }) => {
-    const rangeExpanded = showRangeByDefault || terminalRangeExpanded;
+    const rangeExpanded = !hideRangeControls && terminalRangeExpanded;
 
     return (
       <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
@@ -583,44 +524,42 @@ const Popup = () => {
             rangeEnd={taskDisplayRange[1]}
           >
             {variant === 'success' ? (
-              <div className="border-success/20 bg-success/[0.06] rounded-xl border px-3.5 py-3">
-                <p className="text-[12px] leading-relaxed text-muted">
-                  {t('enjoyingExtension')}{' '}
-                  <Link
-                    href="https://github.com/Oc1S/ehentai-helper"
-                    isExternal
-                    className="font-medium text-brand-accent underline underline-offset-2"
-                  >
-                    {t('starGithubLink')}
-                  </Link>
-                </p>
-              </div>
+              <a
+                href="https://github.com/Oc1S/ehentai-helper"
+                target="_blank"
+                rel="noreferrer"
+                className="eh-github-star-link group"
+              >
+                <span className="eh-github-star-link__text">
+                  {t('enjoyingExtension')}
+                  {t('starGithubLink')}
+                </span>
+                <ExternalLink className="eh-github-star-link__icon size-4 shrink-0" aria-hidden />
+              </a>
             ) : null}
           </DownloadResultSummary>
 
-          {!showRangeByDefault ? rangeToggleButton(rangeExpanded) : null}
+          {!hideRangeControls ? rangeToggleButton(rangeExpanded) : null}
           {rangeExpanded ? rangeSelectorPanel : null}
         </div>
-        <div className="shrink-0 space-y-2 border-t border-[var(--eh-hairline-soft)] pt-3">
+        <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
           {footerActions}
-          {primaryAction}
-          {rangeExpanded && !showRangeByDefault && primaryAction ? startDownloadButton : null}
+          {!hideRangeControls && rangeExpanded && primaryAction ? primaryAction : null}
         </div>
       </div>
     );
   };
 
   const retryPrimaryButton = (count: number, onPress: () => void) => (
-    <Button
+    <EhButton
       type="button"
       size="sm"
-      variant="flat"
-      className="h-10 w-full min-w-0 rounded-lg border border-[rgba(88,158,140,0.18)] bg-[rgba(14,42,38,0.22)] px-3 text-[13px] font-medium text-[#9fd4c4]"
+      appearance="accent"
+      className="h-10 w-full min-w-0 rounded-eh-md px-3 text-[13px] font-medium"
       onPress={onPress}
-      disableRipple
     >
       {t('retryAllFailed', String(count))}
-    </Button>
+    </EhButton>
   );
 
   const postDownloadActionRow = (leading: ReactNode, retryCount: number, onRetry: () => void) => (
@@ -643,7 +582,7 @@ const Popup = () => {
         return (
           <StatusCard
             variant="warning"
-            icon={<InfoIcon />}
+            icon={<Info size={24} strokeWidth={ICON_STROKE} />}
             title={t('notOnGalleryPage')}
             description={t('notOnGalleryDesc')}
           />
@@ -652,7 +591,7 @@ const Popup = () => {
         return (
           <StatusCard
             variant="info"
-            icon={<LinkIcon />}
+            icon={<Link2 size={24} strokeWidth={ICON_STROKE} />}
             title={t('openGalleryFirst')}
             description={t('openGalleryDesc')}
           >
@@ -686,7 +625,7 @@ const Popup = () => {
         return (
           <StatusCard
             variant="error"
-            icon={<CloseIcon />}
+            icon={<X size={24} strokeWidth={ICON_STROKE} />}
             title={t('unableReadGallery')}
             description={t('unableReadGalleryDesc')}
           >
@@ -714,7 +653,7 @@ const Popup = () => {
         return (
           <div className="flex h-full min-h-0 w-full flex-col px-4 py-3">
             <div className="scrollbar-glass flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto">
-              <div className="glass-panel overflow-hidden rounded-[20px]">
+              <div className="glass-panel overflow-hidden rounded-eh-2xl">
                 <div className="p-4">
                   <div className="flex gap-3">
                     {galleryInfo.coverUrl ? (
@@ -746,105 +685,125 @@ const Popup = () => {
                     </div>
                   </>
                 ) : null}
-              </div>
 
-              {counts && trackedTotal > 0 && (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-[12px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] px-3 py-2.5">
-                  <span className="text-[11px] font-semibold text-ink">
-                    {t('previouslyTracked')}
-                  </span>
-                  <span className="bg-success/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-success">
-                    {t('badgeComplete', String(counts.complete))}
-                  </span>
-                  <span className="bg-warning/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-warning">
-                    {t('badgeInProgress', String(counts.in_progress))}
-                  </span>
-                  <span className="bg-error/15 rounded-full px-2 py-0.5 text-[10px] font-medium text-error">
-                    {t('badgeFailed', String(counts.interrupted))}
-                  </span>
-                  <div className="ml-auto flex flex-wrap items-center gap-1.5">
-                    {missingCount > 0 && (
-                      <Button
-                        size="sm"
-                        color="primary"
-                        variant="flat"
-                        className="h-7 min-w-0 px-2 text-[11px]"
-                        onPress={() => void handleResumeMissing()}
+                {counts && trackedTotal > 0 ? (
+                  <div className="border-t border-[var(--eh-hairline-soft)] px-4 py-3">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-soft">
+                      {t('previouslyTracked')}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-soft">
+                      <span className="text-success">{t('badgeComplete', String(counts.complete))}</span>
+                      <span aria-hidden>·</span>
+                      <span className="text-warning">
+                        {t('badgeInProgress', String(counts.in_progress))}
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--eh-hairline-soft)] pt-2.5">
+                      {missingCount > 0 ? (
+                        <button
+                          type="button"
+                          className="eh-accent-action-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
+                          onClick={() => void handleResumeMissing()}
+                        >
+                          {t('continueMissing')} ({missingCount})
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="eh-footer-secondary-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
+                        onClick={() => setGalleryDetailOpen(true)}
                       >
-                        {t('continueMissing')} ({missingCount})
-                      </Button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setGalleryDetailOpen(true)}
-                      className="rounded-full border border-brand-accent/30 bg-brand-accent/[0.08] px-2 py-0.5 text-[10px] font-medium text-brand-accent hover:bg-brand-accent/[0.15]"
-                    >
-                      {t('viewDetails')}
-                    </button>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      className="h-7 min-w-0 px-2 text-[11px]"
-                      onPress={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
-                    >
-                      {t('redownloadAll')}
-                    </Button>
+                        {t('viewDetails')}
+                      </button>
+                      <button
+                        type="button"
+                        className="eh-footer-secondary-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
+                        onClick={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
+                      >
+                        {t('redownloadAll')}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : null}
+              </div>
             </div>
           </div>
         );
       }
       case StatusEnum.Downloading:
         return (
-          <div className="scrollbar-glass flex h-full w-full flex-col gap-3 overflow-y-auto px-4 py-4 pb-6">
-            <div className="glass-panel glass-panel-live relative flex flex-col justify-end rounded-[20px] p-5">
-              <div>
-                <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-                  {galleryInfo?.name || ''}
-                </h3>
-                <div className="mt-2.5 flex items-center gap-2">
-                  <Spinner size="sm" color="primary" />
-                  <span className="text-[13px] font-medium text-brand-accent">
-                    {t('downloadingImages')}
-                  </span>
+          <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
+            <div className="scrollbar-glass flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
+              <div className="glass-panel glass-panel-live relative flex shrink-0 flex-col justify-end rounded-eh-2xl p-5">
+                <div>
+                  <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
+                    {galleryInfo?.name || ''}
+                  </h3>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <Spinner size="sm" color="primary" />
+                    <span className="text-[13px] font-medium text-brand-accent">
+                      {t('downloadingImages')}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-soft">{t('backgroundHint')}</p>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-soft">{t('backgroundHint')}</p>
               </div>
+              {progressPanel}
             </div>
-            {progressPanel}
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="flat" onPress={() => setGalleryDetailOpen(true)}>
-                {t('viewDetails')}
-              </Button>
-              <Button
-                size="sm"
-                color="danger"
-                variant="flat"
-                onPress={() => void handleCancelDownload()}
-              >
-                {t('cancel')}
-              </Button>
+            <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
+              <div className="flex items-stretch gap-2">
+                <Button
+                  size="sm"
+                  variant="flat"
+                  className="h-10 shrink-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-3 text-[13px] font-medium text-body"
+                  onPress={() => setGalleryDetailOpen(true)}
+                >
+                  {t('viewDetails')}
+                </Button>
+                <Button
+                  size="sm"
+                  color="danger"
+                  variant="flat"
+                  className="h-10 min-w-0 flex-1 px-3 text-[13px] font-medium"
+                  onPress={() => void handleCancelDownload()}
+                >
+                  {t('cancel')}
+                </Button>
+              </div>
             </div>
           </div>
         );
       case StatusEnum.DownloadSuccess:
         return postDownloadShell({
           variant: 'success',
-          showRangeByDefault: true,
+          hideRangeControls: true,
           footerActions: (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="flat" onPress={openDownloadFolder}>
+            <div className="flex items-stretch gap-2">
+              <Button
+                size="sm"
+                variant="flat"
+                className="eh-footer-secondary-btn h-10 shrink-0 rounded-lg px-3 text-[13px] font-medium"
+                onPress={openDownloadFolder}
+              >
                 {t('openFolder')}
+              </Button>
+              <Button
+                type="button"
+                variant="flat"
+                className="eh-accent-action-btn h-10 min-w-0 flex-1 rounded-lg px-3 text-[13px] font-medium"
+                onPress={resetToBeforeDownload}
+              >
+                {t('backToInitial')}
               </Button>
             </div>
           ),
-          primaryAction: startDownloadButton,
         });
       case StatusEnum.DownloadPartialSuccess:
         return postDownloadShell({
           variant: 'partial',
+          primaryAction: startDownloadButton,
           footerActions: postDownloadActionRow(
             <>
               <Button
@@ -858,7 +817,7 @@ const Popup = () => {
               <Button
                 size="sm"
                 variant="flat"
-                className="h-10 shrink-0"
+                className="eh-footer-secondary-btn h-10 shrink-0 rounded-lg px-3 text-[13px] font-medium"
                 onPress={openDownloadFolder}
               >
                 {t('openFolder')}
@@ -882,7 +841,7 @@ const Popup = () => {
                 rangeEnd={taskDisplayRange[1]}
               />
             </div>
-            <div className="shrink-0 border-t border-[var(--eh-hairline-soft)] pt-3">
+            <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
               {postDownloadActionRow(
                 <Button
                   type="button"

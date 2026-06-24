@@ -19,7 +19,7 @@ import {
   extractImagePageUrlsFromHtml,
   extractImageUrlFromPageHtml,
 } from '@/utils/gallery-html-parse';
-import { resolveImageBlob } from '@/utils/image-blob';
+import { probeImageUrl, resolveImageBlob } from '@/utils/image-blob';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -296,6 +296,14 @@ const downloadImage = async (
     needsFileDownload(config) && !needsImageBlob(config);
 
   if (directFileDownload) {
+    try {
+      await probeImageUrl(sourceImageUrl);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to fetch image';
+      await markImageFailed(params.galleryFrontPageUrl, currentIndex, msg, sourceImageUrl);
+      return;
+    }
+
     const ext = (() => {
       try {
         const path = new URL(sourceImageUrl).pathname;

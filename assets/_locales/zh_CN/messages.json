@@ -89,8 +89,8 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "downloadCompleted": { "message": "下载完成！" },
-  "enjoyingExtension": { "message": "觉得好用？" },
-  "starGithubLink": { "message": "在 GitHub 点个 Star" },
+  "enjoyingExtension": { "message": "如果这个插件对你有帮助，" },
+  "starGithubLink": { "message": "欢迎在Github右上角，给这个项目留一个小星星✨" },
   "partialSuccessSummary": {
     "message": "成功 $1 张，失败 $2 张",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
@@ -178,6 +178,7 @@
     "message": "完成 $1/$2",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
+  "statusUnknown": { "message": "未知" },
   "galleryDetails": { "message": "画廊详情" },
   "total": { "message": "合计" },
   "countDone": {

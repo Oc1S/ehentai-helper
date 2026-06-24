@@ -173,7 +173,7 @@ export const GalleryDetailModal: FC<{
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="line-clamp-1 text-ink" title={row.filename || ''}>
-                            {trimFilename(row.filename) || '—'}
+                            {trimFilename(row.filename) || '-'}
                           </span>
                           {row.sourceUrl ? (
                             <a
@@ -202,7 +202,7 @@ export const GalleryDetailModal: FC<{
                               {t('retry')}
                             </Button>
                           ) : (
-                            '—'
+                            '-'
                           )}
                         </TableCell>
                       ) : null}

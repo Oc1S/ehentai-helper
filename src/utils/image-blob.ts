@@ -1,5 +1,8 @@
 import type { ImageFormat } from './constant';
 import { convertImageToFormatInWorker } from './image-format-worker';
+import { assertBlobNotHtml, assertResponseNotHtml } from './image-response-guard';
+
+export { probeImageUrl } from './image-response-guard';
 
 const MIME_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -28,7 +31,9 @@ export const resolveImageBlob = async (
   if (!format || format === 'original') {
     const res = await fetch(sourceUrl, { credentials: 'omit' });
     if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
+    assertResponseNotHtml(res);
     const blob = await res.blob();
+    await assertBlobNotHtml(blob);
     return { blob, ext: MIME_EXT[blob.type] ?? extFromUrl(sourceUrl) };
   }
 

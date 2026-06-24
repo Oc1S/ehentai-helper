@@ -2,6 +2,20 @@
  * 黑金主题 — 全项目颜色 token 唯一来源
  * Tailwind: rgb(var(--eh-*) / <alpha-value>)
  * 普通 CSS: var(--eh-*-hex) 或 var(--eh-hairline)
+ *
+ * ── NextUI 同步清单（改 token 时须同步 tailwind.config.js → nextui.themes.dark）──
+ * background      → --eh-canvas-hex
+ * foreground      → --eh-body-hex
+ * focus           → --eh-brand-accent-hex
+ * divider         → --eh-hairline
+ * content1        → --eh-surface-card-hex
+ * content3        → --eh-surface-strong-hex
+ * primary.*       → --eh-primary-* / --eh-primary-fg-hex
+ * success.DEFAULT → --eh-success-hex
+ *
+ * ── 玻璃色温策略 ──
+ * 通用 glass-panel：暖金环境光（--eh-glass-ambient-gold）
+ * 信息池 glass-card-pool / StatusCard info：冷青环境光（--eh-glass-ambient-cyan*），与品牌金形成对比
  */
 :root {
   color-scheme: dark;
@@ -84,6 +98,8 @@
   --eh-glass-border-hover: rgba(100, 120, 124, 0.12);
   --eh-glass-ambient: rgb(48 52 54 / 0.04);
   --eh-glass-ambient-hover: rgb(56 62 64 / 0.058);
+  --eh-glass-ambient-gold: rgb(184 145 42 / 0.06);
+  --eh-glass-ambient-gold-hover: rgb(204 168 66 / 0.085);
   --eh-glass-ambient-cyan: rgb(40 78 90 / 0.055);
   --eh-glass-ambient-cyan-strong: rgb(48 92 104 / 0.085);
   --eh-glass-bg-pool: linear-gradient(
@@ -142,8 +158,9 @@
     transparent 100%
   );
 
-  /* 语义色 */
-  --eh-success-hex: #22c55e;
+  /* 语义色 — success 保留绿色系，降低饱和度以适配黑金暗色界面 */
+  --eh-success-hex: #72a882;
+  --eh-success: 114 168 130;
   --eh-warning-hex: #f59e0b;
   --eh-error-hex: #ef4444;
   --eh-section-label-hex: #9a7a1e;
@@ -152,6 +169,9 @@
   --eh-scrollbar-thumb: rgba(204, 168, 66, 0.2);
   --eh-scrollbar-thumb-hover: rgba(204, 168, 66, 0.34);
   --eh-scrollbar-track: transparent;
+
+  /* Popup 布局 */
+  --popup-footer-h: 52px;
 
   /* Options 页布局 */
   --options-content-w: 800px;

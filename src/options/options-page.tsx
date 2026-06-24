@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Button } from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
+import { EhButton } from '@/components/eh-button';
+import { EhSectionLabel } from '@/components/eh-section-label';
 import { Settings, validateFilePath } from '@/components/settings';
 import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
@@ -41,12 +42,10 @@ export const OptionsPage = () => {
                 {t('optionsSubtitle')}
               </p>
             </div>
-            <Button color="primary" onPress={handleSave}>
-              {t('saveChanges')}
-            </Button>
+            <EhButton appearance="primary" onPress={handleSave}>{t('saveChanges')}</EhButton>
           </header>
           <main className="options-main scrollbar-glass">
-            <p className="settings-section-title">{t('general')}</p>
+            <EhSectionLabel>{t('general')}</EhSectionLabel>
             <Settings
               config={config}
               setConfig={setConfig}

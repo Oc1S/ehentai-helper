@@ -16,6 +16,7 @@ import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
 import { t } from '@/utils/i18n';
 
+import { EhButton } from './eh-button';
 import { Settings } from './settings';
 
 const formatDownloadDir = (path: string) => {
@@ -100,20 +101,12 @@ export const DownloadSettings = ({
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
               <ModalFooter className="flex flex-row justify-end gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-5 py-2.5 backdrop-blur-md">
-                <Button
-                  variant="light"
-                  onPress={close}
-                  className="h-8 min-w-[68px] flex-none rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(12_12_13/0.4)] px-3.5 text-[12px] font-normal text-muted backdrop-blur-sm hover:bg-[rgb(16_16_18/0.5)] hover:text-body"
-                >
+                <EhButton appearance="modal-cancel" onPress={close}>
                   {t('cancel')}
-                </Button>
-                <Button
-                  variant="light"
-                  onPress={handleSave}
-                  className="bg-brand-accent/12 hover:bg-brand-accent/18 h-8 min-w-[68px] flex-none rounded-lg border border-brand-accent/30 px-3.5 text-[12px] font-normal text-brand-accent backdrop-blur-sm"
-                >
+                </EhButton>
+                <EhButton appearance="modal-save" onPress={handleSave}>
                   {t('saveSettings')}
-                </Button>
+                </EhButton>
               </ModalFooter>
             </>
           )}

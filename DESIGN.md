@@ -1,269 +1,381 @@
-## Overview
-
-Cal.com's marketing surface is a clean, friendly modern-SaaS interface — white canvas (`{colors.canvas}` — #ffffff) with black primary CTAs (`{colors.primary}` — #111111), custom **Cal Sans** display typography, and `{colors.surface-card}` (#f5f5f5) light-gray cards holding product UI fragments. The system reads as confidently engineered without trying to impress — every band has clear hierarchy, generous whitespace, and a single primary action.
-
-Type voice splits cleanly into two roles: **Cal Sans** (the brand's custom geometric display face — used for h1, h2, h3, and hero headlines) and **Inter** (used for everything else — body, buttons, nav, captions). Cal Sans uses weight 600 with negative letter-spacing (-0.5px to -2px depending on size) — it feels modern, slightly condensed, distinctly Cal.com.
-
-Component voltage comes from **product UI fragments shown directly inside cards** — calendar widgets, scheduling forms, automation diagrams, integration tiles. Cal.com doesn't paint marketing illustrations of the product; it shows the actual product chrome at small scale embedded in the marketing flow.
-
-The footer flips to `{colors.surface-dark}` (#101010) — a deep near-black that visually closes every long-scroll page. The footer is the only dark surface in the system; everything above stays white-with-light-gray-cards.
-
-**Key Characteristics:**
-- White canvas with black primary CTA (`{colors.primary}` — #111111). Buttons are `{rounded.md}` (8px) with confident weight-600 labels. Standard friendly-SaaS button.
-- Custom `Cal Sans` display typeface for headlines (substituted with Inter weight 600 here). Negative letter-spacing on display sizes — geometric, precise, slightly condensed.
-- Light-gray card surfaces (`{colors.surface-card}` — #f5f5f5) for feature cards, testimonials, and pricing tiers (non-featured). The featured pricing tier flips to `{colors.surface-dark}` (the only dark card on light pages).
-- Product UI fragments embedded directly in cards — Cal.com shows real schedule pickers, calendar widgets, integration grids inside its marketing cards. Brand voltage from real product chrome at small scale.
-- Nav-pill-group (`{component.nav-pill-group}`) — a small pill-radius wrapper around grouped nav segments (e.g., the sub-nav switcher between product views). The pill wrapper is one of the system's signature interactive components.
-- Avatars are circular (`{rounded.full}`), 36px diameter, used in testimonial rows and team-listing surfaces.
-- Footer is dark navy (`{colors.surface-dark}` — #101010) with light text (`{colors.on-dark-soft}` — #a1a1aa). The dark footer closes every page even though the body above is white.
-- Spacing rhythm is `{spacing.section}` (96px) between major bands — tight enough to feel modern-SaaS but generous enough to breathe.
-- Border radius is hierarchical: `{rounded.md}` (8px) for buttons + inputs, `{rounded.lg}` (12px) for content cards, `{rounded.xl}` (16px) for the hero app-mockup container, `{rounded.pill}` for nav-pill-group + badges, `{rounded.full}` for avatars + icon buttons.
-
-## Colors
-
-### Brand & Accent
-- **Primary** (`{colors.primary}` — #111111): The dominant action color. All primary CTAs, h1/h2 display type. Press state shifts to `{colors.primary-active}` (#242424).
-- **Brand Accent** (`{colors.brand-accent}` — #3b82f6): Used sparely on inline links and on a small badge / "Customer story" highlight. Cal.com is a near-monochrome brand — the blue appears rarely.
-- **Badge Pastels** — A small pastel set for category badges and avatar fills: `{colors.badge-orange}` (#fb923c), `{colors.badge-pink}` (#ec4899), `{colors.badge-violet}` (#8b5cf6), `{colors.badge-emerald}` (#34d399). These appear on tag pills and small accent moments inside product UI fragments — never on hero CTAs.
-
-### Surface
-- **Canvas** (`{colors.canvas}` — #ffffff): The default page floor.
-- **Surface Soft** (`{colors.surface-soft}` — #f8f9fa): Nav-pill-group background, very-soft section dividers.
-- **Surface Card** (`{colors.surface-card}` — #f5f5f5): Feature cards, testimonial cards, badge pills, default avatar fills.
-- **Surface Strong** (`{colors.surface-strong}` — #e5e7eb): Hairline border alternative; disabled button background.
-- **Surface Dark** (`{colors.surface-dark}` — #101010): The footer background — the only dark surface on every page. Also used for the featured pricing tier card.
-- **Surface Dark Elevated** (`{colors.surface-dark-elevated}` — #1a1a1a): Used for nested cards inside the dark footer or featured pricing card.
-- **Hairline** (`{colors.hairline}` — #e5e7eb): The 1px border tone on light surfaces. Used on input borders, table dividers, content card outlines (sometimes).
-- **Hairline Soft** (`{colors.hairline-soft}` — #f3f4f6): A barely-visible divider used between sections that share the white canvas.
-
-### Text
-- **Ink** (`{colors.ink}` — #111111): All headlines and primary text.
-- **Body** (`{colors.body}` — #374151): Default running-text color.
-- **Muted** (`{colors.muted}` — #6b7280): Secondary text — sub-headings, breadcrumbs, footer body.
-- **Muted Soft** (`{colors.muted-soft}` — #898989): Tertiary text — captions, fine-print, copyright lines.
-- **On Primary / On Dark** (`{colors.on-primary}` / `{colors.on-dark}` — #ffffff): Text on primary buttons and dark footer.
-- **On Dark Soft** (`{colors.on-dark-soft}` — #a1a1aa): Footer body text — slightly muted white for the link rows.
-
-### Semantic
-- **Success** (`{colors.success}` — #10b981): Confirmation states, success badges in product UI.
-- **Warning** (`{colors.warning}` — #f59e0b): Warning callouts.
-- **Error** (`{colors.error}` — #ef4444): Validation errors.
-
-## Typography
+# E-Hentai Helper 设计系统
 
-### Font Family
-The system runs **Cal Sans** for display + brand wordmark and **Inter** for everything else. Cal Sans is Cal.com's custom geometric display typeface — slightly condensed, weight 600, negative letter-spacing. Inter handles body, buttons, navigation, captions, and tabular code blocks. The fallback stack walks `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` for both families.
+> **Design Read：** Chrome 扩展工具 UI，面向高频下载用户，黑金暗色精密工具语言，基于 Tailwind v3 + CSS 变量 token + NextUI 组件基座。
 
-The split is functional:
-- Cal Sans (display, 600 weight, -0.5 to -2px tracking) — h1, h2, h3
-- Inter (body + UI, 400-600 weight, 0 letter-spacing) — paragraphs, labels, buttons, nav
+## 0. 设计定位
 
-### Hierarchy
+### 0.1 产品形态
 
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xl}` | 64px | 600 | 1.05 | -2px | Homepage h1 ("The better way to schedule your meetings") — Cal Sans |
-| `{typography.display-lg}` | 48px | 600 | 1.1 | -1.5px | Section heads ("Your all-purpose scheduling app") — Cal Sans |
-| `{typography.display-md}` | 36px | 600 | 1.15 | -1px | Sub-section heads, card titles — Cal Sans |
-| `{typography.display-sm}` | 28px | 600 | 1.2 | -0.5px | CTA-band heads, pricing tier prices — Cal Sans |
-| `{typography.title-lg}` | 22px | 600 | 1.3 | -0.3px | Pricing plan names — Inter |
-| `{typography.title-md}` | 18px | 600 | 1.4 | 0 | Feature card titles, intro paragraphs |
-| `{typography.title-sm}` | 16px | 600 | 1.4 | 0 | Small card titles, list labels |
-| `{typography.body-md}` | 16px | 400 | 1.5 | 0 | Default running-text |
-| `{typography.body-sm}` | 14px | 400 | 1.5 | 0 | Footer body, fine-print |
-| `{typography.caption}` | 13px | 500 | 1.4 | 0 | Badge labels, captions |
-| `{typography.code}` | 14px | 400 | 1.5 | 0 | Code snippets, API examples — JetBrains Mono |
-| `{typography.button}` | 14px | 600 | 1.0 | 0 | Standard button labels |
-| `{typography.nav-link}` | 14px | 500 | 1.4 | 0 | Top-nav menu items |
+本项目是 **浏览器扩展工具界面**（Popup 800×600、Options 全页、内容脚本浮层），不是营销落地页。设计目标：
 
-### Principles
-Cal Sans is the brand voice — every display headline uses it. Inter handles the supporting type. The boundary is strict: never put body copy in Cal Sans, never put a display headline in Inter. Cal Sans without negative letter-spacing reads as off-brand — the -0.5 to -2px tracking is part of the voice.
+- **高密度信息展示**：下载进度、历史记录、设置表单在同一视口内可操作
+- **暗色常驻**：扩展 Popup 无系统主题切换，固定暗色 `color-scheme: dark`
+- **品牌识别**：暖碳黑底 + 金属金强调，区别于通用 SaaS 蓝紫渐变
 
-Display weight stays at 600 across all sizes — never 700, never 500. The middle weight is what makes Cal Sans feel modern and confident without becoming bombastic.
+### 0.2 三档拨盘（Dial）
 
-### Note on Font Substitutes
-If Cal Sans is unavailable, **Inter** at weight 600 with -0.04em letter-spacing is a usable approximation. The geometric character of Cal Sans differs from Inter's humanist forms, but the substitution preserves the weight + tracking signature. **Manrope** at weight 700 is another close alternative.
+| 拨盘 | 值 | 含义 |
+|------|-----|------|
+| `DESIGN_VARIANCE` | **3** | 对称网格、左对齐标签、可预测布局 |
+| `MOTION_INTENSITY` | **3** | 仅 hover / active / 进度条过渡；无滚动动画 |
+| `VISUAL_DENSITY` | **8** | 紧凑间距、表格行高 32px、信息优先于留白 |
 
-## Layout
+### 0.3 美学关键词
 
-### Spacing System
-- **Base unit:** 4px.
-- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.md}` 16px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 96px.
-- **Section padding:** `{spacing.section}` (96px) — the universal vertical rhythm between editorial bands.
-- **Card internal padding:** `{spacing.xl}` (32px) for feature cards and pricing tier cards; `{spacing.lg}` (24px) for testimonial and product-mockup cards.
-- **Gutters:** `{spacing.lg}` (24px) between cards in 3-up grids; `{spacing.md}` (16px) inside footer columns.
+`Obsidian Gold` · 暖碳微光 · 克制玻璃质感 · 工具精密感 · 单强调色
 
-### Grid & Container
-- **Max content width:** ~1200px centered on marketing pages.
-- **Editorial body:** Single 12-column grid; hero band often uses 7/5 split (h1 left, app mockup card right).
-- **Feature card grids:** 3-up at desktop, 2-up at tablet, 1-up at mobile.
-- **Pricing grid:** 4-up at desktop, 2-up at tablet, 1-up at mobile.
-- **Footer:** 4-column link list at desktop, wrapping to 2-up at tablet, 1-up at mobile.
+**明确不做：** 蓝紫渐变、居中 Hero、三栏等宽功能卡、营销式 eyebrow 堆砌、装饰性滚动提示、假数据仪表盘。
 
-### Whitespace Philosophy
-Cal.com uses generous but not excessive whitespace — section padding sits at 96px (modern-SaaS standard), and card internal padding stays at 32px. The rhythm is calibrated for fast scanning: every band has a single h1 + h2 + supporting cards, never densely packed lists. The result reads as confident-not-shouting.
+---
 
-## Elevation & Depth
+## 1. Token 来源与使用规则
 
-| Level | Treatment | Use |
-|---|---|---|
-| Flat | No shadow, no border | Body sections, top nav, hero bands |
-| Soft hairline | 1px `{colors.hairline}` border | Inputs, table dividers, occasionally on cards |
-| Card surface | `{colors.surface-card}` background — no shadow | Feature cards, testimonials |
-| Subtle drop shadow | Faint shadow at low alpha | Pricing tier cards, hover-elevated states (the system uses `0 1px 2px rgba(0,0,0,0.05)` and `0 4px 12px rgba(0,0,0,0.08)`) |
-| Featured tier | `{colors.surface-dark}` background, no shadow needed | The featured pricing tier inverts to dark surface — color contrast does the elevation work |
+### 1.1 唯一真相源
 
-The elevation philosophy is **soft and modern** — small drop shadows on elevated cards, color-block contrast for emphasis. No heavy shadows, no neumorphism, no glassmorphism.
+```
+src/styles/tokens.css   ← 所有颜色、阴影、玻璃、布局尺寸的定义
+src/styles/index.css    ← 组件 class（glass-*、settings-*、eh-*-btn）
+tailwind.config.js      ← 将 token 映射为 Tailwind 语义色；NextUI 构建期色值须与 token 同步
+```
 
-### Decorative Depth
-- Calendar widgets and product UI fragments embedded inside marketing cards carry their own internal shadows from the product UI itself — these are not system tokens, they're product chrome shown as content.
-- Avatar circles in testimonial sections sometimes carry pastel fill colors (`{colors.badge-orange}`, `{colors.badge-pink}`, etc.) — adds a small chromatic flourish without breaking the monochrome brand voice.
+**硬性约束：**
 
-## Shapes
+1. 组件与页面 **禁止内联 hex**（`#cca842` 等），一律使用 `var(--eh-*)` 或 Tailwind 语义类（`text-brand-accent`、`bg-surface-card`）
+2. 新增颜色 **只加在 `tokens.css`**，再在 `tailwind.config.js` 的 `theme.extend.colors` 中暴露
+3. NextUI 主题色在构建期写入，**必须与 `tokens.css` 主色一致**；改 token 时同步改 `tailwind.config.js` 的 `nextui({ themes: { dark: ... } })`
+4. 禁止引入第二套并行色板（如 `primaryBlue`、Cal.com 遗留命名）
 
-### Border Radius Scale
+### 1.2 语义色板
 
-| Token | Value | Use |
-|---|---|---|
-| `{rounded.xs}` | 4px | Almost no use — reserved for badge accents |
-| `{rounded.sm}` | 6px | Small inline buttons, dropdown items |
-| `{rounded.md}` | 8px | Standard CTA buttons, text inputs, category tabs |
-| `{rounded.lg}` | 12px | Content cards (feature cards, testimonial cards, pricing tier cards) |
-| `{rounded.xl}` | 16px | Hero app-mockup card (a slightly larger radius for the marquee component) |
-| `{rounded.pill}` | 9999px | Nav-pill-group, badge pills |
-| `{rounded.full}` | 9999px / 50% | Avatars, icon buttons |
+#### 画布与文字
 
-### Photography Geometry
-Avatar photos use `{rounded.full}` (perfect circles) at 36px or 40px. Product UI fragments inside marketing cards retain their native chrome (which often has its own internal radii — e.g., calendar grid cells, button rows). Hero illustration zones use 16:9 or 4:3 ratios with `{rounded.xl}` corners.
+| Token | CSS 变量 | Hex | Tailwind | 用途 |
+|-------|----------|-----|----------|------|
+| Canvas | `--eh-canvas` | `#09090b` | `bg-canvas` | 页面底色 |
+| Ink | `--eh-ink` | `#fafafa` | `text-ink` | 标题、主文字 |
+| Body | `--eh-body` | `#e4e4e7` | `text-body` | 正文、表单值 |
+| Muted | `--eh-muted` | `#a1a1aa` | `text-muted` | 次要说明 |
+| Muted Soft | `--eh-muted-soft` | `#71717a` | `text-muted-soft` | 占位符、表头、辅助标注 |
 
-## Components
+#### 表面层级
 
-### Top Navigation
+| Token | Hex | Tailwind | 用途 |
+|-------|-----|----------|------|
+| Surface Soft | `#141414` | `bg-surface-soft` | 输入框底、次要区块 |
+| Surface Card | `#1c1c1f` | `bg-surface-card` | 卡片、Toast、Modal |
+| Surface Strong | `#2a2822` | `bg-surface-strong` | 强调区块、禁用底 |
+| Surface Dark | `#050505` | `bg-surface-dark` | Options 顶栏、最深底 |
 
-**`top-nav`** — White nav bar pinned to the top of every page. 64px tall, `{colors.canvas}` background. Carries the Cal.com wordmark + logo at left (the lowercase "Cal.com" with the brand circle), primary horizontal menu (Product, Solutions, Resources, Pricing, Enterprise) center, right-side cluster with "Sign in" text-link, "Sign up free" `{component.button-primary}`, and a sometimes-visible language selector. Menu items in `{typography.nav-link}` (Inter 14px / 500).
+#### 品牌与操作
 
-**`nav-pill-group`** — A small pill-radius wrapper around 2-3 sub-nav segments (e.g., the product-mode switcher between "Personal" / "Teams" / "Enterprise"). Background `{colors.surface-soft}` with internal padding 6px, rounded `{rounded.pill}`. Active segment renders as a white-canvas pill with a subtle drop shadow inside the wrapper. The pill-in-pill treatment is one of Cal.com's signature interactive components.
+| Token | Hex | Tailwind | 用途 |
+|-------|-----|----------|------|
+| Brand Accent | `#cca842` | `text-brand-accent` / `bg-brand-accent` | 强调数字、链接、图标高亮 |
+| Primary | `#b8912a` | `bg-primary` | NextUI 主按钮、Progress |
+| Primary Hover | `#9a7a1e` | — | 按钮按压 |
+| Primary FG | `#09090b` | `text-primary-foreground` | 实心金按钮上的文字 |
+| On Primary | `#fafafa` | `text-on-primary` | 深色按钮上的文字 |
 
-### Buttons
+主色阶 `--eh-primary-50` … `--eh-primary-900` 供 NextUI `color="primary"` 梯度使用。
 
-**`button-primary`** — The signature primary CTA. Background `{colors.primary}` (#111111), text `{colors.on-primary}`, type `{typography.button}` (Inter 14px / 600), padding 12px × 20px, height 40px, rounded `{rounded.md}` (8px). Active state `button-primary-active` shifts to `{colors.primary-active}` (#242424).
+#### 描边与阴影
 
-**`button-secondary`** — White button with hairline outline. Background `{colors.canvas}`, text `{colors.ink}`, 1px hairline border, same padding + height + radius as primary.
+| Token | 值 | 用途 |
+|-------|-----|------|
+| `--eh-hairline` | `rgba(204,168,66,0.14)` | 分区线、表格边框 |
+| `--eh-hairline-soft` | `rgba(204,168,66,0.07)` | 弱分隔 |
+| `--eh-shadow-card` | `0 1px 3px rgba(0,0,0,0.4)` | 卡片 |
+| `--eh-shadow-card-elevated` | `0 8px 28px rgba(0,0,0,0.55)` | 浮层 |
+| `--eh-glow` | 金边 + 深阴影 | 聚焦强调（慎用） |
 
-**`button-icon-circular`** — 36 × 36px circular icon button. Background `{colors.canvas}`, hairline border, ink-color icon. Used for share, "view more", carousel arrows.
+#### 语义状态
 
-**`button-text-link`** — Inline text button, no background. Used for "Sign in" in the top nav and inline CTA links inside cards.
+| 状态 | Hex | Tailwind |
+|------|-----|----------|
+| Success | `#72a882` | `text-success` |
+| Warning | `#f59e0b` | `text-warning` |
+| Error | `#ef4444` | `text-error` |
+| Section Label | `#9a7a1e` | 设置区小标题（Options） |
 
-**`text-link`** — Inline body links in `{colors.ink}` (the brand keeps inline links monochrome). Underlined on hover (not documented per the no-hover policy, but mentioned for context).
+#### 玻璃质感（Popup 专用）
 
-### Cards & Containers
+| Token | 用途 |
+|-------|------|
+| `--eh-glass-bg` / `--eh-glass-bg-hover` | 面板半透明底 |
+| `--eh-glass-border` / `--eh-glass-border-hover` | 玻璃描边（冷灰青调，非金色） |
+| `--eh-glass-elevation` / `--eh-glass-elevation-hover` | 内高光 + 外阴影组合 |
+| `--eh-glass-bg-pool` / `--eh-glass-border-pool` | StatusCard 等信息池变体 |
+| `--eh-popup-bg` + `--eh-popup-ambient-*` | Popup 全局背景渐变 |
 
-**`hero-band`** — White-canvas hero with a 7-5 grid: h1 + sub-headline + button row on the left, `{component.hero-app-mockup-card}` on the right. Vertical padding `{spacing.section}` (96px).
+> **玻璃 vs 平面：** Popup 固定视口、展示为主 → 可用 `glass-panel` / `glass-card`。Options 长滚动、表单密集 → 用 `surface-card` + `hairline` 平面风格，避免大面积 `backdrop-blur` 影响性能与对比度。
 
-**`hero-app-mockup-card`** — A larger product-UI mockup card showing the actual Cal.com booking widget with calendar grid, time slots, and a primary "Confirm" button inside. Background `{colors.canvas}`, 1px hairline border, rounded `{rounded.xl}` (16px), subtle drop shadow. Used as the hero's right-side artifact.
+### 1.3 圆角尺度（Shape Lock）
 
-**`feature-card`** — Used in 3-up feature grids ("With us, appointment scheduling is easy"). Background `{colors.surface-card}` (#f5f5f5), rounded `{rounded.lg}` (12px), internal padding `{spacing.xl}` (32px). Carries a small icon at top, an `{typography.title-md}` headline, and a body description in `{typography.body-md}`.
+统一使用 **`eh-*` 前缀**（迁移中 `cal-*` 视为废弃别名）。
 
-**`feature-icon-card`** — A simpler card variant used in 4-up feature grids on lower-density bands. Background `{colors.canvas}` with hairline border, rounded `{rounded.lg}`, padding `{spacing.lg}` (24px). Carries a small icon, `{typography.title-sm}` title, short description.
+| Token | 值 | 用途 |
+|-------|-----|------|
+| `eh-xs` | 4px | 极小徽标 |
+| `eh-sm` | 6px | 下拉项 |
+| `eh-md` | 8px | 按钮、输入框、表格容器 |
+| `eh-lg` | 12px | 设置面板、表格外框 |
+| `eh-xl` | 16px | 大卡片 |
+| `eh-2xl` | 20px | 结果摘要卡（DownloadResultSummary） |
+| `eh-3xl` | 24px | StatusCard 独立态 |
+| `full` | 9999px | 徽章、进度条、头像 |
 
-**`product-mockup-card`** — A card showing actual Cal.com product UI fragments (workflow editor, calendar grid, integration grid, automation flow). Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.lg}` (24px). The product UI inside has its own internal chrome — these cards display the product, they don't decorate around it.
+**规则：** 同层组件圆角一致；禁止在同一页面混用 `rounded-2xl` 与任意 `rounded-[20px]` 表达同一层级。
 
-**`testimonial-card`** — Used in customer-quote grids. Background `{colors.surface-card}`, rounded `{rounded.lg}`, padding `{spacing.lg}` (24px). Top row carries a `{component.avatar-circle}` + name + role; below sits the testimonial quote in `{typography.body-md}`.
+### 1.4 间距
 
-**`pricing-tier-card`** — Standard tier card. Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xl}` (32px). Carries the plan name in `{typography.title-lg}`, price in `{typography.display-sm}`, feature checklist in `{typography.body-md}`, and a `{component.button-primary}` at the bottom.
+| Token | 值 | 用途 |
+|-------|-----|------|
+| Base unit | 4px | 所有间距为 4 的倍数 |
+| Popup gutter | 16–20px | 内容区内边距 |
+| Settings row gap | 8px（modal）/ 20px（page） | 标签与控件 |
+| Options gutter | `24px` (`--options-gutter`) | Options 页水平内边距 |
+| Options header | `56px` (`--options-header-h`) | 顶栏高度 |
+| Options max-width | `800px` (`--options-content-w`) | 内容区上限 |
 
-**`pricing-tier-card-featured`** — The featured tier (typically "Teams"). Background flips to `{colors.surface-dark}` (#101010), text inverts to `{colors.on-dark}`. The dark surface IS the featured-tier signal — no accent border, no badge, no scale shift.
+### 1.5 字体
 
-### Inputs & Forms
+| 角色 | 字体 | 用途 |
+|------|------|------|
+| UI Sans | Inter 400–600 | 全局界面 |
+| Mono | Roboto Mono | 页码范围、路径、数字对齐 `tabular-nums` |
 
-**`text-input`** — Standard text input. Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-md}`, rounded `{rounded.md}` (8px), padding 10px × 14px, height 40px. 1px hairline border in `{colors.hairline}`.
+**层级：**
 
-**`text-input-focused`** — Focus state. Border thickens or shifts to `{colors.ink}` for emphasis.
+| 样式 | 规格 | 场景 |
+|------|------|------|
+| Display | 24–28px / 600 / tracking-tight | 进度百分比 |
+| Title | 15–18px / 600 | 卡片标题、Options h1 |
+| Body | 12–14px / 400 | 正文、表单 |
+| Caption | 11px / 500 | 状态标签 |
+| Section Label | 11px / 600 / uppercase / tracking-[0.06em] | Options 分区标题（每页 ≤3 处） |
+| Micro Label | 11px / 500 / uppercase / tracking-wide | 进度区字段名（成对出现，非装饰 eyebrow） |
 
-### Tags / Badges
+数字与进度一律 `font-variant-numeric: tabular-nums`。
 
-**`badge-pill`** — Small pill label used for category tags ("Product", "Article", "New") and pastel-fill avatar substitutes. Background `{colors.surface-card}` or one of the badge pastels (`{colors.badge-orange}`, `{colors.badge-pink}`, etc.), text `{colors.ink}`, type `{typography.caption}` (13px / 500), rounded `{rounded.pill}`, padding 4px × 12px.
+### 1.6 Z-Index 尺度
 
-**`avatar-circle`** — 36px diameter, rounded `{rounded.full}`. Either holds a photo or a pastel fill with initials in `{typography.caption}`.
+| 层 | 值 | 用途 |
+|----|-----|------|
+| Base | 0 | 内容 |
+| Sticky | 10 | Options header、表头 |
+| Overlay | 40 | Modal、Dropdown |
+| Toast | 50 | Sonner |
 
-**`rating-stars`** — Inline star rating in `{colors.badge-orange}` (#fb923c). Used near testimonial avatars to display a 5-star satisfaction score.
+禁止随意 `z-50` 堆叠；新层须在此表登记。
 
-### Tab / Filter
+---
 
-**`category-tab`** + **`category-tab-active`** — Used inside the nav-pill-group. Inactive: transparent background, `{colors.muted}` text. Active: `{colors.canvas}` background, `{colors.ink}` text, subtle drop shadow inside the pill-group wrapper. Padding 8px × 14px, rounded `{rounded.md}`.
+## 2. 组件契约
 
-### CTA / Footer
+### 2.1 表面模式
 
-**`cta-band-light`** — A pre-footer "Smarter, simpler scheduling" CTA card. Background `{colors.surface-card}`, rounded `{rounded.lg}`, padding `{spacing.xxl}` (48px). Carries an h2 in `{typography.display-sm}`, a sub-line, and a `{component.button-primary}` centered.
+| Class | 场景 | 特征 |
+|-------|------|------|
+| `popup-bg` | Popup 根容器 | 暖金径向光 + 深碳渐变 |
+| `glass-panel` | 可交互面板（含 hover 抬升） | blur + 冷色描边 + 环境光斑 |
+| `glass-card` / `glass-card-static` | 信息卡（StatusCard） | 无 hover 或静态高亮 |
+| `glass-card-pool` | 状态池变体 | 青调玻璃，配语义 ambient |
+| `settings-panel--page` | Options 设置区 | `surface-card` + `hairline`，无 blur |
+| `EhTableFrame` | 历史/下载表格 | 半透明底 + 细滚动条 |
 
-**`footer`** — Dark navy footer that closes every page. Background `{colors.surface-dark}` (#101010), text `{colors.on-dark-soft}`. 4-column link list at desktop covering Product / Solutions / Company / Resources. Vertical padding 64px. The Cal.com wordmark sits at the top-left in `{colors.on-dark}`. The footer is the only dark surface on every page — the deliberate inversion visually closes the page.
+### 2.2 按钮
 
-## Do's and Don'ts
+| 类型 | Class / 组件 | 说明 |
+|------|--------------|------|
+| 主操作 | NextUI `Button color="primary"` | 实心金，foreground 深色 |
+| 强调次操作 | `EhButton appearance="accent"` / `eh-accent-action-btn` | 金边 + 半透明金底 |
+| 次要 / 取消 | `EhButton appearance="secondary"` / `eh-footer-secondary-btn` | 玻璃描边灰底 |
+| Modal 取消 / 保存 | `appearance="modal-cancel"` / `modal-save` | 设置弹窗底栏 |
+| 文字链接 | `eh-github-star-link` | 轻量 hover 金边 |
 
-### Do
-- Reserve `{colors.primary}` (#111111) for primary CTAs and h1/h2 type. Cal.com's button is near-black, not blue.
-- Use Cal Sans for every display headline. Pair with Inter body. Never blur the boundary.
-- Apply negative letter-spacing on display sizes (-0.5 to -2px). Cal Sans without it reads as off-brand.
-- Use `{component.feature-card}` (light gray) and `{component.product-mockup-card}` (white with chrome) deliberately — the gray cards signal "abstract feature claim", white cards signal "look at the actual product".
-- Embed real product UI fragments inside marketing cards. Don't paint marketing illustrations of the product when you can show the product itself.
-- Keep avatar circles at 36px, perfect circles, sometimes with pastel fills. Avatars are the only place where badge pastels appear.
-- Use `{component.nav-pill-group}` for grouped sub-nav segments. The pill-in-pill treatment is signature.
-- End every page with the dark footer. The light-to-dark transition is part of the editorial rhythm.
+**交互：** `:active` 使用 `scale(0.98)`；过渡 150–200ms；`prefers-reduced-motion: reduce` 时去掉 transform。
 
-### Don't
-- Don't use accent colors (`{colors.brand-accent}`, badge pastels) on primary CTAs. The system is monochrome at the action layer.
-- Don't bold display weight beyond 600. Cal Sans at 700 reads as bombastic.
-- Don't use rounded radius beyond `{rounded.xl}` (16px) on cards. Larger radii read as consumer-app, not professional booking software.
-- Don't put dark surface cards anywhere except the footer and the featured pricing tier. The dark surface is a deliberate, scarce signal.
-- Don't repeat the same surface mode in two consecutive bands. Cal.com's pacing alternates white → light-gray → white → product-mockup-card → white → dark-footer.
-- Don't add hover state styling beyond what the system already encodes — primary darkens on press; nothing else changes.
+### 2.3 表单（Settings）
 
-## Responsive Behavior
+- 标签在输入框 **上方或左侧**（page 变体左 200px 固定宽）
+- 占位符颜色 `muted-soft`，聚焦边框 `brand-accent/35`
+- 错误用 Sonner toast，不用 inline 红字堆砌
+- Modal 与 Page 共用 `Settings` 组件，通过 `variant="modal" | "page"` 区分密度
 
-### Breakpoints
+### 2.4 表格（EhTable）
 
-| Name | Width | Key Changes |
-|---|---|---|
-| Mobile | < 768px | Hamburger nav; hero h1 64→32px; hero-app-mockup-card stacks below content; feature grids 1-up; pricing 1-up; footer 4 cols → 1 |
-| Tablet | 768–1024px | Top nav stays horizontal but tightens; nav-pill-group wraps; feature cards 2-up; pricing 2-up |
-| Desktop | 1024–1440px | Full top-nav with all menu items; 3-up feature cards; 4-up pricing tiers |
-| Wide | > 1440px | Same as desktop with more outer breathing room; max content width caps at 1200px |
+- 表头：`11px` uppercase `muted-soft`，sticky，`surface` 半透明底
+- 行 hover：`brand-accent/4%` 暖金底
+- 空状态：`py-10 text-muted-soft`
 
-### Touch Targets
-- `{component.button-primary}` at minimum 40 × 40px.
-- `{component.button-icon-circular}` at exactly 36 × 36 — slightly under WCAG's 44 × 44 but the centered icon and full-circle silhouette compensate.
-- `{component.text-input}` height is 40px.
-- `{component.category-tab}` rendered inside nav-pill-group has 8 × 14 padding; effective tap area meets 44px+ with the surrounding pill.
+### 2.5 状态卡（StatusCard）
 
-### Collapsing Strategy
-- Top nav collapses to hamburger at < 768px; menu opens as a full-screen sheet.
-- Hero band's 7-5 grid collapses to single-column on mobile — h1 + sub-head + buttons first, then the app-mockup card below.
-- Feature grids reduce columns rather than scaling cards down.
-- Pricing tier cards collapse 4 → 2 → 1; featured-tier dark surface stays visually distinct at every breakpoint.
-- Nav-pill-group wraps to multi-row on tablet if the segments don't fit horizontally.
-- Avatar + testimonial card layouts stay grid-aligned at every breakpoint.
+- `embedded`：横向紧凑，用于 Popup 内嵌提示
+- 默认：居中图标 + 标题，最大宽 400px
+- 变体色通过 ambient 光斑区分，图标容器统一 `iconGlass`
 
-### Image Behavior
-- Product UI fragments inside cards retain native aspect ratios; the cards themselves resize.
-- Avatar photos crop to circles at every breakpoint.
-- Hero app-mockup card scales proportionally on mobile — the calendar grid stays legible.
+### 2.6 Toast（Sonner）
 
-## Iteration Guide
+- `theme="dark"`，背景 `surface-card`，边框 `hairline`
+- 位置 Popup 内 `bottom-right`，offset 避开底栏
 
-1. Focus on ONE component at a time. Reference its YAML key directly (`{component.feature-card}`, `{component.pricing-tier-card-featured}`).
-2. Variants of an existing component (`-active`, `-disabled`, `-focused`) live as separate entries in `components:`.
-3. Use `{token.refs}` everywhere — never inline hex.
-4. Never document hover. Default and Active/Pressed states only.
-5. Display headlines stay Cal Sans 600 with negative letter-spacing. Body stays Inter 400. The trinity does not blur.
-6. The dark footer is the only dark surface on most pages. Don't add other dark cards casually.
-7. When in doubt about emphasis: bigger Cal Sans before bolder Cal Sans.
+### 2.7 图标
 
-## Known Gaps
+- 库：**lucide-react**（项目已依赖，保持单一图标族）
+- 全局 `strokeWidth={1.5}`（或 2.0，选定后全项目统一）
+- 禁止手写 SVG 路径（`src/popup/components/icons.tsx` 存量逐步迁入 lucide）
 
-- The dembrandt frequency analyzer captured `Buttons: 0 variants` — Cal.com renders most CTAs as styled `<a>` link elements rather than `<button>` tags, which dembrandt's button selector doesn't capture. Button styles are documented from screenshot ground-truth + standard Cal Sans / Inter baselines.
-- Cal Sans is licensed to Cal.com and not available as a public web font; substitutes are documented in the typography section.
-- The badge pastel set (orange / pink / violet / emerald) is documented from observed avatar fill colors; exact hex values may shift seasonally.
-- Animation and transition timings (calendar slot picker, schedule confirmation, integration grid hover-reveal) are not in scope.
-- Form validation states beyond `{component.text-input-focused}` are not extracted — error / success states would need a sign-up or booking flow to confirm.
-- The actual booking widget surface (cal.com/{username}) is the product, not a marketing surface; its spec is out of scope.
-- Avatar photos in testimonial sections sometimes carry pastel circular fills with initials instead of photographs; both treatments coexist on the same page.
+---
+
+## 3. 页面规范
+
+### 3.1 Popup（800×600）
+
+```
+┌─────────────────────────────────────┐
+│ Header: 画廊名 + Tab（信息/历史）    │  48px
+├─────────────────────────────────────┤
+│                                     │
+│  Main: StatusCard / 进度 / 设置      │  480px 可滚动
+│                                     │
+├─────────────────────────────────────┤
+│ Footer: 主 CTA + 次要操作            │  72px
+└─────────────────────────────────────┘
+```
+
+- 主内容区 `scrollbar-glass`
+- 下载中显示 `DownloadProgress`；结束后 `DownloadResultSummary`
+- 底栏主按钮唯一（开始下载 / 重试 / 打开文件夹），不重复同意图 CTA
+
+### 3.2 Options（全页）
+
+- 顶栏 sticky `surface-dark` + 底部分割线
+- 主内容 `settings-section-title` 分区，每区一组 `settings-row--page`
+- 保存按钮仅在 header，不在底部重复
+
+### 3.3 主题锁
+
+- 全项目 **暗色单主题**，不做 light mode 段落穿插
+- `html { @apply dark }` 固定；NextUI `defaultTheme: 'dark'`
+
+---
+
+## 4. 工程约束（开发必读）
+
+### 4.1 样式
+
+- [ ] 禁止蓝紫色渐变（含 `primaryBlue` 色板，待删除）
+- [ ] 禁止内联 hex；CI/审查时 grep `#[0-9a-fA-F]{6}` 于 `src/**/*.tsx`
+- [ ] 圆角只用 `eh-*` scale 或 Tailwind 等价物，清理 `cal-*` 与魔法数 `rounded-[20px]`
+- [ ] 玻璃效果不用于 Options 长列表区域
+- [ ] 阴影带背景色相，不用纯黑 `rgba(0,0,0,1)`
+
+### 4.2 动效
+
+- [ ] 只动画 `transform` 与 `opacity`
+- [ ] `MOTION_INTENSITY ≤ 3`：禁止无限循环环境光动画（`glass-ambient-pulse` 仅用于「下载中」且需 reduced-motion 降级）
+- [ ] 禁止 `window.addEventListener('scroll')` 驱动 React state
+
+### 4.3 React
+
+- [ ] 禁止使用 `useCallback`（除非有充分理由并注释说明）
+- [ ] 动画相关用 framer-motion（存量）或 CSS transition，不用 scroll 监听写 state
+
+### 4.4 文案
+
+- [ ] 禁止 em dash（`—`）作装饰；范围用 hyphen（`1-10`）
+- [ ] 中间点 `·` 每行最多 1 个
+- [ ] i18n：可见文案走 `t()`，不硬编码
+
+### 4.5 无障碍
+
+- [ ] 正文对比度 WCAG AA（`body` on `canvas` ≥ 4.5:1）
+- [ ] 金底按钮 `primary-foreground` 深色字，禁止白字 on 浅金
+- [ ] 图标按钮最小触控 36×36（Popup 密集区可接受，但主 CTA ≥ 40px）
+- [ ] Progress 带 `aria-label`
+
+---
+
+## 5. 彻底优化方案（分阶段）
+
+### Phase 1 — 地基清理 ✅
+
+| 任务 | 状态 |
+|------|------|
+| 删除 `primaryBlue` | 已完成 |
+| `cal-*` → `eh-*` | 已完成 |
+| 统一魔法圆角 | 已完成 |
+
+### Phase 2 — Token 与双轨统一 ✅
+
+| 任务 | 状态 |
+|------|------|
+| NextUI 同步注释块 | 已写入 `tokens.css` 头部 |
+| 玻璃色温决策 | 通用 panel 暖金；信息池保留冷青 |
+| 字体自托管 | `@fontsource/inter` + `@fontsource/roboto-mono` |
+
+### Phase 3 — 组件提炼 ✅
+
+| 任务 | 状态 |
+|------|------|
+| `EhButton` | `src/components/eh-button.tsx`（`appearance` 属性） |
+| `EhSectionLabel` | `src/components/eh-section-label.tsx` |
+| `EhProgress` | `EhProgressBar` / `EhDownloadProgressPanel` / `EhDownloadResultProgress` |
+| 图标迁移 | Popup 改用 lucide，删除 `popup/components/icons.tsx` |
+
+### Phase 4 — 密度与一致性打磨 ✅
+
+| 任务 | 状态 |
+|------|------|
+| `--popup-footer-h` token | 已加入 `tokens.css` |
+| Options / Popup 输入框 | 统一 `eh-text-input--page` / `--modal` |
+| 表格行高 | `td` 统一 `py-2` |
+| StatusCard 标题 | standalone `text-xl` → `text-lg` |
+
+### Phase 5 — 动效与 a11y 验收 ✅
+
+| 任务 | 状态 |
+|------|------|
+| `prefers-reduced-motion` | 按钮 scale、玻璃脉冲、GitHub 链接图标 |
+| 文案 em dash 清理 | UI 可见文案改为 hyphen |
+| 表单 label | 下载路径输入增加 `aria-label` |
+
+---
+
+## 6. 交付前检查（Product UI 版）
+
+- [ ] 所有颜色来自 `tokens.css` 或 Tailwind 语义类
+- [ ] 无蓝紫渐变、无 `primaryBlue`、无 Cal.com 遗留命名
+- [ ] 圆角符合 Shape Lock 表
+- [ ] Popup 与 Options 按钮样式同源
+- [ ] 主 CTA 每屏唯一意图
+- [ ] 数字 tabular-nums
+- [ ] 无 em dash 装饰文案
+- [ ] reduced-motion 已处理动态装饰
+- [ ] 新文案已加入 `assets/_locales`
+
+---
+
+## 7. 文件索引
+
+| 文件 | 职责 |
+|------|------|
+| `src/styles/tokens.css` | 颜色与效果 token 定义 |
+| `src/styles/index.css` | 全局 base + 组件 class + 工具 class |
+| `src/styles/popup.css` | Popup 视口尺寸锁 |
+| `src/styles/options.css` | Options 布局与 page 设置变体 |
+| `tailwind.config.js` | Tailwind 映射 + NextUI 主题 |
+| `src/app.tsx` | NextUIProvider + Toaster 主题 |
+| `src/components/eh-table.tsx` | 表格样式契约 |
+| `src/components/status-card.tsx` | 状态卡变体 |
+| `src/components/settings.tsx` | 设置表单共享组件 |
+
+---
+
+## 8. 已知差距（Known Gaps）
+
+- NextUI 色值与 CSS 变量 **手动双写**，暂无构建期自动同步
+- Popup 玻璃体系含 **冷青环境光**，与品牌暖金并存，待 Phase 2 决策
+- Inter 为功能字体，非品牌 display；后续可考虑 **DM Sans** 或 **Geist** 仅用于标题
+- `framer-motion` 已安装但使用有限；新动效优先 CSS，避免扩 bundle
+- 内容脚本注入 UI 未纳入本规范，需单独审计

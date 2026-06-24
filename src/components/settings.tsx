@@ -58,11 +58,19 @@ const Row = ({
 const TextInput = ({
   className,
   variant,
+  id,
   ...rest
 }: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
   <input
     type="text"
-    className={`flex-1 rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-2.5 py-1.5 text-ink outline-none backdrop-blur-sm transition-colors placeholder:text-muted-soft focus:border-brand-accent/35 focus:bg-[rgb(10_10_11/0.4)] ${variant === 'page' ? 'path-input--page text-sm' : variant === 'modal' ? 'text-[12px]' : 'text-sm'} ${className ?? ''}`.trim()}
+    id={id}
+    className={[
+      'eh-text-input',
+      variant === 'page' ? 'eh-text-input--page path-input--page text-sm' : 'eh-text-input--modal text-[12px]',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ')}
     {...rest}
   />
 );
@@ -94,7 +102,9 @@ export const Settings: FC<{
             {t('defaultFolder')}
           </button>
           <TextInput
+            id="eh-download-path"
             variant={variant}
+            aria-label={t('downloadFolder')}
             value={config.intermediateDownloadPath}
             onChange={(e) => setConfig({ ...config, intermediateDownloadPath: e.target.value })}
           />
@@ -234,8 +244,8 @@ export const Settings: FC<{
 
   const panelClass =
     variant === 'page'
-      ? 'flex flex-col gap-4 rounded-cal-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
-      : 'flex flex-col gap-5 rounded-[14px] border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
+      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
+      : 'flex flex-col gap-5 rounded-eh-cta border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
 
   return (
     <div className={panelClass}>
