@@ -2,7 +2,7 @@ import '../styles/index.css';
 import '../styles/popup.css';
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Spinner } from '@nextui-org/react';
+import { Spinner } from '@nextui-org/react';
 import { ChevronDown, Download, ExternalLink, Info, Link2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -468,34 +468,36 @@ const Popup = () => {
   ) : null;
 
   const startDownloadButton = (
-    <Button
-      type="button"
-      variant="light"
-      className="eh-accent-action-btn group relative flex h-12 w-full flex-row items-center justify-center gap-2.5 overflow-hidden rounded-eh-cta px-5 font-normal shadow-[inset_0_1px_0_rgba(204,168,66,0.08),var(--eh-shadow-card)]"
+    <EhButton
+      appearance="primary"
+      ehSize="lg"
+      fullWidth
       onPress={handleClickDownload}
-      disableRipple
+      startContent={
+        <span className="eh-btn__icon">
+          <Download size={17} strokeWidth={1.75} />
+        </span>
+      }
     >
-      <div className="eh-accent-action-btn__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg backdrop-blur-md">
-        <Download size={17} strokeWidth={1.75} />
-      </div>
-      <span className="text-sm font-medium tracking-wide text-brand-accent">
-        {t('startDownloadWithCount', String(downloadCount))}
-      </span>
-    </Button>
+      {t('startDownloadWithCount', String(downloadCount))}
+    </EhButton>
   );
 
   const rangeToggleButton = (expanded: boolean) => (
-    <button
-      type="button"
-      onClick={() => setTerminalRangeExpanded((prev) => !prev)}
-      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] px-3 py-2 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+    <EhButton
+      appearance="ghost"
+      ehSize="sm"
+      fullWidth
+      onPress={() => setTerminalRangeExpanded((prev) => !prev)}
+      endContent={
+        <ChevronDown
+          size={14}
+          className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+        />
+      }
     >
       {expanded ? t('collapseRange') : t('adjustRangeAndDownload')}
-      <ChevronDown
-        size={14}
-        className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-      />
-    </button>
+    </EhButton>
   );
 
   const postDownloadShell = ({
@@ -551,13 +553,7 @@ const Popup = () => {
   };
 
   const retryPrimaryButton = (count: number, onPress: () => void) => (
-    <EhButton
-      type="button"
-      size="sm"
-      appearance="accent"
-      className="h-10 w-full min-w-0 rounded-eh-md px-3 text-[13px] font-medium"
-      onPress={onPress}
-    >
+    <EhButton appearance="primary" ehSize="md" fullWidth onPress={onPress}>
       {t('retryAllFailed', String(count))}
     </EhButton>
   );
@@ -596,28 +592,28 @@ const Popup = () => {
             description={t('openGalleryDesc')}
           >
             <div className="grid w-full max-w-[280px] grid-cols-2 gap-2">
-              <Button
+              <EhButton
                 as="a"
                 href="https://e-hentai.org/"
                 target="_blank"
                 rel="noreferrer"
-                size="sm"
-                variant="flat"
-                className="h-9 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.25)] font-medium text-brand-accent"
+                appearance="accent"
+                ehSize="sm"
+                className="w-full"
               >
                 E-Hentai
-              </Button>
-              <Button
+              </EhButton>
+              <EhButton
                 as="a"
                 href="https://exhentai.org/"
                 target="_blank"
                 rel="noreferrer"
-                size="sm"
-                variant="flat"
-                className="h-9 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.25)] font-medium text-brand-accent"
+                appearance="accent"
+                ehSize="sm"
+                className="w-full"
               >
                 ExHentai
-              </Button>
+              </EhButton>
             </div>
           </StatusCard>
         );
@@ -629,9 +625,9 @@ const Popup = () => {
             title={t('unableReadGallery')}
             description={t('unableReadGalleryDesc')}
           >
-            <Button size="sm" color="primary" variant="flat" onPress={() => void reloadGallery()}>
+            <EhButton appearance="primary" ehSize="sm" onPress={() => void reloadGallery()}>
               {t('refreshPage')}
-            </Button>
+            </EhButton>
           </StatusCard>
         );
       case StatusEnum.BeforeDownload: {
@@ -702,28 +698,24 @@ const Popup = () => {
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--eh-hairline-soft)] pt-2.5">
                       {missingCount > 0 ? (
-                        <button
-                          type="button"
-                          className="eh-accent-action-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
-                          onClick={() => void handleResumeMissing()}
+                        <EhButton
+                          appearance="accent"
+                          ehSize="xs"
+                          onPress={() => void handleResumeMissing()}
                         >
                           {t('continueMissing')} ({missingCount})
-                        </button>
+                        </EhButton>
                       ) : null}
-                      <button
-                        type="button"
-                        className="eh-footer-secondary-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
-                        onClick={() => setGalleryDetailOpen(true)}
-                      >
+                      <EhButton appearance="secondary" ehSize="xs" onPress={() => setGalleryDetailOpen(true)}>
                         {t('viewDetails')}
-                      </button>
-                      <button
-                        type="button"
-                        className="eh-footer-secondary-btn h-7 rounded-lg px-2.5 text-[11px] font-medium"
-                        onClick={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
+                      </EhButton>
+                      <EhButton
+                        appearance="secondary"
+                        ehSize="xs"
+                        onPress={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
                       >
                         {t('redownloadAll')}
-                      </button>
+                      </EhButton>
                     </div>
                   </div>
                 ) : null}
@@ -754,23 +746,17 @@ const Popup = () => {
             </div>
             <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
               <div className="flex items-stretch gap-2">
-                <Button
-                  size="sm"
-                  variant="flat"
-                  className="h-10 shrink-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] px-3 text-[13px] font-medium text-body"
-                  onPress={() => setGalleryDetailOpen(true)}
-                >
+                <EhButton appearance="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
                   {t('viewDetails')}
-                </Button>
-                <Button
-                  size="sm"
-                  color="danger"
-                  variant="flat"
-                  className="h-10 min-w-0 flex-1 px-3 text-[13px] font-medium"
+                </EhButton>
+                <EhButton
+                  appearance="danger"
+                  ehSize="md"
+                  className="min-w-0 flex-1"
                   onPress={() => void handleCancelDownload()}
                 >
                   {t('cancel')}
-                </Button>
+                </EhButton>
               </div>
             </div>
           </div>
@@ -781,22 +767,17 @@ const Popup = () => {
           hideRangeControls: true,
           footerActions: (
             <div className="flex items-stretch gap-2">
-              <Button
-                size="sm"
-                variant="flat"
-                className="eh-footer-secondary-btn h-10 shrink-0 rounded-lg px-3 text-[13px] font-medium"
-                onPress={openDownloadFolder}
-              >
+              <EhButton appearance="secondary" ehSize="md" onPress={openDownloadFolder}>
                 {t('openFolder')}
-              </Button>
-              <Button
-                type="button"
-                variant="flat"
-                className="eh-accent-action-btn h-10 min-w-0 flex-1 rounded-lg px-3 text-[13px] font-medium"
+              </EhButton>
+              <EhButton
+                appearance="primary"
+                ehSize="md"
+                className="min-w-0 flex-1"
                 onPress={resetToBeforeDownload}
               >
                 {t('backToInitial')}
-              </Button>
+              </EhButton>
             </div>
           ),
         });
@@ -806,22 +787,12 @@ const Popup = () => {
           primaryAction: startDownloadButton,
           footerActions: postDownloadActionRow(
             <>
-              <Button
-                size="sm"
-                variant="flat"
-                className="h-10 shrink-0"
-                onPress={() => setGalleryDetailOpen(true)}
-              >
+              <EhButton appearance="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
                 {t('viewDetails')}
-              </Button>
-              <Button
-                size="sm"
-                variant="flat"
-                className="eh-footer-secondary-btn h-10 shrink-0 rounded-lg px-3 text-[13px] font-medium"
-                onPress={openDownloadFolder}
-              >
+              </EhButton>
+              <EhButton appearance="secondary" ehSize="md" onPress={openDownloadFolder}>
                 {t('openFolder')}
-              </Button>
+              </EhButton>
             </>,
             failedCount,
             () => void handleRetryFailed()
@@ -843,14 +814,9 @@ const Popup = () => {
             </div>
             <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
               {postDownloadActionRow(
-                <Button
-                  type="button"
-                  variant="light"
-                  className="h-10 shrink-0 px-3 text-[13px] font-medium text-muted"
-                  onPress={resetToBeforeDownload}
-                >
+                <EhButton appearance="ghost" ehSize="md" onPress={resetToBeforeDownload}>
                   {t('backToInitial')}
-                </Button>,
+                </EhButton>,
                 failedCount,
                 () => void handleRetryFailed()
               )}

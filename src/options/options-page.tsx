@@ -42,7 +42,9 @@ export const OptionsPage = () => {
                 {t('optionsSubtitle')}
               </p>
             </div>
-            <EhButton appearance="primary" onPress={handleSave}>{t('saveChanges')}</EhButton>
+            <EhButton appearance="primary" ehSize="md" onPress={handleSave}>
+              {t('saveChanges')}
+            </EhButton>
           </header>
           <main className="options-main scrollbar-glass">
             <EhSectionLabel>{t('general')}</EhSectionLabel>

@@ -8,6 +8,8 @@ import {
   PATTERN_INVALID_FILE_PATH_CHAR,
 } from '@/utils';
 import { t } from '@/utils/i18n';
+
+import { EhButton } from './eh-button';
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
@@ -92,15 +94,16 @@ export const Settings: FC<{
       label: <HintLabel label={t('downloadFolder')} hint={t('downloadFolderHint')} />,
       content: (
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={`shrink-0 font-normal text-ink underline underline-offset-2 ${variant === 'page' ? 'text-[13px]' : 'text-[12px]'}`}
-            onClick={() => {
+          <EhButton
+            appearance="link"
+            ehSize="sm"
+            className={variant === 'page' ? 'text-[13px]' : 'text-[12px]'}
+            onPress={() => {
               chrome.downloads.showDefaultFolder();
             }}
           >
             {t('defaultFolder')}
-          </button>
+          </EhButton>
           <TextInput
             id="eh-download-path"
             variant={variant}

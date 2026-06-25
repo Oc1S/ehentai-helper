@@ -70,14 +70,156 @@
     background: rgb(8 8 9 / 0.28);
   }
 
+  /* ── EhButton 统一体系 ── */
+  .eh-btn {
+    @apply inline-flex shrink-0 cursor-pointer items-center justify-center border-0 font-medium transition-colors;
+    border-radius: var(--eh-btn-radius, 6px);
+    background-image: none;
+    white-space: nowrap;
+  }
+
+  .eh-btn:disabled,
+  .eh-btn[aria-disabled='true'] {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .eh-btn--xs {
+    @apply h-6 min-h-6 px-1.5 text-xs font-normal;
+  }
+
+  .eh-btn--sm {
+    @apply h-8 min-h-8 min-w-[68px] px-3 text-[12px] font-normal;
+  }
+
+  .eh-btn--md {
+    @apply h-10 min-h-10 px-3.5 text-[13px];
+  }
+
+  .eh-btn--lg {
+    @apply h-12 min-h-12 gap-2.5 px-5 text-sm;
+    --eh-btn-radius: var(--eh-btn-radius-lg, 8px);
+  }
+
+  .eh-btn--full {
+    @apply w-full;
+  }
+
+  .eh-btn--primary {
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.38);
+    background: rgb(var(--eh-brand-accent) / 0.12);
+    color: var(--eh-brand-accent-bright-hex);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgb(var(--eh-brand-accent) / 0.06);
+  }
+
+  .eh-btn--primary:hover {
+    background: rgb(var(--eh-brand-accent) / 0.18);
+    border-color: rgb(var(--eh-brand-accent) / 0.48);
+  }
+
+  .eh-btn--accent {
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.24);
+    background: rgb(var(--eh-brand-accent) / 0.06);
+    color: var(--eh-brand-accent-hex);
+    backdrop-filter: blur(12px);
+  }
+
+  .eh-btn--accent:hover {
+    background: rgb(var(--eh-brand-accent) / 0.1);
+    border-color: rgb(var(--eh-brand-accent) / 0.3);
+  }
+
+  .eh-btn--secondary {
+    border: 1px solid rgba(250, 250, 250, 0.1);
+    background: rgb(36 36 40 / 0.52);
+    color: var(--eh-body-hex);
+    backdrop-filter: blur(8px);
+  }
+
+  .eh-btn--secondary:hover {
+    background: rgb(48 48 54 / 0.62);
+    border-color: rgb(var(--eh-brand-accent) / 0.22);
+  }
+
+  .eh-btn--danger {
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
+    backdrop-filter: blur(8px);
+  }
+
+  .eh-btn--danger:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.38);
+  }
+
+  .eh-btn--ghost {
+    border: 1px solid rgba(250, 250, 250, 0.1);
+    background: rgb(36 36 40 / 0.52);
+    color: var(--eh-muted-hex);
+    backdrop-filter: blur(8px);
+  }
+
+  .eh-btn--ghost:hover {
+    color: var(--eh-body-hex);
+    background: rgb(48 48 54 / 0.62);
+    border-color: rgba(250, 250, 250, 0.14);
+  }
+
+  .eh-btn--link {
+    @apply h-auto min-h-0 min-w-0 border-0 bg-transparent p-0 font-normal underline-offset-2;
+    color: var(--eh-brand-accent-hex);
+  }
+
+  .eh-btn--link:hover {
+    text-decoration: underline;
+  }
+
+  .eh-btn--icon {
+    @apply h-7 w-7 min-h-0 min-w-0 p-0;
+    border: 1px solid var(--eh-glass-border);
+    background: rgb(8 8 9 / 0.35);
+    color: var(--eh-muted-hex);
+    backdrop-filter: blur(4px);
+  }
+
+  .eh-btn--icon:hover {
+    border-color: var(--eh-glass-border-hover);
+    background: rgb(12 12 13 / 0.45);
+    color: var(--eh-body-hex);
+  }
+
+  .eh-btn:active {
+    transform: scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eh-btn:active {
+      transform: none;
+    }
+  }
+
+  .eh-btn__icon {
+    @apply flex shrink-0 items-center justify-center rounded-eh-md;
+    border: 1px solid rgb(var(--eh-brand-accent) / 0.22);
+    background: rgb(var(--eh-brand-accent) / 0.1);
+    color: var(--eh-brand-accent-bright-hex);
+  }
+
+  .eh-btn--lg .eh-btn__icon {
+    @apply h-8 w-8;
+  }
+
+  /* 遗留别名 → 迁移完成后可删 */
   .settings-modal-btn {
-    @apply h-8 min-w-[68px] cursor-pointer rounded-lg px-3.5 text-[12px] font-normal backdrop-blur-sm transition-colors;
+    @apply eh-btn eh-btn--sm;
   }
 
   .settings-modal-btn--cancel {
+    @apply eh-btn--ghost;
     border: 1px solid var(--eh-glass-border);
     background: rgb(12 12 13 / 0.4);
-    color: var(--eh-muted-hex);
+    backdrop-filter: blur(4px);
   }
 
   .settings-modal-btn--cancel:hover {
@@ -86,39 +228,19 @@
   }
 
   .settings-modal-btn--save {
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.3);
-    background: rgb(var(--eh-brand-accent) / 0.12);
-    color: var(--eh-brand-accent-hex);
-  }
-
-  .settings-modal-btn--save:hover {
-    background: rgb(var(--eh-brand-accent) / 0.18);
+    @apply eh-btn--accent;
   }
 
   .eh-accent-action-btn {
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.3);
-    background: rgb(var(--eh-brand-accent) / 0.12);
-    color: var(--eh-brand-accent-hex);
-    backdrop-filter: blur(12px);
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.15s ease;
+    @apply eh-btn eh-btn--accent;
   }
 
-  .eh-accent-action-btn:hover {
-    background: rgb(var(--eh-brand-accent) / 0.18);
-    border-color: rgb(var(--eh-brand-accent) / 0.38);
+  .eh-accent-action-btn__icon {
+    @apply eh-btn__icon;
   }
 
-  .eh-accent-action-btn:active {
-    transform: scale(0.98);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .eh-accent-action-btn:active {
-      transform: none;
-    }
+  .eh-footer-secondary-btn {
+    @apply eh-btn eh-btn--secondary;
   }
 
   .eh-text-input {
@@ -146,26 +268,6 @@
 
   .eh-text-input--page:focus {
     border-color: var(--eh-brand-accent-hex);
-  }
-
-  .eh-accent-action-btn__icon {
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.22);
-    background: rgb(var(--eh-brand-accent) / 0.1);
-    color: var(--eh-brand-accent-bright-hex);
-  }
-
-  .eh-footer-secondary-btn {
-    border: 1px solid var(--eh-glass-border);
-    background: rgb(12 12 13 / 0.58);
-    color: var(--eh-body-hex);
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease;
-  }
-
-  .eh-footer-secondary-btn:hover {
-    background: rgb(18 18 20 / 0.72);
-    border-color: rgb(var(--eh-brand-accent) / 0.18);
   }
 
   .eh-github-star-link {
@@ -246,8 +348,8 @@
     pointer-events: none;
     background: radial-gradient(
       ellipse 68% 42% at 50% -6%,
-      rgba(204, 168, 66, 0.11) 0%,
-      rgba(184, 145, 42, 0.035) 48%,
+      rgba(52, 211, 153, 0.11) 0%,
+      rgba(5, 150, 105, 0.035) 48%,
       transparent 72%
     );
   }

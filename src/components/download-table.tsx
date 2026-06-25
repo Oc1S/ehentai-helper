@@ -1,8 +1,6 @@
-import type { FC } from 'react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import type { ComponentProps } from 'react';
 import {
-  Button,
-  type ButtonProps,
   Chip,
   type ChipProps,
   Dropdown,
@@ -32,6 +30,8 @@ import {
 } from '@/storage';
 import { t } from '@/utils/i18n';
 
+import { EhButton } from './eh-button';
+
 import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
@@ -41,10 +41,10 @@ const pageSize = 6;
 type DownloadItem = chrome.downloads.DownloadItem & { displayIndex?: number };
 type DownloadState = DownloadItem['state'];
 
-const CellButton = ({ children, ...rest }: ButtonProps) => (
-  <Button size="sm" {...rest}>
+const CellButton = ({ children, ...rest }: ComponentProps<typeof EhButton>) => (
+  <EhButton appearance="accent" ehSize="sm" {...rest}>
     {children}
-  </Button>
+  </EhButton>
 );
 
 const columns = () => [
@@ -198,13 +198,13 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
         />
         <Dropdown>
           <DropdownTrigger>
-            <Button
-              size="sm"
+            <EhButton
+              appearance="secondary"
+              ehSize="sm"
               endContent={<ChevronDownIcon className="text-small" />}
-              variant="flat"
             >
               {t('filter')}
-            </Button>
+            </EhButton>
           </DropdownTrigger>
           <DropdownMenu
             disallowEmptySelection

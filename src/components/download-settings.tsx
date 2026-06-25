@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Button,
   Modal,
   ModalBody,
   ModalContent,
@@ -66,17 +65,15 @@ export const DownloadSettings = ({
 
   return (
     <>
-      <Button
-        isIconOnly
-        size="sm"
-        variant="flat"
+      <EhButton
+        appearance="icon"
+        ehSize="sm"
         onPress={onOpen}
         isDisabled={disabled}
         aria-label={t('settings')}
-        className="h-7 w-7 min-w-0 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] text-muted backdrop-blur-sm hover:border-[var(--eh-glass-border-hover)] hover:bg-[rgb(12_12_13/0.45)] hover:text-body"
       >
         <SettingsIcon size={15} strokeWidth={1.75} />
-      </Button>
+      </EhButton>
 
       <Modal
         isOpen={isOpen}
@@ -101,10 +98,10 @@ export const DownloadSettings = ({
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
               <ModalFooter className="flex flex-row justify-end gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-5 py-2.5 backdrop-blur-md">
-                <EhButton appearance="modal-cancel" onPress={close}>
+                <EhButton appearance="ghost" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
-                <EhButton appearance="modal-save" onPress={handleSave}>
+                <EhButton appearance="primary" ehSize="sm" onPress={handleSave}>
                   {t('saveSettings')}
                 </EhButton>
               </ModalFooter>

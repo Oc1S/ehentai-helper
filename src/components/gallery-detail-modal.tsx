@@ -1,6 +1,5 @@
 import { type FC, useMemo, useState } from 'react';
 import {
-  Button,
   Chip,
   type ChipProps,
   Input,
@@ -21,6 +20,8 @@ import {
 
 import type { GalleryImageState, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
+
+import { EhButton } from './eh-button';
 
 import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { SearchIcon } from './icons/SearchIcon';
@@ -194,13 +195,9 @@ export const GalleryDetailModal: FC<{
                       {(onRetryIndex || onRetryAllFailed) ? (
                         <TableCell>
                           {onRetryIndex && row.state === 'interrupted' ? (
-                            <Button
-                              size="sm"
-                              variant="flat"
-                              onPress={() => onRetryIndex(row.index)}
-                            >
+                            <EhButton appearance="accent" ehSize="xs" onPress={() => onRetryIndex(row.index)}>
                               {t('retry')}
-                            </Button>
+                            </EhButton>
                           ) : (
                             '-'
                           )}
@@ -214,17 +211,13 @@ export const GalleryDetailModal: FC<{
             </ModalBody>
             <ModalFooter className="gap-2">
               {onRetryAllFailed && counts.interrupted > 0 && (
-                <Button size="sm" color="primary" variant="flat" onPress={onRetryAllFailed}>
+                <EhButton appearance="primary" ehSize="sm" onPress={onRetryAllFailed}>
                   {t('retryAllFailed', String(counts.interrupted))}
-                </Button>
+                </EhButton>
               )}
-              <button
-                type="button"
-                onClick={close}
-                className="rounded-md border border-hairline bg-surface-soft px-3 py-1.5 text-xs text-body hover:text-ink"
-              >
+              <EhButton appearance="secondary" ehSize="sm" onPress={close}>
                 {t('close')}
-              </button>
+              </EhButton>
             </ModalFooter>
           </>
         )}
