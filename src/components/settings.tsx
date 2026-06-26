@@ -89,6 +89,8 @@ export const Settings: FC<{
   variant?: 'modal' | 'page';
   pathPreview?: string;
 }> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
+  type ConfigKey = keyof Config;
+
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
     intermediateDownloadPath: {
       label: <HintLabel label={t('downloadFolder')} hint={t('downloadFolderHint')} />,
@@ -250,6 +252,25 @@ export const Settings: FC<{
       ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
       : 'flex flex-col gap-5 rounded-eh-cta border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
 
+  const pageGroups: { title: string; keys: ConfigKey[] }[] = [
+    { title: t('settingsGroupLocation'), keys: ['intermediateDownloadPath'] },
+    {
+      title: t('settingsGroupFileHandling'),
+      keys: ['fileNameRule', 'filenameConflictAction', 'saveOriginalImages', 'saveGalleryInfo'],
+    },
+    { title: t('settingsGroupDownloadBehavior'), keys: ['downloadInterval'] },
+    { title: t('settingsGroupOutput'), keys: ['imageFormat', 'outputMode'] },
+  ];
+
+  const renderRow = (key: ConfigKey) => (
+    <Row
+      key={key}
+      variant={variant}
+      label={formItemMap[key].label}
+      content={formItemMap[key].content}
+    />
+  );
+
   return (
     <div className={panelClass}>
       {pathPreview ? (
@@ -261,14 +282,14 @@ export const Settings: FC<{
           </span>
         </p>
       ) : null}
-      {Object.keys(formItemMap).map((key) => (
-        <Row
-          key={key}
-          variant={variant}
-          label={formItemMap[key as keyof Config].label}
-          content={formItemMap[key as keyof Config].content}
-        />
-      ))}
+      {variant === 'page'
+        ? pageGroups.map((group) => (
+            <section key={group.title} className="settings-group">
+              <h2 className="settings-section-title">{group.title}</h2>
+              <div className="settings-group__rows">{group.keys.map(renderRow)}</div>
+            </section>
+          ))
+        : (Object.keys(formItemMap) as ConfigKey[]).map(renderRow)}
     </div>
   );
 };

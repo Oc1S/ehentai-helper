@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 
 import { AppShell } from '@/app';
 import { EhButton } from '@/components/eh-button';
-import { EhSectionLabel } from '@/components/eh-section-label';
 import { Settings, validateFilePath } from '@/components/settings';
 import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
@@ -47,7 +46,6 @@ export const OptionsPage = () => {
             </EhButton>
           </header>
           <main className="options-main scrollbar-glass">
-            <EhSectionLabel>{t('general')}</EhSectionLabel>
             <Settings
               config={config}
               setConfig={setConfig}

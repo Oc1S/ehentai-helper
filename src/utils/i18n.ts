@@ -144,6 +144,10 @@ const fallbackMessages: Record<string, string> = {
   optionsSubtitle: 'Download preferences',
   saveChanges: 'Save changes',
   general: 'General',
+  settingsGroupLocation: 'Location',
+  settingsGroupFileHandling: 'File handling',
+  settingsGroupDownloadBehavior: 'Download behavior',
+  settingsGroupOutput: 'Output',
 };
 
 export type I18nKey = keyof typeof fallbackMessages;

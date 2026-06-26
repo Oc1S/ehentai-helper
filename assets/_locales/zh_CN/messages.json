@@ -115,7 +115,7 @@
   "settingsSaved": { "message": "设置已保存！" },
   "saved": { "message": "已保存" },
   "downloadFolder": { "message": "下载文件夹" },
-  "downloadFolderHint": { "message": "出于安全考虑，只能设置在浏览器默认下载目录下的子文件夹。" },
+  "downloadFolderHint": { "message": "浏览器限制，只能设置在浏览器默认下载目录下的子文件夹。" },
   "saveOriginalImages": { "message": "保存原图" },
   "saveGalleryInfo": { "message": "保存画廊信息" },
   "filenameConflictAction": { "message": "文件名冲突处理" },
@@ -132,7 +132,7 @@
   "output": { "message": "输出方式" },
   "outputHint": { "message": "CBZ 模式会在下载过程中缓存图片，完成后打包为一个压缩包。" },
   "formatOriginal": { "message": "原始" },
-  "pathPreview": { "message": "预览：" },
+  "pathPreview": { "message": "目标路径：" },
   "defaultFolder": { "message": "[默认]/" },
   "presetAll": { "message": "全部" },
   "presetCurrentPage": { "message": "当前页" },
@@ -207,5 +207,9 @@
   "close": { "message": "关闭" },
   "optionsSubtitle": { "message": "下载偏好设置" },
   "saveChanges": { "message": "保存更改" },
-  "general": { "message": "常规" }
+  "general": { "message": "常规" },
+  "settingsGroupLocation": { "message": "保存位置" },
+  "settingsGroupFileHandling": { "message": "文件处理" },
+  "settingsGroupDownloadBehavior": { "message": "下载行为" },
+  "settingsGroupOutput": { "message": "输出格式" }
 }

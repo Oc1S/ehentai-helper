@@ -22,6 +22,7 @@ import { computeFailedIndices, computeMissingIndices } from '@/download/helpers'
 import type { DownloadJobPayload } from '@/download/types';
 import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
 import {
+  type ActiveDownloadTask,
   configStorage,
   downloadHistoryStorage,
   downloadTaskStorage,
@@ -94,7 +95,7 @@ const DownloadResultSummary = ({
         : t('downloadFailedDesc');
 
   return (
-    <div className="glass-panel flex shrink-0 flex-col gap-3 rounded-eh-2xl p-5">
+    <div className="glass-panel rounded-eh-2xl flex shrink-0 flex-col gap-3 p-5">
       <div className="min-w-0 text-left">
         <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
           {galleryName}
@@ -197,8 +198,62 @@ const taskStatusToUi = (taskStatus: string): StatusEnum | null => {
   }
 };
 
+type PopupViewModelInput = {
+  pageStatus: StatusEnum;
+  optimisticTaskStatus: StatusEnum.Downloading | null;
+  activeTask: ActiveDownloadTask | null;
+  galleryUrl: string;
+  range: [number, number];
+  downloadCount: number;
+};
+
+const derivePopupViewModel = ({
+  pageStatus,
+  optimisticTaskStatus,
+  activeTask,
+  galleryUrl,
+  range,
+  downloadCount,
+}: PopupViewModelInput) => {
+  const currentTask = activeTask?.galleryUrl === galleryUrl ? activeTask : null;
+  const taskStatus = currentTask ? taskStatusToUi(currentTask.status) : null;
+  const status =
+    pageStatus === StatusEnum.BeforeDownload
+      ? taskStatus ?? optimisticTaskStatus ?? pageStatus
+      : pageStatus;
+  const isTerminalDownload =
+    status === StatusEnum.DownloadSuccess ||
+    status === StatusEnum.DownloadPartialSuccess ||
+    status === StatusEnum.DownloadFailed;
+  const isAnyTaskActive =
+    activeTask?.status === 'running' || activeTask?.status === 'dispatch_complete';
+
+  return {
+    status,
+    isTaskForCurrentGallery: Boolean(currentTask),
+    isCenteredStatus: (CENTERED_STATUSES as readonly StatusEnum[]).includes(status),
+    isTerminalDownload,
+    isSelfScrollingLayout:
+      status === StatusEnum.BeforeDownload ||
+      status === StatusEnum.Downloading ||
+      isTerminalDownload,
+    isDownloading: status === StatusEnum.Downloading || isAnyTaskActive,
+    progressRange: currentTask
+      ? { start: currentTask.rangeStart, end: currentTask.rangeEnd }
+      : { start: range[0], end: range[1] },
+    progressTotal: currentTask ? currentTask.expectedCount : downloadCount,
+    taskDisplayRange: currentTask
+      ? ([currentTask.rangeStart, currentTask.rangeEnd] as [number, number])
+      : range,
+    taskDisplayTotal: currentTask ? currentTask.expectedCount : downloadCount,
+  };
+};
+
 const Popup = () => {
-  const [status, setStatus] = useState<StatusEnum>(StatusEnum.Loading);
+  const [pageStatus, setPageStatus] = useState<StatusEnum>(StatusEnum.Loading);
+  const [optimisticTaskStatus, setOptimisticTaskStatus] = useState<StatusEnum.Downloading | null>(
+    null
+  );
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
   const activeTask = useStorage(downloadTaskStorage);
   const galleryFrontPageUrl = useRef('');
@@ -220,21 +275,43 @@ const Popup = () => {
     setRange([1, galleryPageInfo.totalImages]);
   }, [galleryPageInfo.totalImages]);
 
+  const downloadCount = range[1] - range[0] + 1;
+  const viewModel = useMemo(
+    () =>
+      derivePopupViewModel({
+        pageStatus,
+        optimisticTaskStatus,
+        activeTask,
+        galleryUrl: galleryFrontPageUrl.current,
+        range,
+        downloadCount,
+      }),
+    [activeTask, downloadCount, optimisticTaskStatus, pageStatus, range]
+  );
+  const {
+    status,
+    isTaskForCurrentGallery,
+    isCenteredStatus,
+    isTerminalDownload,
+    isSelfScrollingLayout,
+    isDownloading,
+    progressRange,
+    progressTotal,
+    taskDisplayRange,
+    taskDisplayTotal,
+  } = viewModel;
+
   useEffect(() => {
-    if (
-      status !== StatusEnum.DownloadSuccess &&
-      status !== StatusEnum.DownloadPartialSuccess &&
-      status !== StatusEnum.DownloadFailed
-    ) {
+    if (optimisticTaskStatus && isTaskForCurrentGallery) {
+      setOptimisticTaskStatus(null);
+    }
+  }, [isTaskForCurrentGallery, optimisticTaskStatus]);
+
+  useEffect(() => {
+    if (!isTerminalDownload) {
       setTerminalRangeExpanded(false);
     }
-  }, [status]);
-
-  const downloadCount = range[1] - range[0] + 1;
-  const progressRange =
-    activeTask?.galleryUrl === galleryFrontPageUrl.current
-      ? { start: activeTask.rangeStart, end: activeTask.rangeEnd }
-      : { start: range[0], end: range[1] };
+  }, [isTerminalDownload]);
 
   const { completeCount, failedCount, inProgressCount } = useMemo(() => {
     const record = galleryRecords[galleryFrontPageUrl.current];
@@ -246,29 +323,6 @@ const Popup = () => {
     }
     return countRangeProgress(record, progressRange.start, progressRange.end);
   }, [galleryRecords, activeTask, progressRange.start, progressRange.end]);
-
-  const progressTotal =
-    activeTask?.galleryUrl === galleryFrontPageUrl.current
-      ? activeTask.expectedCount
-      : downloadCount;
-
-  const isTaskForCurrentGallery = activeTask?.galleryUrl === galleryFrontPageUrl.current;
-  const taskDisplayRange: [number, number] = isTaskForCurrentGallery
-    ? [activeTask.rangeStart, activeTask.rangeEnd]
-    : range;
-  const taskDisplayTotal = isTaskForCurrentGallery ? activeTask.expectedCount : downloadCount;
-
-  useEffect(() => {
-    if (!activeTask || activeTask.galleryUrl !== galleryFrontPageUrl.current) {
-      setStatus((prev) =>
-        prev === StatusEnum.Downloading ? StatusEnum.BeforeDownload : prev
-      );
-      return;
-    }
-    const next = taskStatusToUi(activeTask.status);
-    if (next === null) return;
-    setStatus(next);
-  }, [activeTask]);
 
   const buildJobPayload = (
     indices?: number[],
@@ -298,7 +352,7 @@ const Popup = () => {
     rangeOverride?: [number, number]
   ) => {
     if (!galleryInfo) return false;
-    setStatus(StatusEnum.Downloading);
+    setOptimisticTaskStatus(StatusEnum.Downloading);
 
     const payload = buildJobPayload(indices, rangeOverride);
     const fn =
@@ -307,7 +361,8 @@ const Popup = () => {
 
     if (!response?.ok) {
       toast.error(t('failedStartDownload'));
-      setStatus(StatusEnum.BeforeDownload);
+      setOptimisticTaskStatus(null);
+      setPageStatus(StatusEnum.BeforeDownload);
       return false;
     }
 
@@ -357,11 +412,12 @@ const Popup = () => {
   };
 
   const initFromCurrentTab = async () => {
-    setStatus(StatusEnum.Loading);
+    setOptimisticTaskStatus(null);
+    setPageStatus(StatusEnum.Loading);
     const url = await getCurrentTabUrl().catch(() => '');
     tabUrlRef.current = url;
     if (!isEHentaiGalleryUrl(url)) {
-      setStatus(isEHentaiPageUrl(url) ? StatusEnum.EHentaiOther : StatusEnum.OtherPage);
+      setPageStatus(isEHentaiPageUrl(url) ? StatusEnum.EHentaiOther : StatusEnum.OtherPage);
       return;
     }
 
@@ -372,7 +428,7 @@ const Popup = () => {
     galleryFrontPageUrl.current = trimmed.substring(0, trimmed.lastIndexOf('/') + 1);
     const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
     if (!isGalleryPageHtml(galleryHtmlStr)) {
-      setStatus(StatusEnum.Fail);
+      setPageStatus(StatusEnum.Fail);
       return;
     }
 
@@ -381,23 +437,12 @@ const Popup = () => {
     const galleryInfoResult = await extractGalleryInfo(galleryHtmlStr);
     setGalleryInfo(galleryInfoResult);
 
-    setStatus(StatusEnum.BeforeDownload);
-
-    const task = await downloadTaskStorage.get();
-    if (task?.galleryUrl === galleryFrontPageUrl.current) {
-      const restored = taskStatusToUi(task.status);
-      if (restored !== null) setStatus(restored);
-    }
+    setPageStatus(StatusEnum.BeforeDownload);
   };
 
   const reloadGallery = () => {
     void initFromCurrentTab();
   };
-
-  const isDownloading =
-    status === StatusEnum.Downloading ||
-    activeTask?.status === 'running' ||
-    activeTask?.status === 'dispatch_complete';
 
   useMounted(() => {
     void initFromCurrentTab();
@@ -416,7 +461,8 @@ const Popup = () => {
       setRange([activeTask.rangeStart, activeTask.rangeEnd]);
     }
     await downloadTaskStorage.set(null);
-    setStatus(StatusEnum.BeforeDownload);
+    setOptimisticTaskStatus(null);
+    setPageStatus(StatusEnum.BeforeDownload);
   };
 
   const handleCancelDownload = async () => {
@@ -425,18 +471,8 @@ const Popup = () => {
     toast.info(t('downloadCancelled'));
   };
 
-  const isCenteredStatus = (CENTERED_STATUSES as readonly StatusEnum[]).includes(status);
-  const isTerminalDownload =
-    status === StatusEnum.DownloadSuccess ||
-    status === StatusEnum.DownloadPartialSuccess ||
-    status === StatusEnum.DownloadFailed;
-  const isSelfScrollingLayout =
-    status === StatusEnum.BeforeDownload ||
-    status === StatusEnum.Downloading ||
-    isTerminalDownload;
-
   const progressPanel = (
-    <div className="glass-panel flex flex-col gap-3 rounded-eh-2xl p-5">
+    <div className="glass-panel rounded-eh-2xl flex flex-col gap-3 p-5">
       <EhDownloadProgressPanel
         downloadCount={progressTotal}
         completeCount={completeCount}
@@ -462,7 +498,7 @@ const Popup = () => {
     ) : null;
 
   const rangeSelectorPanel = rangeSelectorContent ? (
-    <div className="glass-panel flex flex-col gap-2.5 rounded-eh-xl px-4 py-3.5">
+    <div className="glass-panel rounded-eh-xl flex flex-col gap-2.5 px-4 py-3.5">
       {rangeSelectorContent}
     </div>
   ) : null;
@@ -544,7 +580,7 @@ const Popup = () => {
           {!hideRangeControls ? rangeToggleButton(rangeExpanded) : null}
           {rangeExpanded ? rangeSelectorPanel : null}
         </div>
-        <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
+        <div className="min-h-popup-footer flex shrink-0 flex-col justify-center gap-2 border-t border-[var(--eh-hairline-soft)] pt-3">
           {footerActions}
           {!hideRangeControls && rangeExpanded && primaryAction ? primaryAction : null}
         </div>
@@ -649,7 +685,7 @@ const Popup = () => {
         return (
           <div className="flex h-full min-h-0 w-full flex-col px-4 py-3">
             <div className="scrollbar-glass flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto">
-              <div className="glass-panel overflow-hidden rounded-eh-2xl">
+              <div className="glass-panel rounded-eh-2xl overflow-hidden">
                 <div className="p-4">
                   <div className="flex gap-3">
                     {galleryInfo.coverUrl ? (
@@ -688,13 +724,17 @@ const Popup = () => {
                       {t('previouslyTracked')}
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-soft">
-                      <span className="text-success">{t('badgeComplete', String(counts.complete))}</span>
+                      <span className="text-success">
+                        {t('badgeComplete', String(counts.complete))}
+                      </span>
                       <span aria-hidden>·</span>
                       <span className="text-warning">
                         {t('badgeInProgress', String(counts.in_progress))}
                       </span>
                       <span aria-hidden>·</span>
-                      <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
+                      <span className="text-error">
+                        {t('badgeFailed', String(counts.interrupted))}
+                      </span>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--eh-hairline-soft)] pt-2.5">
                       {missingCount > 0 ? (
@@ -706,7 +746,11 @@ const Popup = () => {
                           {t('continueMissing')} ({missingCount})
                         </EhButton>
                       ) : null}
-                      <EhButton appearance="secondary" ehSize="xs" onPress={() => setGalleryDetailOpen(true)}>
+                      <EhButton
+                        appearance="secondary"
+                        ehSize="xs"
+                        onPress={() => setGalleryDetailOpen(true)}
+                      >
                         {t('viewDetails')}
                       </EhButton>
                       <EhButton
@@ -728,7 +772,7 @@ const Popup = () => {
         return (
           <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
             <div className="scrollbar-glass flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
-              <div className="glass-panel glass-panel-live relative flex shrink-0 flex-col justify-end rounded-eh-2xl p-5">
+              <div className="glass-panel glass-panel-live rounded-eh-2xl relative flex shrink-0 flex-col justify-end p-5">
                 <div>
                   <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
                     {galleryInfo?.name || ''}
@@ -744,9 +788,13 @@ const Popup = () => {
               </div>
               {progressPanel}
             </div>
-            <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
+            <div className="min-h-popup-footer flex shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
               <div className="flex items-stretch gap-2">
-                <EhButton appearance="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
+                <EhButton
+                  appearance="secondary"
+                  ehSize="md"
+                  onPress={() => setGalleryDetailOpen(true)}
+                >
                   {t('viewDetails')}
                 </EhButton>
                 <EhButton
@@ -767,15 +815,15 @@ const Popup = () => {
           hideRangeControls: true,
           footerActions: (
             <div className="flex items-stretch gap-2">
-              <EhButton appearance="secondary" ehSize="md" onPress={openDownloadFolder}>
-                {t('openFolder')}
-              </EhButton>
               <EhButton
                 appearance="primary"
                 ehSize="md"
                 className="min-w-0 flex-1"
-                onPress={resetToBeforeDownload}
+                onPress={openDownloadFolder}
               >
+                {t('openFolder')}
+              </EhButton>
+              <EhButton appearance="secondary" ehSize="md" onPress={resetToBeforeDownload}>
                 {t('backToInitial')}
               </EhButton>
             </div>
@@ -787,7 +835,11 @@ const Popup = () => {
           primaryAction: startDownloadButton,
           footerActions: postDownloadActionRow(
             <>
-              <EhButton appearance="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
+              <EhButton
+                appearance="secondary"
+                ehSize="md"
+                onPress={() => setGalleryDetailOpen(true)}
+              >
                 {t('viewDetails')}
               </EhButton>
               <EhButton appearance="secondary" ehSize="md" onPress={openDownloadFolder}>
@@ -812,7 +864,7 @@ const Popup = () => {
                 rangeEnd={taskDisplayRange[1]}
               />
             </div>
-            <div className="flex min-h-popup-footer shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
+            <div className="min-h-popup-footer flex shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
               {postDownloadActionRow(
                 <EhButton appearance="ghost" ehSize="md" onPress={resetToBeforeDownload}>
                   {t('backToInitial')}
@@ -844,15 +896,11 @@ const Popup = () => {
   return (
     <AppShell>
       <div className="popup-bg flex h-popup w-popup flex-col overflow-hidden">
-        <header className="flex h-popup-header shrink-0 items-center gap-3 px-4">
-          <span className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">
+        <header className="grid h-popup-header shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4">
+          <span className="min-w-0 truncate text-[15px] font-semibold tracking-tight text-ink">
             E-Hentai <span className="text-brand-accent">Helper</span>
           </span>
-          <nav
-            role="tablist"
-            aria-label="popup tabs"
-            className="flex min-w-0 flex-1 items-center justify-center"
-          >
+          <nav role="tablist" aria-label="popup tabs" className="z-10 justify-self-center">
             <div className="flex items-center gap-0.5 rounded-full border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.35)] p-0.5">
               {popupTabs.map((tab) => {
                 const isActive = selectedTab === tab.key;
@@ -875,7 +923,7 @@ const Popup = () => {
               })}
             </div>
           </nav>
-          <div className="shrink-0">
+          <div className="min-w-0 justify-self-end">
             <DownloadSettings
               disabled={isDownloading}
               pathPreview={

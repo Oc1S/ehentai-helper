@@ -124,7 +124,7 @@
   "saved": { "message": "Saved" },
   "downloadFolder": { "message": "Download folder" },
   "downloadFolderHint": {
-    "message": "For security reasons, you can only set a directory inside the default download folder."
+    "message": "Browser limitation, you can only set a directory inside the default download folder."
   },
   "saveOriginalImages": { "message": "Save original images" },
   "saveGalleryInfo": { "message": "Save gallery information" },
@@ -146,7 +146,7 @@
     "message": "CBZ mode caches images during download and packs one archive when finished."
   },
   "formatOriginal": { "message": "Original" },
-  "pathPreview": { "message": "Preview:" },
+  "pathPreview": { "message": "Target path:" },
   "defaultFolder": { "message": "[Default]/" },
   "presetAll": { "message": "All" },
   "presetCurrentPage": { "message": "Current page" },
@@ -221,5 +221,9 @@
   "close": { "message": "Close" },
   "optionsSubtitle": { "message": "Download preferences" },
   "saveChanges": { "message": "Save changes" },
-  "general": { "message": "General" }
+  "general": { "message": "General" },
+  "settingsGroupLocation": { "message": "Location" },
+  "settingsGroupFileHandling": { "message": "File handling" },
+  "settingsGroupDownloadBehavior": { "message": "Download behavior" },
+  "settingsGroupOutput": { "message": "Output" }
 }
