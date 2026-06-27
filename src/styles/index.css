@@ -117,18 +117,6 @@
     border-color: rgb(var(--eh-brand-accent) / 0.48);
   }
 
-  .eh-btn--accent {
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.24);
-    background: rgb(var(--eh-brand-accent) / 0.06);
-    color: var(--eh-brand-accent-hex);
-    backdrop-filter: blur(12px);
-  }
-
-  .eh-btn--accent:hover {
-    background: rgb(var(--eh-brand-accent) / 0.1);
-    border-color: rgb(var(--eh-brand-accent) / 0.3);
-  }
-
   .eh-btn--secondary {
     border: 1px solid rgba(250, 250, 250, 0.1);
     background: rgb(36 36 40 / 0.52);
@@ -150,18 +138,6 @@
   .eh-btn--danger:hover {
     background: rgb(var(--eh-error) / 0.12);
     border-color: rgb(var(--eh-error) / 0.38);
-  }
-
-  .eh-btn--ghost {
-    border: 1px solid rgba(250, 250, 250, 0.1);
-    background: rgb(36 36 40 / 0.52);
-    color: var(--eh-muted-hex);
-    backdrop-filter: blur(8px);
-  }
-
-  .eh-btn--ghost:hover {
-    color: var(--eh-body-hex);
-    background: rgb(48 48 54 / 0.62);
   }
 
   .eh-btn--link {
@@ -214,7 +190,7 @@
   }
 
   .settings-modal-btn--cancel {
-    @apply eh-btn--ghost;
+    @apply eh-btn--secondary;
     border: 1px solid var(--eh-glass-border);
     background: rgb(12 12 13 / 0.4);
     backdrop-filter: blur(4px);
@@ -226,11 +202,11 @@
   }
 
   .settings-modal-btn--save {
-    @apply eh-btn--accent;
+    @apply eh-btn--primary;
   }
 
   .eh-accent-action-btn {
-    @apply eh-btn eh-btn--accent;
+    @apply eh-btn eh-btn--primary;
   }
 
   .eh-accent-action-btn__icon {

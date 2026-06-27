@@ -65,10 +65,7 @@ export const DownloadSettings = ({
 
   return (
     <>
-      <EhButton
-        appearance="icon"
-        ehSize="sm"
-        onPress={onOpen}
+      <EhButton isIconOnly ehSize="sm" onPress={onOpen}
         disabled={disabled}
         aria-label={t('settings')}
       >
@@ -98,7 +95,7 @@ export const DownloadSettings = ({
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
               <ModalFooter className="flex flex-row justify-end gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-5 py-2.5 backdrop-blur-md">
-                <EhButton appearance="ghost" ehSize="sm" onPress={close}>
+                <EhButton appearance="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
                 <EhButton appearance="primary" ehSize="sm" onPress={handleSave}>

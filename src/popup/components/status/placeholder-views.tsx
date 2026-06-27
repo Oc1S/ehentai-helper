@@ -36,7 +36,7 @@ export const OtherPageStatusView = () => (
         href="https://e-hentai.org/"
         target="_blank"
         rel="noreferrer"
-        appearance="accent"
+        appearance="primary"
         ehSize="sm"
         className="w-full"
       >
@@ -47,7 +47,7 @@ export const OtherPageStatusView = () => (
         href="https://exhentai.org/"
         target="_blank"
         rel="noreferrer"
-        appearance="accent"
+        appearance="primary"
         ehSize="sm"
         className="w-full"
       >

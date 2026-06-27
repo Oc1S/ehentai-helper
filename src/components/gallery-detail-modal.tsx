@@ -22,7 +22,6 @@ import type { GalleryImageState, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-
 import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { SearchIcon } from './icons/SearchIcon';
 
@@ -154,61 +153,62 @@ export const GalleryDetailModal: FC<{
                   removeWrapper
                   classNames={ehTableClassNames()}
                 >
-                <TableHeader>
-                  <TableColumn width={56}>{t('colIndex')}</TableColumn>
-                  <TableColumn width={92}>{t('colState')}</TableColumn>
-                  <TableColumn>{t('colFileUrl')}</TableColumn>
-                  {(onRetryIndex || onRetryAllFailed) && (
-                    <TableColumn width={88}>{t('colAction')}</TableColumn>
-                  )}
-                </TableHeader>
-                <TableBody items={filteredRows} emptyContent={t('noRecords')}>
-                  {(row) => (
-                    <TableRow key={row.index}>
-                      <TableCell>{row.index}</TableCell>
-                      <TableCell>
-                        <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
-                          {stateLabel(row.state)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell className="eh-table-cell--clip">
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                          <span
-                            className="eh-url-link text-ink"
-                            title={row.filename || ''}
-                          >
-                            {trimFilename(row.filename) || '-'}
-                          </span>
-                          {row.sourceUrl ? (
-                            <a
-                              href={row.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
-                              title={row.sourceUrl}
-                            >
-                              {row.sourceUrl}
-                            </a>
-                          ) : null}
-                          {row.error ? (
-                            <span className="text-xs text-error">{row.error}</span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      {(onRetryIndex || onRetryAllFailed) ? (
+                  <TableHeader>
+                    <TableColumn width={56}>{t('colIndex')}</TableColumn>
+                    <TableColumn width={92}>{t('colState')}</TableColumn>
+                    <TableColumn>{t('colFileUrl')}</TableColumn>
+                    {(onRetryIndex || onRetryAllFailed) && (
+                      <TableColumn width={88}>{t('colAction')}</TableColumn>
+                    )}
+                  </TableHeader>
+                  <TableBody items={filteredRows} emptyContent={t('noRecords')}>
+                    {(row) => (
+                      <TableRow key={row.index}>
+                        <TableCell>{row.index}</TableCell>
                         <TableCell>
-                          {onRetryIndex && row.state === 'interrupted' ? (
-                            <EhButton appearance="accent" ehSize="sm" onPress={() => onRetryIndex(row.index)}>
-                              {t('retry')}
-                            </EhButton>
-                          ) : (
-                            '-'
-                          )}
+                          <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
+                            {stateLabel(row.state)}
+                          </Chip>
                         </TableCell>
-                      ) : null}
-                    </TableRow>
-                  )}
-                </TableBody>
+                        <TableCell className="eh-table-cell--clip">
+                          <div className="flex min-w-0 flex-col gap-0.5">
+                            <span className="eh-url-link text-ink" title={row.filename || ''}>
+                              {trimFilename(row.filename) || '-'}
+                            </span>
+                            {row.sourceUrl ? (
+                              <a
+                                href={row.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
+                                title={row.sourceUrl}
+                              >
+                                {row.sourceUrl}
+                              </a>
+                            ) : null}
+                            {row.error ? (
+                              <span className="text-xs text-error">{row.error}</span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        {onRetryIndex || onRetryAllFailed ? (
+                          <TableCell>
+                            {onRetryIndex && row.state === 'interrupted' ? (
+                              <EhButton
+                                appearance="primary"
+                                ehSize="sm"
+                                onPress={() => onRetryIndex(row.index)}
+                              >
+                                {t('retry')}
+                              </EhButton>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                        ) : null}
+                      </TableRow>
+                    )}
+                  </TableBody>
                 </Table>
               </EhTableFrame>
             </ModalBody>

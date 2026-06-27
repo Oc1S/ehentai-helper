@@ -183,14 +183,14 @@ export const History: FC = () => {
                 <TableCell className="py-1.5">
                   <div className="flex flex-nowrap items-center gap-0.5">
                     <EhButton
-                      appearance="ghost"
+                      appearance="secondary"
                       ehSize="sm"
                       onPress={() => void handleRedownload(item)}
                     >
                       {t('redownload')}
                     </EhButton>
                     <EhButton
-                      appearance="ghost"
+                      appearance="secondary"
                       ehSize="sm"
                       disabled={!galleryRecords[item.url]}
                       onPress={() => setActiveUrl(item.url)}
@@ -219,7 +219,7 @@ export const History: FC = () => {
               <ModalHeader>{t('clearAll')}</ModalHeader>
               <ModalBody className="text-sm text-muted">{t('confirmClearAll')}</ModalBody>
               <ModalFooter>
-                <EhButton appearance="ghost" ehSize="sm" onPress={close}>
+                <EhButton appearance="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
                 <EhButton
@@ -245,7 +245,7 @@ export const History: FC = () => {
               <ModalHeader>{t('delete')}</ModalHeader>
               <ModalBody className="text-sm text-muted">{t('confirmDelete')}</ModalBody>
               <ModalFooter>
-                <EhButton appearance="ghost" ehSize="sm" onPress={close}>
+                <EhButton appearance="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
                 <EhButton

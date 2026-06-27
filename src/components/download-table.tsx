@@ -1,5 +1,5 @@
+import type { ComponentProps, FC } from 'react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import type { ComponentProps } from 'react';
 import {
   Chip,
   type ChipProps,
@@ -31,7 +31,6 @@ import {
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-
 import { ehTableClassNames, EhTableFrame } from './eh-table';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { SearchIcon } from './icons/SearchIcon';
@@ -42,7 +41,7 @@ type DownloadItem = chrome.downloads.DownloadItem & { displayIndex?: number };
 type DownloadState = DownloadItem['state'];
 
 const CellButton = ({ children, ...rest }: ComponentProps<typeof EhButton>) => (
-  <EhButton appearance="accent" ehSize="sm" {...rest}>
+  <EhButton appearance="primary" ehSize="sm" {...rest}>
     {children}
   </EhButton>
 );
@@ -230,20 +229,20 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
           removeWrapper
           classNames={ehTableClassNames()}
         >
-        <TableHeader columns={columns()}>
-          {(col) => (
-            <TableColumn key={col.key} width={col.width}>
-              {col.label}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
-          {(item) => (
-            <TableRow key={item.id}>
-              {(key) => <TableCell>{renderCell(item, key as string)}</TableCell>}
-            </TableRow>
-          )}
-        </TableBody>
+          <TableHeader columns={columns()}>
+            {(col) => (
+              <TableColumn key={col.key} width={col.width}>
+                {col.label}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
+            {(item) => (
+              <TableRow key={item.id}>
+                {(key) => <TableCell>{renderCell(item, key as string)}</TableCell>}
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </EhTableFrame>
       <div className="flex shrink-0 items-center justify-center pt-1">

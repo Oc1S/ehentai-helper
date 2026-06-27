@@ -72,7 +72,7 @@ export const PostDownloadShell = ({
 
         {!hideRangeControls ? (
           <EhButton
-            appearance="ghost"
+            appearance="secondary"
             ehSize="sm"
             fullWidth
             onPress={onToggleRange}

@@ -137,7 +137,7 @@ const PreviouslyTrackedSection = ({
     </div>
     {missingCount > 0 ? (
       <div className="mt-2.5">
-        <EhButton appearance="accent" ehSize="sm" onPress={onResumeMissing}>
+        <EhButton appearance="primary" ehSize="sm" onPress={onResumeMissing}>
           {t('continueMissing')} ({missingCount})
         </EhButton>
       </div>

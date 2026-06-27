@@ -166,7 +166,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           footer={
             <PostDownloadActionRow
               leading={
-                <EhButton appearance="ghost" ehSize="md" onPress={resetToBeforeDownload}>
+                <EhButton appearance="secondary" ehSize="md" onPress={resetToBeforeDownload}>
                   {t('backToInitial')}
                 </EhButton>
               }
