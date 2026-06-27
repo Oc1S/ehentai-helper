@@ -100,9 +100,9 @@ const DownloadResultSummary = ({
         <h3 className="break-words text-[15px] font-bold leading-snug tracking-tight text-ink">
           {galleryName}
         </h3>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-soft">
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-soft">
           <span>{t('thisDownloadRange')}</span>
-          <span className="rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 py-0.5 font-mono text-[10px] font-bold text-brand-accent">
+          <span className="rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 py-0.5 font-mono text-xs font-bold text-brand-accent">
             {rangeStart} - {rangeEnd}
           </span>
           <span>
@@ -113,7 +113,7 @@ const DownloadResultSummary = ({
 
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className={`text-[11px] font-medium uppercase tracking-wide ${statusClass}`}>
+          <p className={`text-xs font-medium uppercase tracking-wide ${statusClass}`}>
             {statusLabel}
           </p>
           <p className={`mt-1 text-2xl font-semibold tabular-nums ${statusClass}`}>
@@ -123,7 +123,7 @@ const DownloadResultSummary = ({
         </div>
         {variant !== 'success' && failedCount > 0 ? (
           <div className="text-right">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
               {t('stateFailed')}
             </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-error">{failedCount}</p>
@@ -137,7 +137,7 @@ const DownloadResultSummary = ({
         failedCount={failedCount}
       />
 
-      <p className="text-[12px] leading-relaxed text-muted">{desc}</p>
+      <p className="text-xs leading-relaxed text-muted">{desc}</p>
       {children}
     </div>
   );
@@ -486,10 +486,10 @@ const Popup = () => {
     range[1] > 0 ? (
       <>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] font-semibold tracking-tight text-ink">
+          <span className="text-xs font-semibold tracking-tight text-ink">
             {t('downloadRange')}
           </span>
-          <span className="flex h-5 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-[11px] font-bold text-brand-accent">
+          <span className="flex h-6 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-xs font-bold text-brand-accent">
             {range[0]} - {range[1]}
           </span>
         </div>
@@ -699,7 +699,7 @@ const Popup = () => {
                       <h2 className="line-clamp-3 text-[15px] font-bold leading-snug tracking-tight text-ink">
                         {galleryInfo.name || ''}
                       </h2>
-                      <p className="mt-1.5 text-[11px] font-medium text-muted">
+                      <p className="mt-1.5 text-xs font-medium text-muted">
                         {galleryPageInfo.totalImages} {t('imagesLabel')} ·{' '}
                         {galleryPageInfo.numPages} {t('pagesLabel')}
                       </p>
@@ -720,47 +720,42 @@ const Popup = () => {
 
                 {counts && trackedTotal > 0 ? (
                   <div className="border-t border-[var(--eh-hairline-soft)] px-4 py-3">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-soft">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
                       {t('previouslyTracked')}
                     </p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-soft">
-                      <span className="text-success">
-                        {t('badgeComplete', String(counts.complete))}
-                      </span>
-                      <span aria-hidden>·</span>
-                      <span className="text-warning">
-                        {t('badgeInProgress', String(counts.in_progress))}
-                      </span>
-                      <span aria-hidden>·</span>
-                      <span className="text-error">
-                        {t('badgeFailed', String(counts.interrupted))}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--eh-hairline-soft)] pt-2.5">
-                      {missingCount > 0 ? (
-                        <EhButton
-                          appearance="accent"
-                          ehSize="xs"
-                          onPress={() => void handleResumeMissing()}
-                        >
-                          {t('continueMissing')} ({missingCount})
-                        </EhButton>
-                      ) : null}
+                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-soft">
+                        <span className="text-success">
+                          {t('badgeComplete', String(counts.complete))}
+                        </span>
+                        <span aria-hidden>·</span>
+                        <span className="text-warning">
+                          {t('badgeInProgress', String(counts.in_progress))}
+                        </span>
+                        <span aria-hidden>·</span>
+                        <span className="text-error">
+                          {t('badgeFailed', String(counts.interrupted))}
+                        </span>
+                      </div>
                       <EhButton
                         appearance="secondary"
-                        ehSize="xs"
+                        ehSize="sm"
                         onPress={() => setGalleryDetailOpen(true)}
                       >
                         {t('viewDetails')}
                       </EhButton>
-                      <EhButton
-                        appearance="secondary"
-                        ehSize="xs"
-                        onPress={() => void handleStartDownload([1, galleryPageInfo.totalImages])}
-                      >
-                        {t('redownloadAll')}
-                      </EhButton>
                     </div>
+                    {missingCount > 0 ? (
+                      <div className="mt-2.5">
+                        <EhButton
+                          appearance="accent"
+                          ehSize="sm"
+                          onPress={() => void handleResumeMissing()}
+                        >
+                          {t('continueMissing')} ({missingCount})
+                        </EhButton>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -783,7 +778,7 @@ const Popup = () => {
                       {t('downloadingImages')}
                     </span>
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-soft">{t('backgroundHint')}</p>
+                  <p className="mt-2 text-xs text-muted-soft">{t('backgroundHint')}</p>
                 </div>
               </div>
               {progressPanel}
@@ -911,7 +906,7 @@ const Popup = () => {
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => setSelectedTab(tab.key)}
-                    className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-normal transition-colors ${
+                    className={`flex h-8 items-center gap-1 rounded-full px-3 text-xs font-normal transition-colors ${
                       isActive
                         ? 'bg-surface-card text-ink shadow-card'
                         : 'text-muted hover:text-body'

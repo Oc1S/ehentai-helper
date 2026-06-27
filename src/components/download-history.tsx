@@ -104,7 +104,7 @@ export const History: FC = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <p className="shrink-0 text-[11px] leading-relaxed text-muted-soft">
+      <p className="shrink-0 text-xs leading-relaxed text-muted-soft">
         {t('storageLimitHint', [
           String(data.length),
           String(MAX_DOWNLOAD_HISTORY),
@@ -171,7 +171,7 @@ export const History: FC = () => {
                     {item.name}
                   </a>
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-[11px] text-muted">
+                <TableCell className="whitespace-nowrap text-xs text-muted">
                   {formatStatus(galleryRecords[item.url], item.range)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-muted-soft">
@@ -184,20 +184,20 @@ export const History: FC = () => {
                   <div className="flex flex-nowrap items-center gap-0.5">
                     <EhButton
                       appearance="ghost"
-                      ehSize="xs"
+                      ehSize="sm"
                       onPress={() => void handleRedownload(item)}
                     >
                       {t('redownload')}
                     </EhButton>
                     <EhButton
                       appearance="ghost"
-                      ehSize="xs"
-                      isDisabled={!galleryRecords[item.url]}
+                      ehSize="sm"
+                      disabled={!galleryRecords[item.url]}
                       onPress={() => setActiveUrl(item.url)}
                     >
                       {t('detail')}
                     </EhButton>
-                    <EhButton appearance="danger" ehSize="xs" onPress={() => setDeleteTarget(item)}>
+                    <EhButton appearance="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
                       {t('delete')}
                     </EhButton>
                   </div>

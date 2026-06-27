@@ -50,7 +50,7 @@ export const StatusCard = ({
         <div className="relative z-10 flex flex-col gap-1 text-left">
           <h3 className="text-[13px] font-semibold tracking-tight text-ink">{title}</h3>
           {description && (
-            <div className="text-[11px] leading-relaxed text-muted">{description}</div>
+            <div className="text-xs leading-relaxed text-muted">{description}</div>
           )}
           {children && <div className="mt-1">{children}</div>}
         </div>

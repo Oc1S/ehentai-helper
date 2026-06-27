@@ -1,4 +1,5 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
+import { type HTMLMotionProps, motion } from 'framer-motion';
 
 export type EhButtonAppearance =
   | 'primary'
@@ -33,15 +34,15 @@ type EhButtonProps = {
   ehSize?: EhButtonSize;
   fullWidth?: boolean;
   onPress?: () => void;
-  isDisabled?: boolean;
   isIconOnly?: boolean;
   startContent?: ReactNode;
   endContent?: ReactNode;
+  children?: ReactNode;
   as?: 'button' | 'a';
   href?: string;
   target?: string;
   rel?: string;
-} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'>;
+} & Omit<HTMLMotionProps<'button'>, 'color' | 'children' | 'ref'>;
 
 export const EhButton = ({
   appearance = 'primary',
@@ -50,7 +51,6 @@ export const EhButton = ({
   className = '',
   onPress,
   onClick,
-  isDisabled,
   disabled,
   startContent,
   endContent,
@@ -72,10 +72,10 @@ export const EhButton = ({
     .filter(Boolean)
     .join(' ');
 
-  const isDisabledState = Boolean(disabled ?? isDisabled);
+  const isDisabled = Boolean(disabled);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    if (isDisabledState) {
+    if (isDisabled) {
       event.preventDefault();
       return;
     }
@@ -96,10 +96,10 @@ export const EhButton = ({
     return (
       <a
         className={classes}
-        href={isDisabledState ? undefined : href}
+        href={isDisabled ? undefined : href}
         target={target}
         rel={rel}
-        aria-disabled={isDisabledState}
+        aria-disabled={isDisabled}
         {...anchorProps}
         onClick={handleClick}
       >
@@ -109,14 +109,16 @@ export const EhButton = ({
   }
 
   return (
-    <button
+    <motion.button
       type={type}
       className={classes}
-      disabled={isDisabledState}
+      disabled={isDisabled}
+      whileTap={isDisabled ? undefined : { scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       {...rest}
       onClick={handleClick}
     >
       {content}
-    </button>
+    </motion.button>
   );
 };

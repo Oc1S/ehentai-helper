@@ -32,7 +32,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
   return (
     <div className="grid grid-cols-2 gap-2.5">
       <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-soft">
           {t('rangeFrom')}
         </span>
         <input
@@ -48,7 +48,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
         />
       </label>
       <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-soft">
           {t('rangeTo')}
         </span>
         <input

@@ -68,7 +68,7 @@ const TextInput = ({
     id={id}
     className={[
       'eh-text-input',
-      variant === 'page' ? 'eh-text-input--page path-input--page text-sm' : 'eh-text-input--modal text-[12px]',
+      variant === 'page' ? 'eh-text-input--page path-input--page text-sm' : 'eh-text-input--modal text-xs',
       className,
     ]
       .filter(Boolean)
@@ -99,7 +99,7 @@ export const Settings: FC<{
           <EhButton
             appearance="link"
             ehSize="sm"
-            className={variant === 'page' ? 'text-[13px]' : 'text-[12px]'}
+            className={variant === 'page' ? 'text-[13px]' : 'text-xs'}
             onPress={() => {
               chrome.downloads.showDefaultFolder();
             }}
@@ -170,7 +170,7 @@ export const Settings: FC<{
           classNames={
             variant === 'modal'
               ? {
-                  input: 'text-[12px]',
+                  input: 'text-xs',
                   inputWrapper:
                     'h-8 min-h-8 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] shadow-none backdrop-blur-sm data-[hover=true]:bg-[rgb(10_10_11/0.35)] group-data-[focus=true]:border-brand-accent/35',
                 }
@@ -274,7 +274,7 @@ export const Settings: FC<{
   return (
     <div className={panelClass}>
       {pathPreview ? (
-        <p className="text-[12px] leading-relaxed text-muted">
+        <p className="text-xs leading-relaxed text-muted">
           {t('pathPreview')}{' '}
           <span className="font-mono text-brand-accent">
             {t('defaultFolder')}

@@ -82,13 +82,13 @@ export const EhDownloadProgressPanel = ({
     <div className="w-full space-y-4">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
             {t('progress')}
           </p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">{percent}%</p>
         </div>
         <div className="text-right">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-soft">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
             {t('completed')}
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
@@ -102,7 +102,7 @@ export const EhDownloadProgressPanel = ({
         max={downloadCount}
         ariaLabel={t('downloadProgress')}
       />
-      <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-soft">
+      <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-soft">
         <span className="text-success">{t('badgeComplete', String(completeCount))}</span>
         <span aria-hidden>·</span>
         <span className="text-warning">{t('badgeInProgress', String(inProgressCount))}</span>

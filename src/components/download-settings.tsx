@@ -69,7 +69,7 @@ export const DownloadSettings = ({
         appearance="icon"
         ehSize="sm"
         onPress={onOpen}
-        isDisabled={disabled}
+        disabled={disabled}
         aria-label={t('settings')}
       >
         <SettingsIcon size={15} strokeWidth={1.75} />

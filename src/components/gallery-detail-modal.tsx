@@ -104,7 +104,7 @@ export const GalleryDetailModal: FC<{
               <span className="line-clamp-1 text-base font-semibold text-ink">
                 {record?.galleryName || t('galleryDetails')}
               </span>
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span>
                   {t('total')}: {record?.total ?? 0}
                 </span>
@@ -143,7 +143,7 @@ export const GalleryDetailModal: FC<{
                     <Tab key={tab.id} title={tab.label} />
                   ))}
                 </Tabs>
-                <span className="text-[11px] text-muted">
+                <span className="text-xs text-muted">
                   {t('itemsCount', String(filteredRows.length))}
                 </span>
               </div>
@@ -184,21 +184,21 @@ export const GalleryDetailModal: FC<{
                               href={row.sourceUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="eh-url-link text-[11px] text-muted underline-offset-2 hover:underline"
+                              className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
                               title={row.sourceUrl}
                             >
                               {row.sourceUrl}
                             </a>
                           ) : null}
                           {row.error ? (
-                            <span className="text-[11px] text-error">{row.error}</span>
+                            <span className="text-xs text-error">{row.error}</span>
                           ) : null}
                         </div>
                       </TableCell>
                       {(onRetryIndex || onRetryAllFailed) ? (
                         <TableCell>
                           {onRetryIndex && row.state === 'interrupted' ? (
-                            <EhButton appearance="accent" ehSize="xs" onPress={() => onRetryIndex(row.index)}>
+                            <EhButton appearance="accent" ehSize="sm" onPress={() => onRetryIndex(row.index)}>
                               {t('retry')}
                             </EhButton>
                           ) : (

@@ -160,7 +160,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
 
     switch (key) {
       case 'displayIndex':
-        return <span className="font-mono text-[11px] text-muted">{item.displayIndex ?? '-'}</span>;
+        return <span className="font-mono text-xs text-muted">{item.displayIndex ?? '-'}</span>;
       case 'state':
         return (
           <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">
