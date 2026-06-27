@@ -142,15 +142,15 @@
   }
 
   .eh-btn--danger {
-    border: 1px solid rgba(239, 68, 68, 0.28);
-    background: rgba(239, 68, 68, 0.08);
-    color: #f87171;
+    border: 1px solid rgb(var(--eh-error) / 0.28);
+    background: rgb(var(--eh-error) / 0.08);
+    color: var(--eh-error-bright-hex);
     backdrop-filter: blur(8px);
   }
 
   .eh-btn--danger:hover {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.38);
+    background: rgb(var(--eh-error) / 0.12);
+    border-color: rgb(var(--eh-error) / 0.38);
   }
 
   .eh-btn--ghost {
@@ -268,6 +268,29 @@
 
   .eh-text-input--page:focus {
     border-color: var(--eh-brand-accent-hex);
+  }
+
+  .eh-number-input {
+    @apply eh-text-input eh-text-input--modal w-full py-2 font-mono text-[13px] tabular-nums;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .eh-number-input::-webkit-outer-spin-button,
+  .eh-number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* URL：禁止在 e-hentai 等连字符处软换行，单行省略 */
+  .eh-url-link {
+    @apply block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .eh-table-cell--clip {
+    @apply min-w-0 max-w-0 overflow-hidden;
   }
 
   .eh-github-star-link {

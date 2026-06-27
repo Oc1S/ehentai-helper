@@ -155,8 +155,8 @@ export const GalleryDetailModal: FC<{
                   classNames={ehTableClassNames()}
                 >
                 <TableHeader>
-                  <TableColumn width={64}>{t('colIndex')}</TableColumn>
-                  <TableColumn width={100}>{t('colState')}</TableColumn>
+                  <TableColumn width={56}>{t('colIndex')}</TableColumn>
+                  <TableColumn width={92}>{t('colState')}</TableColumn>
                   <TableColumn>{t('colFileUrl')}</TableColumn>
                   {(onRetryIndex || onRetryAllFailed) && (
                     <TableColumn width={88}>{t('colAction')}</TableColumn>
@@ -171,9 +171,12 @@ export const GalleryDetailModal: FC<{
                           {stateLabel(row.state)}
                         </Chip>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="line-clamp-1 text-ink" title={row.filename || ''}>
+                      <TableCell className="eh-table-cell--clip">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="eh-url-link text-ink"
+                            title={row.filename || ''}
+                          >
                             {trimFilename(row.filename) || '-'}
                           </span>
                           {row.sourceUrl ? (
@@ -181,7 +184,7 @@ export const GalleryDetailModal: FC<{
                               href={row.sourceUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="line-clamp-1 text-[11px] text-muted underline-offset-2 hover:underline"
+                              className="eh-url-link text-[11px] text-muted underline-offset-2 hover:underline"
                               title={row.sourceUrl}
                             >
                               {row.sourceUrl}

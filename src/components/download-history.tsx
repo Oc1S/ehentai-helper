@@ -2,7 +2,6 @@ import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import {
   Input,
-  Link,
   Modal,
   ModalBody,
   ModalContent,
@@ -144,7 +143,7 @@ export const History: FC = () => {
                 key={col.key}
                 width={
                   col.key === 'name'
-                    ? 180
+                    ? 220
                     : col.key === 'status'
                       ? 108
                       : col.key === 'time'
@@ -161,14 +160,16 @@ export const History: FC = () => {
           <TableBody items={filteredData} emptyContent={t('noHistory')}>
             {(item) => (
               <TableRow key={item.timestamp}>
-                <TableCell title={item.name}>
-                  <Link
+                <TableCell className="eh-table-cell--clip">
+                  <a
                     href={item.url}
-                    isExternal
-                    className="line-clamp-1 text-xs text-primary underline underline-offset-2"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="eh-url-link text-xs text-primary underline underline-offset-2"
+                    title={item.name}
                   >
                     {item.name}
-                  </Link>
+                  </a>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-[11px] text-muted">
                   {formatStatus(galleryRecords[item.url], item.range)}
@@ -181,7 +182,11 @@ export const History: FC = () => {
                 </TableCell>
                 <TableCell className="py-1.5">
                   <div className="flex flex-nowrap items-center gap-0.5">
-                    <EhButton appearance="ghost" ehSize="xs" onPress={() => void handleRedownload(item)}>
+                    <EhButton
+                      appearance="ghost"
+                      ehSize="xs"
+                      onPress={() => void handleRedownload(item)}
+                    >
                       {t('redownload')}
                     </EhButton>
                     <EhButton

@@ -2,39 +2,56 @@ import { useSyncExternalStore } from 'react';
 
 import type { BaseStorage } from '@/storage/base';
 
-type WrappedPromise = ReturnType<typeof wrapPromise>;
-const storageMap = new Map<BaseStorage<unknown>, WrappedPromise>();
+type StorageCacheEntry<D> = {
+  read: () => D;
+  /** 值曾由 getSnapshot 同步；snapshot 变为 null 时应信任 null 而非旧缓存 */
+  fromSnapshot: boolean;
+};
+
+const storageMap = new Map<BaseStorage<unknown>, StorageCacheEntry<unknown>>();
+
+function readStorageValue<Data>(
+  storage: BaseStorage<Data>,
+  snapshot: Data | null
+): Data {
+  if (!storageMap.has(storage)) {
+    storageMap.set(storage, {
+      ...wrapPromise(storage.get()),
+      fromSnapshot: false,
+    });
+  }
+
+  const cached = storageMap.get(storage) as StorageCacheEntry<Data>;
+
+  if (snapshot !== null) {
+    const entry: StorageCacheEntry<Data> = { read: () => snapshot, fromSnapshot: true };
+    storageMap.set(storage, entry);
+    return snapshot;
+  }
+
+  if (cached.fromSnapshot) {
+    const entry: StorageCacheEntry<Data> = { read: () => null as Data, fromSnapshot: true };
+    storageMap.set(storage, entry);
+    return null as Data;
+  }
+
+  return cached.read();
+}
 
 export function useStorage<
   Storage extends BaseStorage<Data>,
   Data = Storage extends BaseStorage<infer D> ? D : unknown,
 >(storage: Storage) {
-  const _data = useSyncExternalStore<Data | null>(storage.subscribe, storage.getSnapshot);
-
-  if (!storageMap.has(storage)) {
-    storageMap.set(storage, wrapPromise(storage.get()));
-  }
-  if (_data !== null) {
-    storageMap.set(storage, { read: () => _data });
-  }
-
-  return _data ?? (storageMap.get(storage)!.read() as Data);
+  const snapshot = useSyncExternalStore<Data | null>(storage.subscribe, storage.getSnapshot);
+  return readStorageValue(storage, snapshot);
 }
 
 export function useStorageSuspense<
   Storage extends BaseStorage<Data>,
   Data = Storage extends BaseStorage<infer D> ? D : unknown,
 >(storage: Storage) {
-  const _data = useSyncExternalStore<Data | null>(storage.subscribe, storage.getSnapshot);
-
-  if (!storageMap.has(storage)) {
-    storageMap.set(storage, wrapPromise(storage.get()));
-  }
-  if (_data !== null) {
-    storageMap.set(storage, { read: () => _data });
-  }
-
-  return _data ?? (storageMap.get(storage)!.read() as Data);
+  const snapshot = useSyncExternalStore<Data | null>(storage.subscribe, storage.getSnapshot);
+  return readStorageValue(storage, snapshot);
 }
 
 function wrapPromise<R>(promise: Promise<R>) {

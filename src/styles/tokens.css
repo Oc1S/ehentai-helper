@@ -12,6 +12,7 @@
  * content3        → --eh-surface-strong-hex
  * primary.*       → --eh-primary-* / --eh-primary-fg-hex
  * success.DEFAULT → --eh-success-hex
+ * danger.*        → --eh-error-* / --eh-error-bright-hex
  *
  * ── 玻璃色温策略 ──
  * 通用 glass-panel：祖母绿环境光（--eh-glass-ambient-gold，历史命名）
@@ -166,7 +167,9 @@
   --eh-success-hex: #4ade80;
   --eh-success: 74 222 128;
   --eh-warning-hex: #f59e0b;
-  --eh-error-hex: #ef4444;
+  --eh-error: 244 63 94;
+  --eh-error-hex: #f43f5e;
+  --eh-error-bright-hex: #fb7185;
   --eh-section-label-hex: #34d399;
 
   /* 滚动条 */

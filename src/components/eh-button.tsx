@@ -92,7 +92,7 @@ export const EhButton = ({
   );
 
   if (as === 'a' && href) {
-    const anchorProps = rest as AnchorHTMLAttributes<HTMLAnchorElement>;
+    const anchorProps = rest as unknown as AnchorHTMLAttributes<HTMLAnchorElement>;
     return (
       <a
         className={classes}
@@ -100,8 +100,8 @@ export const EhButton = ({
         target={target}
         rel={rel}
         aria-disabled={isDisabledState}
-        onClick={handleClick}
         {...anchorProps}
+        onClick={handleClick}
       >
         {content}
       </a>
@@ -113,8 +113,8 @@ export const EhButton = ({
       type={type}
       className={classes}
       disabled={isDisabledState}
-      onClick={handleClick}
       {...rest}
+      onClick={handleClick}
     >
       {content}
     </button>
