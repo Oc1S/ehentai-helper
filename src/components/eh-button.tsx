@@ -1,7 +1,7 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { type HTMLMotionProps, motion } from 'framer-motion';
 
-export type EhButtonAppearance = 'primary' | 'secondary' | 'danger' | 'link';
+export type EhButtonVariant = 'primary' | 'secondary' | 'danger' | 'link';
 
 export type EhButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -12,7 +12,7 @@ const SIZE_CLASS: Record<EhButtonSize, string> = {
   lg: 'eh-btn--lg',
 };
 
-const APPEARANCE_CLASS: Record<EhButtonAppearance, string> = {
+const VARIANT_CLASS: Record<EhButtonVariant, string> = {
   primary: 'eh-btn--primary',
   secondary: 'eh-btn--secondary',
   danger: 'eh-btn--danger',
@@ -20,10 +20,9 @@ const APPEARANCE_CLASS: Record<EhButtonAppearance, string> = {
 };
 
 type EhButtonProps = {
-  appearance?: EhButtonAppearance;
+  variant?: EhButtonVariant;
   ehSize?: EhButtonSize;
   fullWidth?: boolean;
-  onPress?: () => void;
   isIconOnly?: boolean;
   startContent?: ReactNode;
   endContent?: ReactNode;
@@ -32,10 +31,11 @@ type EhButtonProps = {
   href?: string;
   target?: string;
   rel?: string;
+  onPress?: () => void;
 } & Omit<HTMLMotionProps<'button'>, 'color' | 'children' | 'ref'>;
 
 export const EhButton = ({
-  appearance = 'primary',
+  variant = 'primary',
   ehSize = 'md',
   fullWidth = false,
   className = '',
@@ -56,7 +56,7 @@ export const EhButton = ({
   const classes = [
     'eh-btn',
     SIZE_CLASS[ehSize],
-    isIconOnly ? 'eh-btn--icon' : APPEARANCE_CLASS[appearance],
+    isIconOnly ? 'eh-btn--icon' : VARIANT_CLASS[variant],
     fullWidth ? 'eh-btn--full' : '',
     className,
   ]

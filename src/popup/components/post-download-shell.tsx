@@ -72,7 +72,7 @@ export const PostDownloadShell = ({
 
         {!hideRangeControls ? (
           <EhButton
-            appearance="secondary"
+            variant="secondary"
             ehSize="sm"
             fullWidth
             onPress={onToggleRange}
@@ -99,7 +99,7 @@ export const PostDownloadShell = ({
 };
 
 export const RetryPrimaryButton = ({ count, onPress }: { count: number; onPress: () => void }) => (
-  <EhButton appearance="primary" ehSize="md" fullWidth onPress={onPress}>
+  <EhButton variant="primary" ehSize="md" fullWidth onPress={onPress}>
     {t('retryAllFailed', String(count))}
   </EhButton>
 );

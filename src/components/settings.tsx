@@ -97,7 +97,7 @@ export const Settings: FC<{
       content: (
         <div className="flex flex-wrap items-center gap-2">
           <EhButton
-            appearance="link"
+            variant="link"
             ehSize="sm"
             className={variant === 'page' ? 'text-[13px]' : 'text-xs'}
             onPress={() => {

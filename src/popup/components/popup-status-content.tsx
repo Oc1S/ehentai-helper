@@ -99,15 +99,18 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           hideRangeControls
           footerActions={
             <div className="flex items-stretch gap-2">
+              <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
+                {t('viewDetails')}
+              </EhButton>
               <EhButton
-                appearance="primary"
+                variant="primary"
                 ehSize="md"
                 className="min-w-0 flex-1"
                 onPress={openDownloadFolder}
               >
                 {t('openFolder')}
               </EhButton>
-              <EhButton appearance="secondary" ehSize="md" onPress={resetToBeforeDownload}>
+              <EhButton variant="secondary" ehSize="md" onPress={resetToBeforeDownload}>
                 {t('backToInitial')}
               </EhButton>
             </div>
@@ -137,13 +140,13 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
               leading={
                 <>
                   <EhButton
-                    appearance="secondary"
+                    variant="secondary"
                     ehSize="md"
                     onPress={() => setGalleryDetailOpen(true)}
                   >
                     {t('viewDetails')}
                   </EhButton>
-                  <EhButton appearance="secondary" ehSize="md" onPress={openDownloadFolder}>
+                  <EhButton variant="secondary" ehSize="md" onPress={openDownloadFolder}>
                     {t('openFolder')}
                   </EhButton>
                 </>
@@ -166,9 +169,14 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           footer={
             <PostDownloadActionRow
               leading={
-                <EhButton appearance="secondary" ehSize="md" onPress={resetToBeforeDownload}>
-                  {t('backToInitial')}
-                </EhButton>
+                <>
+                  <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
+                    {t('viewDetails')}
+                  </EhButton>
+                  <EhButton variant="secondary" ehSize="md" onPress={resetToBeforeDownload}>
+                    {t('backToInitial')}
+                  </EhButton>
+                </>
               }
               retryCount={failedCount}
               onRetry={() => handleRetryFailed()}

@@ -36,7 +36,7 @@ export const OtherPageStatusView = () => (
         href="https://e-hentai.org/"
         target="_blank"
         rel="noreferrer"
-        appearance="primary"
+        variant="primary"
         ehSize="sm"
         className="w-full"
       >
@@ -47,7 +47,7 @@ export const OtherPageStatusView = () => (
         href="https://exhentai.org/"
         target="_blank"
         rel="noreferrer"
-        appearance="primary"
+        variant="primary"
         ehSize="sm"
         className="w-full"
       >
@@ -64,7 +64,7 @@ export const FailStatusView = ({ onReload }: { onReload: () => void }) => (
     title={t('unableReadGallery')}
     description={t('unableReadGalleryDesc')}
   >
-    <EhButton appearance="primary" ehSize="sm" onPress={onReload}>
+    <EhButton variant="primary" ehSize="sm" onPress={onReload}>
       {t('refreshPage')}
     </EhButton>
   </StatusCard>

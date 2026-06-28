@@ -41,7 +41,7 @@ export const OptionsPage = () => {
                 {t('optionsSubtitle')}
               </p>
             </div>
-            <EhButton appearance="primary" ehSize="md" onPress={handleSave}>
+            <EhButton variant="primary" ehSize="md" onPress={handleSave}>
               {t('saveChanges')}
             </EhButton>
           </header>

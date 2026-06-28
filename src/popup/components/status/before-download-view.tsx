@@ -78,7 +78,7 @@ export const BeforeDownloadView = ({
               </div>
               <div className="border-t border-[var(--eh-hairline-soft)] p-4 pt-3">
                 <EhButton
-                  appearance="primary"
+                  variant="primary"
                   ehSize="lg"
                   fullWidth
                   onPress={onStartDownload}
@@ -131,13 +131,13 @@ const PreviouslyTrackedSection = ({
         <span aria-hidden>·</span>
         <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
       </div>
-      <EhButton appearance="secondary" ehSize="sm" onPress={onViewDetails}>
+      <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
         {t('viewDetails')}
       </EhButton>
     </div>
     {missingCount > 0 ? (
       <div className="mt-2.5">
-        <EhButton appearance="primary" ehSize="sm" onPress={onResumeMissing}>
+        <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
           {t('continueMissing')} ({missingCount})
         </EhButton>
       </div>

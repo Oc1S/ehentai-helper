@@ -195,7 +195,7 @@ export const GalleryDetailModal: FC<{
                           <TableCell>
                             {onRetryIndex && row.state === 'interrupted' ? (
                               <EhButton
-                                appearance="primary"
+                                variant="primary"
                                 ehSize="sm"
                                 onPress={() => onRetryIndex(row.index)}
                               >
@@ -214,11 +214,11 @@ export const GalleryDetailModal: FC<{
             </ModalBody>
             <ModalFooter className="gap-2">
               {onRetryAllFailed && counts.interrupted > 0 && (
-                <EhButton appearance="primary" ehSize="sm" onPress={onRetryAllFailed}>
+                <EhButton variant="primary" ehSize="sm" onPress={onRetryAllFailed}>
                   {t('retryAllFailed', String(counts.interrupted))}
                 </EhButton>
               )}
-              <EhButton appearance="secondary" ehSize="sm" onPress={close}>
+              <EhButton variant="secondary" ehSize="sm" onPress={close}>
                 {t('close')}
               </EhButton>
             </ModalFooter>

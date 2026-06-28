@@ -41,7 +41,7 @@ type DownloadItem = chrome.downloads.DownloadItem & { displayIndex?: number };
 type DownloadState = DownloadItem['state'];
 
 const CellButton = ({ children, ...rest }: ComponentProps<typeof EhButton>) => (
-  <EhButton appearance="primary" ehSize="sm" {...rest}>
+  <EhButton variant="primary" ehSize="sm" {...rest}>
     {children}
   </EhButton>
 );
@@ -198,7 +198,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
         <Dropdown>
           <DropdownTrigger>
             <EhButton
-              appearance="secondary"
+              variant="secondary"
               ehSize="sm"
               endContent={<ChevronDownIcon className="text-small" />}
             >

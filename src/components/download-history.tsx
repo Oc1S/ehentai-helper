@@ -126,7 +126,7 @@ export const History: FC = () => {
           {t('recordsCount', [String(filteredData.length), String(data.length)])}
         </span>
         <div className="flex-1" />
-        <EhButton appearance="danger" ehSize="sm" onPress={() => setConfirmClear(true)}>
+        <EhButton variant="danger" ehSize="sm" onPress={() => setConfirmClear(true)}>
           {t('clearAll')}
         </EhButton>
       </div>
@@ -183,21 +183,21 @@ export const History: FC = () => {
                 <TableCell className="py-1.5">
                   <div className="flex flex-nowrap items-center gap-0.5">
                     <EhButton
-                      appearance="secondary"
+                      variant="secondary"
                       ehSize="sm"
                       onPress={() => void handleRedownload(item)}
                     >
                       {t('redownload')}
                     </EhButton>
                     <EhButton
-                      appearance="secondary"
+                      variant="secondary"
                       ehSize="sm"
                       disabled={!galleryRecords[item.url]}
                       onPress={() => setActiveUrl(item.url)}
                     >
                       {t('detail')}
                     </EhButton>
-                    <EhButton appearance="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
+                    <EhButton variant="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
                       {t('delete')}
                     </EhButton>
                   </div>
@@ -219,11 +219,11 @@ export const History: FC = () => {
               <ModalHeader>{t('clearAll')}</ModalHeader>
               <ModalBody className="text-sm text-muted">{t('confirmClearAll')}</ModalBody>
               <ModalFooter>
-                <EhButton appearance="secondary" ehSize="sm" onPress={close}>
+                <EhButton variant="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
                 <EhButton
-                  appearance="danger"
+                  variant="danger"
                   ehSize="sm"
                   onPress={() => {
                     downloadHistoryStorage.clear();
@@ -245,11 +245,11 @@ export const History: FC = () => {
               <ModalHeader>{t('delete')}</ModalHeader>
               <ModalBody className="text-sm text-muted">{t('confirmDelete')}</ModalBody>
               <ModalFooter>
-                <EhButton appearance="secondary" ehSize="sm" onPress={close}>
+                <EhButton variant="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>
                 <EhButton
-                  appearance="danger"
+                  variant="danger"
                   ehSize="sm"
                   onPress={() => {
                     if (deleteTarget) {

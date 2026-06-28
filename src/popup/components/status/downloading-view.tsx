@@ -52,10 +52,10 @@ export const DownloadingView = ({
     </div>
     <div className="min-h-popup-footer flex shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
       <div className="flex items-stretch gap-2">
-        <EhButton appearance="secondary" ehSize="md" onPress={onViewDetails}>
+        <EhButton variant="secondary" ehSize="md" onPress={onViewDetails}>
           {t('viewDetails')}
         </EhButton>
-        <EhButton appearance="danger" ehSize="md" className="min-w-0 flex-1" onPress={onCancel}>
+        <EhButton variant="danger" ehSize="md" className="min-w-0 flex-1" onPress={onCancel}>
           {t('cancel')}
         </EhButton>
       </div>
@@ -106,7 +106,7 @@ export const StartDownloadButton = ({
   onPress: () => void;
 }) => (
   <EhButton
-    appearance="primary"
+    variant="primary"
     ehSize="lg"
     fullWidth
     onPress={onPress}
