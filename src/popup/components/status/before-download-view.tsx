@@ -123,24 +123,22 @@ const PreviouslyTrackedSection = ({
     <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
       {t('previouslyTracked')}
     </p>
-    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-soft">
-        <span className="text-success">{t('badgeComplete', String(counts.complete))}</span>
-        <span aria-hidden>·</span>
-        <span className="text-warning">{t('badgeInProgress', String(counts.in_progress))}</span>
-        <span aria-hidden>·</span>
-        <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
-      </div>
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-soft">
+      <span className="text-success">{t('badgeComplete', String(counts.complete))}</span>
+      <span aria-hidden>·</span>
+      <span className="text-warning">{t('badgeInProgress', String(counts.in_progress))}</span>
+      <span aria-hidden>·</span>
+      <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
+    </div>
+    <div className="mt-2.5 flex flex-wrap items-center gap-2">
       <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
         {t('viewDetails')}
       </EhButton>
-    </div>
-    {missingCount > 0 ? (
-      <div className="mt-2.5">
+      {missingCount > 0 ? (
         <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
-          {t('continueMissing')} ({missingCount})
+          {t('continueMissing', String(missingCount))}
         </EhButton>
-      </div>
-    ) : null}
+      ) : null}
+    </div>
   </div>
 );

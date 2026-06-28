@@ -57,6 +57,18 @@ const trimFilename = (filename?: string) => {
   return arr[arr.length - 1] || filename;
 };
 
+const detailColumns = (showAction: boolean) => {
+  const cols = [
+    { key: 'index', label: t('colIndex'), width: 56 },
+    { key: 'state', label: t('colState'), width: 92 },
+    { key: 'file', label: t('colFileUrl') },
+  ];
+  if (showAction) {
+    cols.push({ key: 'action', label: t('colAction'), width: 88 });
+  }
+  return cols;
+};
+
 export const GalleryDetailModal: FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -93,6 +105,9 @@ export const GalleryDetailModal: FC<{
       );
     });
   }, [rows, filter, keyword]);
+
+  const showAction = Boolean(onRetryIndex || onRetryAllFailed);
+  const columns = detailColumns(showAction);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
@@ -153,59 +168,72 @@ export const GalleryDetailModal: FC<{
                   removeWrapper
                   classNames={ehTableClassNames()}
                 >
-                  <TableHeader>
-                    <TableColumn width={56}>{t('colIndex')}</TableColumn>
-                    <TableColumn width={92}>{t('colState')}</TableColumn>
-                    <TableColumn>{t('colFileUrl')}</TableColumn>
-                    {(onRetryIndex || onRetryAllFailed) && (
-                      <TableColumn width={88}>{t('colAction')}</TableColumn>
+                  <TableHeader columns={columns}>
+                    {(col) => (
+                      <TableColumn key={col.key} width={col.width}>
+                        {col.label}
+                      </TableColumn>
                     )}
                   </TableHeader>
                   <TableBody items={filteredRows} emptyContent={t('noRecords')}>
                     {(row) => (
                       <TableRow key={row.index}>
-                        <TableCell>{row.index}</TableCell>
-                        <TableCell>
-                          <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
-                            {stateLabel(row.state)}
-                          </Chip>
-                        </TableCell>
-                        <TableCell className="eh-table-cell--clip">
-                          <div className="flex min-w-0 flex-col gap-0.5">
-                            <span className="eh-url-link text-ink" title={row.filename || ''}>
-                              {trimFilename(row.filename) || '-'}
-                            </span>
-                            {row.sourceUrl ? (
-                              <a
-                                href={row.sourceUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
-                                title={row.sourceUrl}
-                              >
-                                {row.sourceUrl}
-                              </a>
-                            ) : null}
-                            {row.error ? (
-                              <span className="text-xs text-error">{row.error}</span>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        {onRetryIndex || onRetryAllFailed ? (
-                          <TableCell>
-                            {onRetryIndex && row.state === 'interrupted' ? (
-                              <EhButton
-                                variant="primary"
-                                ehSize="sm"
-                                onPress={() => onRetryIndex(row.index)}
-                              >
-                                {t('retry')}
-                              </EhButton>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                        ) : null}
+                        {(columnKey) => {
+                          switch (columnKey) {
+                            case 'index':
+                              return <TableCell>{row.index}</TableCell>;
+                            case 'state':
+                              return (
+                                <TableCell>
+                                  <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
+                                    {stateLabel(row.state)}
+                                  </Chip>
+                                </TableCell>
+                              );
+                            case 'file':
+                              return (
+                                <TableCell className="eh-table-cell--clip">
+                                  <div className="flex min-w-0 flex-col gap-0.5">
+                                    <span className="eh-url-link text-ink" title={row.filename || ''}>
+                                      {trimFilename(row.filename) || '-'}
+                                    </span>
+                                    {row.sourceUrl ? (
+                                      <a
+                                        href={row.sourceUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
+                                        title={row.sourceUrl}
+                                      >
+                                        {row.sourceUrl}
+                                      </a>
+                                    ) : null}
+                                    {row.error ? (
+                                      <span className="text-xs text-error">{row.error}</span>
+                                    ) : null}
+                                  </div>
+                                </TableCell>
+                              );
+                            case 'action':
+                              return (
+                                <TableCell>
+                                  {onRetryIndex && row.state === 'interrupted' ? (
+                                    <EhButton
+                                      variant="primary"
+                                      ehSize="sm"
+                                      onPress={() => onRetryIndex(row.index)}
+                                    >
+                                      {t('retry')}
+                                    </EhButton>
+                                  ) : (
+                                    '-'
+                                  )}
+                                </TableCell>
+                              );
+                            default:
+                              return <TableCell>-</TableCell>;
+                          }
+                        }}
                       </TableRow>
                     )}
                   </TableBody>

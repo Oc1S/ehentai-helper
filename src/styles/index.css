@@ -40,31 +40,31 @@
 }
 
 @layer components {
-  .settings-row {
+  .eh-settings-row {
     @apply flex flex-col gap-2 sm:flex-row sm:items-center;
   }
 
-  .settings-row--modal {
+  .eh-settings-row--modal {
     @apply gap-2.5 sm:gap-3;
   }
 
-  .settings-label {
+  .eh-settings-label {
     @apply w-full shrink-0 text-sm font-medium text-muted sm:w-[200px];
   }
 
-  .settings-label--modal {
+  .eh-settings-label--modal {
     @apply w-full shrink-0 text-xs font-normal text-muted sm:w-[148px];
   }
 
-  .settings-content {
+  .eh-settings-field {
     @apply w-full flex-1 text-sm text-body;
   }
 
-  .settings-content--modal {
+  .eh-settings-field--modal {
     @apply w-full flex-1 text-xs text-body;
   }
 
-  .settings-modal-footer {
+  .eh-modal-footer {
     @apply flex flex-row justify-end gap-2 px-5 py-2.5 backdrop-blur-md;
     border-top: 1px solid var(--eh-hairline-soft);
     background: rgb(8 8 9 / 0.28);
@@ -88,7 +88,7 @@
   }
 
   .eh-btn--sm {
-    @apply h-9 min-h-9 min-w-[76px] px-3.5 text-[13px] font-normal;
+    @apply h-9 min-h-9 min-w-14 px-3.5 text-[13px] font-normal;
   }
 
   .eh-btn--md {
@@ -108,7 +108,7 @@
     border: 1px solid rgb(var(--eh-brand-accent) / 0.38);
     background: rgb(var(--eh-brand-accent) / 0.12);
     color: var(--eh-brand-accent-bright-hex);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
     box-shadow: inset 0 1px 0 rgb(var(--eh-brand-accent) / 0.06);
   }
 
@@ -118,14 +118,17 @@
   }
 
   .eh-btn--secondary {
-    background: rgba(90, 97, 90, 0.4);
-    border: 1px solid rgba(250, 250, 250, 0.1);
-    color: var(--eh-body-hex);
-    backdrop-filter: blur(8px);
+    border: 1px solid var(--eh-glass-border);
+    background: rgb(8 8 9 / 0.35);
+    color: var(--eh-muted-hex);
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 0 rgb(250 250 250 / 0.04);
   }
 
   .eh-btn--secondary:hover {
-    background: rgb(48 48 54 / 0.62);
+    border-color: var(--eh-glass-border-hover);
+    background: rgb(12 12 13 / 0.45);
+    color: var(--eh-body-hex);
   }
 
   .eh-btn--danger {
@@ -182,39 +185,6 @@
 
   .eh-btn--lg .eh-btn__icon {
     @apply h-8 w-8;
-  }
-
-  /* 遗留别名 → 迁移完成后可删 */
-  .settings-modal-btn {
-    @apply eh-btn eh-btn--sm;
-  }
-
-  .settings-modal-btn--cancel {
-    @apply eh-btn--secondary;
-    border: 1px solid var(--eh-glass-border);
-    background: rgb(12 12 13 / 0.4);
-    backdrop-filter: blur(4px);
-  }
-
-  .settings-modal-btn--cancel:hover {
-    background: rgb(16 16 18 / 0.5);
-    color: var(--eh-body-hex);
-  }
-
-  .settings-modal-btn--save {
-    @apply eh-btn--primary;
-  }
-
-  .eh-accent-action-btn {
-    @apply eh-btn eh-btn--primary;
-  }
-
-  .eh-accent-action-btn__icon {
-    @apply eh-btn__icon;
-  }
-
-  .eh-footer-secondary-btn {
-    @apply eh-btn eh-btn--secondary;
   }
 
   .eh-text-input {

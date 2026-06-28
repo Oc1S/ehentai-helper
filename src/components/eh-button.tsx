@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { type HTMLMotionProps, motion } from 'framer-motion';
 
 export type EhButtonVariant = 'primary' | 'secondary' | 'danger' | 'link';
@@ -82,20 +82,24 @@ export const EhButton = ({
     </>
   );
 
+  const tapMotion = {
+    whileTap: isDisabled ? undefined : { scale: 0.97 as const },
+    transition: { type: 'spring' as const, visualDuration: 0.3, bounce: 0.3 },
+  };
+
   if (as === 'a' && href) {
-    const anchorProps = rest as unknown as AnchorHTMLAttributes<HTMLAnchorElement>;
     return (
-      <a
+      <motion.a
         className={classes}
         href={isDisabled ? undefined : href}
         target={target}
         rel={rel}
         aria-disabled={isDisabled}
-        {...anchorProps}
+        {...tapMotion}
         onClick={handleClick}
       >
         {content}
-      </a>
+      </motion.a>
     );
   }
 
@@ -104,8 +108,7 @@ export const EhButton = ({
       type={type}
       className={classes}
       disabled={isDisabled}
-      whileTap={isDisabled ? undefined : { scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      {...tapMotion}
       {...rest}
       onClick={handleClick}
     >

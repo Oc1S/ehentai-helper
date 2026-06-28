@@ -14,7 +14,7 @@
   },
   "confirmDownload": { "message": "Confirm Download" },
   "cancel": { "message": "Cancel" },
-  "continueMissing": { "message": "Continue missing" },
+  "continueMissing": { "message": "Download $1 missing" },
   "redownloadAll": { "message": "Redownload all" },
   "retryFailed": { "message": "Retry failed" },
   "openFolder": { "message": "Open download folder" },

@@ -14,13 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
-import { toast } from 'sonner';
 
-import { startDownload } from '@/download/client';
-import { resolveGalleryDownloadPath } from '@/download/download-filename';
 import { useStorageSuspense } from '@/hooks';
 import {
-  configStorage,
   type DownloadHistoryItem,
   downloadHistoryStorage,
   type GalleryRecord,
@@ -54,26 +50,6 @@ const formatStatus = (record: GalleryRecord | undefined, range: [number, number]
   return t('statusCompleteRatio', [String(complete), String(total)]);
 };
 
-const buildPayloadFromHistory = async (item: DownloadHistoryItem) => {
-  const config = await configStorage.get();
-  const imagesPerPage = 20;
-  const totalImages = item.info.numImages;
-  const numPages = Math.ceil(totalImages / imagesPerPage);
-  const downloadPath = resolveGalleryDownloadPath(config.intermediateDownloadPath, item.name);
-
-  return {
-    galleryFrontPageUrl: item.url,
-    galleryName: item.name,
-    galleryId: item.info.id,
-    downloadPath,
-    rangeStart: item.range[0],
-    rangeEnd: item.range[1],
-    imagesPerPage,
-    numPages,
-    totalImages,
-  };
-};
-
 export const History: FC = () => {
   const list = useStorageSuspense(downloadHistoryStorage) || [];
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
@@ -92,13 +68,6 @@ export const History: FC = () => {
   }, [data, keyword]);
 
   const activeRecord = activeUrl ? galleryRecords[activeUrl] ?? null : null;
-
-  const handleRedownload = async (item: DownloadHistoryItem) => {
-    const payload = await buildPayloadFromHistory(item);
-    const res = await startDownload(payload);
-    if (res?.ok) toast.success(t('downloadStarted'));
-    else toast.error(t('failedStartDownload'));
-  };
 
   const galleryCount = Object.keys(galleryRecords).length;
 
@@ -149,7 +118,7 @@ export const History: FC = () => {
                       : col.key === 'time'
                         ? 128
                         : col.key === 'op'
-                          ? 220
+                          ? 148
                           : 64
                 }
               >
@@ -182,13 +151,6 @@ export const History: FC = () => {
                 </TableCell>
                 <TableCell className="py-1.5">
                   <div className="flex flex-nowrap items-center gap-0.5">
-                    <EhButton
-                      variant="secondary"
-                      ehSize="sm"
-                      onPress={() => void handleRedownload(item)}
-                    >
-                      {t('redownload')}
-                    </EhButton>
                     <EhButton
                       variant="secondary"
                       ehSize="sm"

@@ -56,23 +56,23 @@
   padding: var(--options-gutter);
 }
 
-.options-shell .settings-panel--page {
+.options-shell .eh-settings-panel--page {
   gap: 18px;
   padding: 16px 20px 20px;
   border-radius: 12px;
 }
 
-.options-shell .settings-group {
+.options-shell .eh-settings-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.options-shell .settings-group__rows {
+.options-shell .eh-settings-group__rows {
   border-top: 1px solid var(--eh-hairline-soft);
 }
 
-.options-shell .settings-row--page {
+.options-shell .eh-settings-row--page {
   flex-direction: row;
   align-items: flex-start;
   gap: 20px;
@@ -80,11 +80,11 @@
   border-bottom: 1px solid var(--eh-hairline-soft);
 }
 
-.options-shell .settings-row--page:last-child {
+.options-shell .eh-settings-row--page:last-child {
   border-bottom: none;
 }
 
-.options-shell .settings-label--page {
+.options-shell .eh-settings-label--page {
   width: 200px;
   flex-shrink: 0;
   padding-top: 2px;
@@ -93,14 +93,14 @@
   color: var(--eh-muted-hex);
 }
 
-.options-shell .settings-content--page {
+.options-shell .eh-settings-field--page {
   flex: 1;
   min-width: 0;
   font-size: 14px;
   color: var(--eh-body-hex);
 }
 
-.options-shell .settings-section-title {
+.options-shell .eh-settings-section-title {
   padding: 0 4px;
   font-size: 12px;
   font-weight: 600;

@@ -7,5 +7,5 @@ export const EhSectionLabel = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <p className={['settings-section-title', className].filter(Boolean).join(' ')}>{children}</p>
+  <p className={['eh-settings-section-title', className].filter(Boolean).join(' ')}>{children}</p>
 );

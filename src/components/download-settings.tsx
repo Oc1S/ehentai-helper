@@ -97,7 +97,7 @@ export const DownloadSettings = ({
               <ModalBody className="scrollbar-glass px-5 py-4">
                 <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
               </ModalBody>
-              <ModalFooter className="flex flex-row justify-end gap-2 border-t border-[var(--eh-hairline-soft)] bg-[rgb(8_8_9/0.28)] px-5 py-2.5 backdrop-blur-md">
+              <ModalFooter className="eh-modal-footer">
                 <EhButton variant="secondary" ehSize="sm" onPress={close}>
                   {t('cancel')}
                 </EhButton>

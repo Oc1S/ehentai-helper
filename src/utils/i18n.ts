@@ -3,7 +3,7 @@ const fallbackMessages: Record<string, string> = {
   startDownloadWithCount: 'Start Download · $1 images',
   confirmDownload: 'Confirm Download',
   cancel: 'Cancel',
-  continueMissing: 'Continue missing',
+  continueMissing: 'Download $1 missing',
   redownloadAll: 'Redownload all',
   retryFailed: 'Retry failed',
   openFolder: 'Open download folder',

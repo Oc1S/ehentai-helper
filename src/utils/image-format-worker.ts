@@ -33,6 +33,8 @@ export const convertImageToFormatInWorker = async (
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
 
+  // PNG 为无损格式，不传 quality；JPEG/WebP 使用 0.92（常见高质量默认值，
+  // 与 Chrome canvas 默认接近，画质损失极小且比 1.0 更省空间，显式指定以保证跨浏览器一致）
   return canvas.convertToBlob({
     type: MIME_MAP[format],
     quality: format === 'png' ? undefined : 0.92,

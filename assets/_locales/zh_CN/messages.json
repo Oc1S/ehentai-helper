@@ -14,7 +14,7 @@
   },
   "confirmDownload": { "message": "确认下载" },
   "cancel": { "message": "取消" },
-  "continueMissing": { "message": "继续下载缺失" },
+  "continueMissing": { "message": "补下载 $1 张" },
   "redownloadAll": { "message": "重新下载全部" },
   "retryFailed": { "message": "重试失败项" },
   "openFolder": { "message": "打开下载文件夹" },

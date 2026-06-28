@@ -38,7 +38,7 @@ export const OtherPageStatusView = () => (
         rel="noreferrer"
         variant="primary"
         ehSize="sm"
-        className="w-full"
+        fullWidth
       >
         E-Hentai
       </EhButton>
@@ -49,7 +49,7 @@ export const OtherPageStatusView = () => (
         rel="noreferrer"
         variant="primary"
         ehSize="sm"
-        className="w-full"
+        fullWidth
       >
         ExHentai
       </EhButton>

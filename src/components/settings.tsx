@@ -29,16 +29,18 @@ const Row = ({
 }: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'page' }) => (
   <div
     className={
-      variant === 'page' ? 'settings-row settings-row--page' : 'settings-row settings-row--modal'
+      variant === 'page'
+        ? 'eh-settings-row eh-settings-row--page'
+        : 'eh-settings-row eh-settings-row--modal'
     }
   >
     <div
       className={
         variant === 'page'
-          ? 'settings-label settings-label--page'
+          ? 'eh-settings-label eh-settings-label--page'
           : variant === 'modal'
-            ? 'settings-label--modal'
-            : 'settings-label'
+            ? 'eh-settings-label--modal'
+            : 'eh-settings-label'
       }
     >
       {label}
@@ -46,10 +48,10 @@ const Row = ({
     <div
       className={
         variant === 'page'
-          ? 'settings-content settings-content--page'
+          ? 'eh-settings-field eh-settings-field--page'
           : variant === 'modal'
-            ? 'settings-content--modal'
-            : 'settings-content'
+            ? 'eh-settings-field--modal'
+            : 'eh-settings-field'
       }
     >
       {content}
@@ -68,7 +70,7 @@ const TextInput = ({
     id={id}
     className={[
       'eh-text-input',
-      variant === 'page' ? 'eh-text-input--page path-input--page text-sm' : 'eh-text-input--modal text-xs',
+      variant === 'page' ? 'eh-text-input--page text-sm' : 'eh-text-input--modal text-xs',
       className,
     ]
       .filter(Boolean)
@@ -249,8 +251,8 @@ export const Settings: FC<{
 
   const panelClass =
     variant === 'page'
-      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 shadow-card settings-panel--page'
-      : 'flex flex-col gap-5 rounded-eh-cta border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm settings-panel--modal';
+      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 shadow-card eh-settings-panel--page'
+      : 'flex flex-col gap-5 rounded-eh-cta border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm eh-settings-panel--modal';
 
   const pageGroups: { title: string; keys: ConfigKey[] }[] = [
     { title: t('settingsGroupLocation'), keys: ['intermediateDownloadPath'] },
@@ -284,9 +286,9 @@ export const Settings: FC<{
       ) : null}
       {variant === 'page'
         ? pageGroups.map((group) => (
-            <section key={group.title} className="settings-group">
-              <h2 className="settings-section-title">{group.title}</h2>
-              <div className="settings-group__rows">{group.keys.map(renderRow)}</div>
+            <section key={group.title} className="eh-settings-group">
+              <h2 className="eh-settings-section-title">{group.title}</h2>
+              <div className="eh-settings-group__rows">{group.keys.map(renderRow)}</div>
             </section>
           ))
         : (Object.keys(formItemMap) as ConfigKey[]).map(renderRow)}
