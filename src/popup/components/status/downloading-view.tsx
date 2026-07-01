@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Spinner } from '@nextui-org/react';
 import { Download } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
 import { EhDownloadProgressPanel } from '@/components/eh-progress';
+import { Spinner } from '@/components/ui-primitives';
 import { t } from '@/utils/i18n';
 
 import { DownloadResultSummary } from '../download-result-summary';
@@ -33,7 +33,7 @@ export const DownloadingView = ({
             {galleryName}
           </h3>
           <div className="mt-2.5 flex items-center gap-2">
-            <Spinner size="sm" color="primary" />
+            <Spinner size="sm" />
             <span className="text-[13px] font-medium text-brand-accent">
               {t('downloadingImages')}
             </span>

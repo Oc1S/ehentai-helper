@@ -1,395 +1,255 @@
-# E-Hentai Helper 设计系统
+## Overview
 
-> **Design Read：** Chrome 扩展工具 UI，Mono + Emerald 暗色精密工具语言，基于 `tokens.css` + Tailwind + NextUI。
+Cohere's current web presence feels like a sober enterprise AI command center with editorial restraint. The home page opens on a huge typographic declaration over a white canvas, then uses photography, dark product mockups, trust logos, and generous empty space to make AI infrastructure feel controlled rather than speculative. Product pages invert the tone into deep green-black or dark navy bands, while blog and research pages move toward publishing-system clarity: large filters, thin rules, dense lists, and pale technical backgrounds.
 
-## 0. 设计定位
+What makes the system distinctive is the mix of austere black-and-white UI with bursts of tactile brand imagery. The site avoids decorative chrome in the normal interface; color arrives through photography, abstract 3D media, coral blog taxonomy chips, blue research links, and dark product environments. Cards are rounded but not cute. Type is large, tight, and almost monospaced in spirit, creating a research-lab cadence across marketing, product, and editorial surfaces.
 
-### 0.1 产品形态
+**Key Characteristics:**
+- Monumental display headlines with very tight line height and negative tracking.
+- White editorial canvases interrupted by deep green, dark navy, and image-led CTA bands.
+- Rounded media cards and product cards, usually 8px to 22px.
+- Pill CTAs in near-black or white, with most secondary actions rendered as underlined text links.
+- Trust-logo strips with monochrome partner marks and very wide vertical spacing.
+- Agent-console mockups using dark panels, small status chips, and product integration badges.
+- Blog and research surfaces with prominent taxonomy chips, long rule-separated lists, and search fields.
 
-本项目是 **浏览器扩展工具界面**（Popup 800×600、Options 全页、内容脚本浮层），不是营销落地页。设计目标：
+## Colors
 
-- **高密度信息展示**：下载进度、历史记录、设置表单在同一视口内可操作
-- **暗色常驻**：扩展 Popup 无系统主题切换，固定暗色 `color-scheme: dark`
-- **品牌识别**：近黑碳底 + emerald 祖母绿强调，区别于通用 SaaS 蓝紫渐变
+### Brand & Accent
 
-### 0.2 三档拨盘（Dial）
+- **Cohere Black** (`#000000`): Announcement bar, highest-contrast text, and the global brand anchor.
+- **Near-Black Primary** (`#17171c`): Primary CTA buttons, dark footer, and deep UI cards.
+- **Deep Enterprise Green** (`#003c33`): Product hero bands for North and Command-style dark sections.
+- **Dark Navy** (`#071829`): Financial-services and security-oriented solution bands.
+- **Action Blue** (`#1863dc`): Editorial links, pagination, and secondary action emphasis.
+- **Coral** (`#ff7759`): Blog category chips, taxonomy outlines, and warm product markers.
+- **Soft Coral** (`#ffad9b`): Pale chip borders and segmented article-label details.
 
-| 拨盘 | 值 | 含义 |
-|------|-----|------|
-| `DESIGN_VARIANCE` | **3** | 对称网格、左对齐标签、可预测布局 |
-| `MOTION_INTENSITY` | **3** | 仅 hover / active / 进度条过渡；无滚动动画 |
-| `VISUAL_DENSITY` | **8** | 紧凑间距、表格行高 32px、信息优先于留白 |
+### Surface & Background
 
-### 0.3 美学关键词
+- **Canvas White** (`#ffffff`): Dominant page background and form/card surface.
+- **Soft Stone** (`#eeece7`): Product cards, testimonial placeholders, and warm neutral surface blocks.
+- **Pale Green Wash** (`#edfce9`): North page section backdrop behind stacked dark capability panels.
+- **Pale Blue Wash** (`#f1f5ff`): Blog CTA surface behind abstract 3D imagery.
+- **Card Border** (`#f2f2f2`): Softest card containment line.
 
-`Mono Emerald` · 暗碳底 · 祖母绿点缀 · 克制玻璃质感 · 工具精密感 · 单强调色
+### Text & Rules
 
-**明确不做：** 蓝紫渐变、居中 Hero、三栏等宽功能卡、营销式 eyebrow 堆砌、装饰性滚动提示、假数据仪表盘。
+- **Ink** (`#212121`): Default body text and most link text on light backgrounds.
+- **Muted Slate** (`#93939f`): Footer links, dates, metadata, and de-emphasized labels.
+- **Slate** (`#75758a`): Research separators and tertiary text.
+- **Hairline** (`#d9d9dd`): Standard list rules and section dividers.
+- **Border Light** (`#e5e7eb`): Secondary divider and utility rule.
 
----
+### Semantic
 
-## 1. Token 来源与使用规则
+- **Focus Blue** (`#4c6ee6`): Keyboard focus and ring color.
+- **Form Focus Violet** (`#9b60aa`): Focus border for text inputs.
+- **Error Red** (`#b30000`): Extracted ring/shadow color associated with validation-like states.
 
-### 1.1 唯一真相源
+### Gradient System
 
-```
-src/styles/tokens.css   ← 所有颜色、阴影、玻璃、布局尺寸的定义
-src/styles/index.css    ← 组件 class（glass-*、settings-*、eh-*-btn）
-tailwind.config.js      ← 将 token 映射为 Tailwind 语义色；NextUI 构建期色值须与 token 同步
-```
+Cohere does not use gradients as a generic UI fill. Gradients and color fields are media-led: abstract 3D hero imagery, deep blue open-science particle fields, red-orange product video posters, and dark green-to-black product environments. Keep UI surfaces flat; reserve gradient richness for large media panels and CTA image bands.
 
-**硬性约束：**
+## Typography
 
-1. 组件与页面 **禁止内联 hex**（`#34d399` 等），一律使用 `var(--eh-*)` 或 Tailwind 语义类（`text-brand-accent`、`bg-surface-card`）
-2. 新增颜色 **只加在 `tokens.css`**，再在 `tailwind.config.js` 的 `theme.extend.colors` 中暴露
-3. NextUI 主题色在构建期写入，**必须与 `tokens.css` 主色一致**；改 token 时同步改 `tailwind.config.js` 的 `nextui({ themes: { dark: ... } })`
-4. 禁止引入第二套并行色板（如 `primaryBlue`、Cal.com 遗留命名）
+### Font Family
 
-### 1.2 语义色板
+- **Display**: `CohereText`, falling back to `Space Grotesk`, `Inter`, `ui-sans-serif`, and `system-ui`.
+- **Body/UI**: `Unica77 Cohere Web`, falling back to `Inter`, `Arial`, `ui-sans-serif`, and `system-ui`.
+- **Technical labels**: `CohereMono`, falling back to `Arial`, `ui-sans-serif`, and `system-ui`.
+- **Icons**: Cohere uses custom icon fonts and thin-line geometric illustrations.
 
-#### 画布与文字
+### Hierarchy
 
-| Token | CSS 变量 | Hex | Tailwind | 用途 |
-|-------|----------|-----|----------|------|
-| Canvas | `--eh-canvas` | `#09090b` | `bg-canvas` | 页面底色 |
-| Ink | `--eh-ink` | `#fafafa` | `text-ink` | 标题、主文字 |
-| Body | `--eh-body` | `#e4e4e7` | `text-body` | 正文、表单值 |
-| Muted | `--eh-muted` | `#a1a1aa` | `text-muted` | 次要说明 |
-| Muted Soft | `--eh-muted-soft` | `#71717a` | `text-muted-soft` | 占位符、表头、辅助标注 |
+| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
+|---|---|---:|---:|---:|---:|---|
+| Hero Display | CohereText | 96px | 400 | 1.00 | -1.92px | Home page declaration scale. |
+| Product Display | CohereText | 72px | 400 | 1.00 | -1.44px | Product and research hero headlines. |
+| Section Display | Unica77 | 60px | 400 | 1.00 | -1.2px | Large product-page headings. |
+| Section Heading | Unica77 | 48px | 400 | 1.20 | -0.48px | Split hero and CTA headings. |
+| Card Heading | Unica77 | 32px | 400 | 1.20 | -0.32px | Feature card and list section titles. |
+| Feature Heading | Unica77 | 24px | 400 | 1.30 | 0 | Cards, filters, and article titles. |
+| Body Large | Unica77 | 18px | 400 | 1.40 | 0 | Lead text and larger paragraphs. |
+| Body | Unica77 | 16px | 400 | 1.50 | 0 | Default copy and link text. |
+| Button | Unica77 | 14px | 500 | 1.71 | 0 | Compact CTA labels. |
+| Caption | Unica77 | 14px | 400 | 1.40 | 0 | Metadata and small explanatory text. |
+| Mono Label | CohereMono | 14px | 400 | 1.40 | 0.28px | Uppercase technical labels. |
+| Micro | Unica77 | 12px | 400 | 1.40 | 0 | Footer, nav microcopy, and small links. |
 
-#### 表面层级
+### Principles
 
-| Token | Hex | Tailwind | 用途 |
-|-------|-----|----------|------|
-| Surface Soft | `#141414` | `bg-surface-soft` | 输入框底、次要区块 |
-| Surface Card | `#18181b` | `bg-surface-card` | 卡片、Toast、Modal |
-| Surface Strong | `#27272a` | `bg-surface-strong` | 强调区块、禁用底 |
-| Surface Dark | `#050505` | `bg-surface-dark` | Options 顶栏、最深底 |
+- Use massive type sparingly; Cohere pages often have one oversized headline and then settle into restrained 16px-24px UI copy.
+- Keep display type tight. Hero copy should feel compact and carved, not airy.
+- Avoid heavy bold weights. Size, spacing, and surface contrast do most of the hierarchy work.
+- Use uppercase mono labels for category and system markers, especially on product and research pages.
+- Editorial pages can use coral chips and blue links, but the base typography remains black and measured.
 
-#### 品牌与操作
+## Layout
 
-| Token | Hex | Tailwind | 用途 |
-|-------|-----|----------|------|
-| Brand Accent | `#34d399` | `text-brand-accent` / `bg-brand-accent` | 强调数字、链接、图标高亮 |
-| Brand Accent Bright | `#6ee7b7` | — | 主按钮文字、强高亮 |
-| Primary | `#059669` | `bg-primary` | NextUI 主按钮、Progress |
-| Primary Hover | `#047857` | — | 按钮按压 |
-| Primary FG | `#ecfdf5` | `text-primary-foreground` | emerald 按钮上的文字 |
-| On Primary | `#ecfdf5` | `text-on-primary` | 深色按钮上的文字 |
+### Spacing System
 
-主色阶 `--eh-primary-50` … `--eh-primary-900` 供 NextUI `color="primary"` 梯度使用。
+The system uses an 8px base with many one-off alignment values: `2px`, `6px`, `8px`, `10px`, `12px`, `16px`, `20px`, `22px`, `24px`, `28px`, `32px`, `36px`, `40px`, `56px`, `60px`, `64px`, and `80px`.
 
-#### 描边与阴影
+Large sections rely on dramatic vertical breathing room. The home page places a trust-logo strip far below the hero media. Product pages often hold dark panels inside fields of empty white space, then transition to dense forms or footers only near the end.
 
-| Token | 值 | 用途 |
-|-------|-----|------|
-| `--eh-hairline` | `rgba(250,250,250,0.08)` | 分区线、表格边框 |
-| `--eh-hairline-soft` | `rgba(250,250,250,0.04)` | 弱分隔 |
-| `--eh-shadow-card` | `0 1px 3px rgba(0,0,0,0.4)` | 卡片 |
-| `--eh-shadow-card-elevated` | `0 8px 28px rgba(0,0,0,0.55)` | 浮层 |
-| `--eh-glow` | emerald 细描边 + 深阴影 | 聚焦强调（慎用） |
+### Grid & Container
 
-#### 语义状态
+- Global nav uses a three-zone layout: logo left, menu centered, sign-in/CTA right.
+- Home hero is centered text above a two-card media composition: a wide product mockup card beside a narrower photography card.
+- Feature sections commonly use 3-column cards on desktop.
+- Product pages alternate centered hero blocks, trust-logo strips, large single-feature bands, and 2- or 3-column card grids.
+- Research pages use full-width lists with date and chip columns instead of decorative cards.
+- Forms use two-column input rows inside a rounded white card on dark or stone section backgrounds.
 
-| 状态 | Hex | Tailwind |
-|------|-----|----------|
-| Success | `#4ade80` | `text-success` |
-| Warning | `#f59e0b` | `text-warning` |
-| Error | `#ef4444` | `text-error` |
-| Section Label | `#34d399` | 设置区小标题（Options） |
+### Whitespace Philosophy
 
-#### 玻璃质感（Popup 专用）
-
-| Token | 用途 |
-|-------|------|
-| `--eh-glass-bg` / `--eh-glass-bg-hover` | 面板半透明底 |
-| `--eh-glass-border` / `--eh-glass-border-hover` | 玻璃描边（冷灰青调，避免与 emerald 主光抢焦点） |
-| `--eh-glass-elevation` / `--eh-glass-elevation-hover` | 内高光 + 外阴影组合 |
-| `--eh-glass-bg-pool` / `--eh-glass-border-pool` | StatusCard 等信息池变体 |
-| `--eh-popup-bg` + `--eh-popup-ambient-*` | Popup 全局背景渐变 |
-
-> **玻璃 vs 平面：** Popup 固定视口、展示为主 → 可用 `glass-panel` / `glass-card`。Options 长滚动、表单密集 → 用 `surface-card` + `hairline` 平面风格，避免大面积 `backdrop-blur` 影响性能与对比度。
-
-### 1.3 圆角尺度（Shape Lock）
-
-统一使用 **`eh-*` 前缀**（迁移中 `cal-*` 视为废弃别名）。
-
-| Token | 值 | 用途 |
-|-------|-----|------|
-| `eh-xs` | 4px | 极小徽标 |
-| `eh-sm` | 6px | 下拉项 |
-| `eh-md` | 8px | 按钮、输入框、表格容器 |
-| `eh-lg` | 12px | 设置面板、表格外框 |
-| `eh-xl` | 16px | 大卡片 |
-| `eh-2xl` | 20px | 结果摘要卡（DownloadResultSummary） |
-| `eh-3xl` | 24px | StatusCard 独立态 |
-| `full` | 9999px | 徽章、进度条、头像 |
+Cohere uses whitespace as a trust signal. Large empty intervals separate the brand claim, customer proof, product proof, and CTA. Dense content appears only where it serves the information architecture: research paper rows, blog card grids, and contact form fields.
 
-**规则：** 同层组件圆角一致；禁止在同一页面混用 `rounded-2xl` 与任意 `rounded-[20px]` 表达同一层级。
+## Elevation & Depth
 
-### 1.4 间距
+Cohere is mostly flat. Depth comes from surface alternation, media contrast, rounded corners, and thin borders rather than drop shadows.
 
-| Token | 值 | 用途 |
-|-------|-----|------|
-| Base unit | 4px | 所有间距为 4 的倍数 |
-| Popup gutter | 16–20px | 内容区内边距 |
-| Settings row gap | 8px（modal）/ 20px（page） | 标签与控件 |
-| Options gutter | `24px` (`--options-gutter`) | Options 页水平内边距 |
-| Options header | `56px` (`--options-header-h`) | 顶栏高度 |
-| Options max-width | `800px` (`--options-content-w`) | 内容区上限 |
+| Level | Treatment | Use |
+|---|---|---|
+| Flat | No shadow, white or dark field | Hero copy, research lists, editorial surfaces |
+| Bordered | 1px `#d9d9dd`, `#e5e7eb`, or dark translucent rules | Research rows, forms, pale cards, footer inputs |
+| Media Lift | Rounded image or video over contrasting section color | Hero photo cards, product videos, CTA imagery |
+| Dark Product Field | Deep green or navy full-width band | Command, North, financial services, security sections |
 
-### 1.5 字体
+## Shapes
 
-| 角色 | 字体 | 用途 |
-|------|------|------|
-| UI Sans | Inter 400–600 | 全局界面 |
-| Mono | Roboto Mono | 页码范围、路径、数字对齐 `tabular-nums` |
+### Radius Scale
 
-**层级：**
+| Token | Value | Role |
+|---|---:|---|
+| `xs` | 4px | Small images, search fields, article thumbnails, utility elements |
+| `sm` | 8px | Blog chips, cards, small media, dialogs |
+| `md` | 16px | Medium product cards and grouped blocks |
+| `lg` | 22px | Signature media-card and soft placeholder radius |
+| `xl` | 30px | Research/topic filter pills |
+| `pill` | 32px | Primary CTA buttons |
+| `full` | 9999px | Round status elements and fully pill-shaped controls |
 
-| 样式 | 规格 | 场景 |
-|------|------|------|
-| Display | 24–28px / 600 / tracking-tight | 进度百分比 |
-| Title | 15–18px / 600 | 卡片标题、Options h1 |
-| Body | 12–14px / 400 | 正文、表单 |
-| Caption | 11px / 500 | 状态标签 |
-| Section Label | 11px / 600 / uppercase / tracking-[0.06em] | Options 分区标题（每页 ≤3 处） |
-| Micro Label | 11px / 500 / uppercase / tracking-wide | 进度区字段名（成对出现，非装饰 eyebrow） |
+### Image Treatment
 
-数字与进度一律 `font-variant-numeric: tabular-nums`。
+Images are not decorative backdrops for text except in CTA bands. Most imagery sits as rounded cards with visible corners: product videos, enterprise photography, article thumbnails, and abstract 3D renders. The dominant radii are 8px and 22px.
 
-### 1.6 Z-Index 尺度
+## Components
 
-| 层 | 值 | 用途 |
-|----|-----|------|
-| Base | 0 | 内容 |
-| Sticky | 10 | Options header、表头 |
-| Overlay | 40 | Modal、Dropdown |
-| Toast | 50 | Sonner |
+### **`button-primary`**
 
-禁止随意 `z-50` 堆叠；新层须在此表登记。
+Near-black or white pill CTA, depending on surface contrast. Uses 14px-16px Unica77, 12px 24px padding, and a 32px pill radius. This is the primary action style for "Request a demo", "Submit", and hero CTAs.
 
----
+### **`button-secondary`**
 
-## 2. 组件契约
+Text-only action link, usually underlined or rule-aligned, with no filled background. Used for "Explore products", "Try the Playground", newsletter signup, and secondary hero actions.
 
-### 2.1 表面模式
+### **`button-pill-outline`**
 
-| Class | 场景 | 特征 |
-|-------|------|------|
-| `popup-bg` | Popup 根容器 | emerald 径向光 + 深碳渐变 |
-| `glass-panel` | 可交互面板（含 hover 抬升） | blur + 冷色描边 + 环境光斑 |
-| `glass-card` / `glass-card-static` | 信息卡（StatusCard） | 无 hover 或静态高亮 |
-| `glass-card-pool` | 状态池变体 | 青调玻璃，配语义 ambient |
-| `settings-panel--page` | Options 设置区 | `surface-card` + `hairline`，无 blur |
-| `EhTableFrame` | 历史/下载表格 | 半透明底 + 细滚动条 |
+Outlined pill control with transparent fill, 1px dark border, and 30px radius. Used for research filters, topic tags, and lightweight taxonomy controls.
 
-### 2.2 按钮（EhButton）
+### **`announcement-bar`**
 
-全项目统一使用 `EhButton`，禁止直接使用 NextUI `Button`（`EhButton` 内部封装）。
+Full-width black strip above the nav, 36px tall, centered microcopy with an underlined "Learn more" link and a close control at the far right.
 
-| appearance | 用途 | 示例 |
-|------------|------|------|
-| `primary` | 每屏唯一主 CTA，半透明 emerald 底 + 亮 emerald 字 | 开始下载、保存、重试失败 |
-| `accent` | 次要正向，更淡半透明描边 | 继续缺失、单条重试、外链 |
-| `secondary` | 中性操作 | 查看详情、打开文件夹、关闭 |
-| `danger` | 破坏性 | 取消下载、删除、清空 |
-| `ghost` | 最低调 | 取消、返回、表格轻操作 |
-| `link` | 文字链 | 默认文件夹 |
-| `icon` | 仅图标 | 设置齿轮 |
+### **`hero-photo-card`**
 
-| ehSize | 高度 | 场景 |
-|--------|------|------|
-| `xs` | 24px | 表格行内、标签区小按钮 |
-| `sm` | 32px | Modal 底栏、次要行内 |
-| `md` | 40px | Popup 底栏默认 |
-| `lg` | 48px | 主下载 CTA |
+Rounded media card used in the home hero and solution pages. It combines photography or abstract imagery with an overlaid dark agent-console module. Radius is usually 22px on large cards and 8px on smaller thumbnails.
 
-`fullWidth` 用于底栏主按钮拉满。CSS 类前缀 `eh-btn--*`（`src/styles/index.css`）。
+### **`agent-console-card`**
 
-**交互：** `:active` 使用 `scale(0.98)`；过渡 150–200ms；`prefers-reduced-motion: reduce` 时去掉 transform。
+Dark product mockup panel showing agent names, status chips, integration badges, prompt fields, and generated response cards. Background is near-black, text is white or muted, and small accent chips use product colors.
 
-### 2.3 表单（Settings）
+### **`trust-logo-strip`**
 
-- 标签在输入框 **上方或左侧**（page 变体左 200px 固定宽）
-- 占位符颜色 `muted-soft`，聚焦边框 `brand-accent/35`
-- 错误用 Sonner toast，不用 inline 红字堆砌
-- Modal 与 Page 共用 `Settings` 组件，通过 `variant="modal" | "page"` 区分密度
+Centered copy above a row of monochrome customer logos. It is intentionally quiet: no cards, no borders, just large horizontal spacing and black or white logos depending on the background.
 
-### 2.4 表格（EhTable）
+### **`capability-card`**
 
-- 表头：`11px` uppercase `muted-soft`，sticky，`surface` 半透明底
-- 行 hover：`brand-accent/4%` emerald 低透明底
-- 空状态：`py-10 text-muted-soft`
+Content block with thin-line geometric illustration, 24px heading, body copy, and a text link. On light backgrounds, cards often have only a top rule or a subtle image/card relationship rather than full boxing.
 
-### 2.5 状态卡（StatusCard）
+### **`dark-feature-band`**
 
-- `embedded`：横向紧凑，用于 Popup 内嵌提示
-- 默认：居中图标 + 标题，最大宽 400px
-- 变体色通过 ambient 光斑区分，图标容器统一 `iconGlass`
+Deep green or navy full-width section used for product capabilities, security claims, and feature breakdowns. Text turns white; cards use darker translucent surfaces, pale borders, and abstract line illustrations.
 
-### 2.6 Toast（Sonner）
+### **`product-card`**
 
-- `theme="dark"`，背景 `surface-card`，边框 `hairline`
-- 位置 Popup 内 `bottom-right`，offset 避开底栏
+Warm stone card used for product/model summaries. Typically 3-column on desktop, with 8px radius, generous padding, a small pill button, a divider line, and checkmark bullet rows.
 
-### 2.7 图标
+### **`blog-filter-chip`**
 
-- 库：**lucide-react**（项目已依赖，保持单一图标族）
-- 全局 `strokeWidth={1.5}`（或 2.0，选定后全项目统一）
-- 禁止手写 SVG 路径（`src/popup/components/icons.tsx` 存量逐步迁入 lucide）
+Large coral taxonomy chip used on the blog index. Active chips invert to coral fill with dark text; inactive chips use coral outline and pale fill. Typography is oversized relative to typical filters, making the taxonomy a hero-level control.
 
----
+### **`research-table`**
 
-## 3. 页面规范
+Rule-separated publication list with title left, topic pills centered, and date right. Rows are tall, white, and border-driven; filters above use many compact outlined pills.
 
-### 3.1 Popup（800×600）
+### **`contact-form-card`**
 
-```
-┌─────────────────────────────────────┐
-│ Header: 画廊名 + Tab（信息/历史）    │  48px
-├─────────────────────────────────────┤
-│                                     │
-│  Main: StatusCard / 进度 / 设置      │  480px 可滚动
-│                                     │
-├─────────────────────────────────────┤
-│ Footer: 主 CTA + 次要操作            │  72px
-└─────────────────────────────────────┘
-```
+Rounded white form panel set against dark green or warm stone sections. Inputs are rectangular with thin gray borders, 12px-16px padding, and compact labels/placeholders. Submit uses the same near-black pill style as primary CTAs.
 
-- 主内容区 `scrollbar-glass`
-- 下载中显示 `DownloadProgress`；结束后 `DownloadResultSummary`
-- 底栏主按钮唯一（开始下载 / 重试 / 打开文件夹），不重复同意图 CTA
+### **`footer-newsletter`**
 
-### 3.2 Options（全页）
+Dark footer subscription block with coral "AI moves fast" label, white headline, muted legal microcopy, a single-line email field, and arrow submit marker. Footer columns use white section labels and muted links.
 
-- 顶栏 sticky `surface-dark` + 底部分割线
-- 主内容 `settings-section-title` 分区，每区一组 `settings-row--page`
-- 保存按钮仅在 header，不在底部重复
+## Do's and Don'ts
 
-### 3.3 主题锁
+### Do
 
-- 全项目 **暗色单主题**，不做 light mode 段落穿插
-- `html { @apply dark }` 固定；NextUI `defaultTheme: 'dark'`
+- Use white canvas as the default surface; introduce dark green or navy as full-width product bands.
+- Keep primary CTAs pill-shaped and near-black on light surfaces.
+- Use 22px radius on major media cards and placeholders.
+- Use coral for editorial taxonomy and small warm accents, not as the main CTA system.
+- Use monochrome trust logos with wide spacing.
+- Use thin-line geometric illustrations for research and capability icons.
+- Let photography and product mockups carry color, while the UI shell stays restrained.
 
----
+### Don't
 
-## 4. 工程约束（开发必读）
+- Do not turn coral or blue into broad decorative surface colors.
+- Do not add heavy drop shadows to cards.
+- Do not make every section card-based; Cohere often uses unframed rows, rules, and open space.
+- Do not use rounded cards below 8px for major media.
+- Do not replace the display/body type split with one generic sans-serif voice.
+- Do not render undocumented interaction variants in documentation or previews.
+- Do not use saturated gradients as normal UI backgrounds; keep gradients media-led.
 
-### 4.1 样式
+## Responsive Behavior
 
-- [ ] 禁止蓝紫色渐变（含 `primaryBlue` 色板，待删除）
-- [ ] 禁止内联 hex；CI/审查时 grep `#[0-9a-fA-F]{6}` 于 `src/**/*.tsx`
-- [ ] 圆角只用 `eh-*` scale 或 Tailwind 等价物，清理 `cal-*` 与魔法数 `rounded-[20px]`
-- [ ] 玻璃效果不用于 Options 长列表区域
-- [ ] 阴影带背景色相，不用纯黑 `rgba(0,0,0,1)`
+### Breakpoints
 
-### 4.2 动效
+| Name | Width | Key Changes |
+|---|---:|---|
+| Small Mobile | <425px | Single-column cards, compact nav, reduced hero headline scale |
+| Mobile | 425-640px | Hero media stacks, card grids become one column, form rows stack |
+| Large Mobile | 640-768px | Wider one-column layouts with larger media cards |
+| Tablet | 768-1024px | Two-column cards begin, nav spacing tightens |
+| Desktop | 1024-1440px | Full nav, 3-column card grids, split hero compositions |
+| Large Desktop | 1440-2560px | Wide containers and large empty vertical intervals |
 
-- [ ] 只动画 `transform` 与 `opacity`
-- [ ] `MOTION_INTENSITY ≤ 3`：禁止无限循环环境光动画（`glass-ambient-pulse` 仅用于「下载中」且需 reduced-motion 降级）
-- [ ] 禁止 `window.addEventListener('scroll')` 驱动 React state
+### Touch Targets
 
-### 4.3 React
+Primary CTAs and pills meet comfortable touch sizing through 12px-24px padding and pill radii. Research filter chips and blog category chips are larger than standard tags, making dense taxonomy surfaces usable on touch devices.
 
-- [ ] 禁止使用 `useCallback`（除非有充分理由并注释说明）
-- [ ] 动画相关用 framer-motion（存量）或 CSS transition，不用 scroll 监听写 state
+### Collapsing Strategy
 
-### 4.4 文案
+- Nav collapses from full horizontal links to a compact mobile menu.
+- Hero media moves from split cards to stacked cards.
+- Product and capability grids collapse from 3 columns to 2 and then 1.
+- Form fields collapse from paired rows to a single column.
+- Research rows preserve their rule-separated structure but stack metadata below titles on smaller widths.
 
-- [ ] 禁止 em dash（`—`）作装饰；范围用 hyphen（`1-10`）
-- [ ] 中间点 `·` 每行最多 1 个
-- [ ] i18n：可见文案走 `t()`，不硬编码
+## Iteration Guide
 
-### 4.5 无障碍
+1. Start from a white canvas or a full-width dark green/navy band; avoid mid-tone page backgrounds unless the screenshot shows a specific CTA/form section.
+2. Use `button-primary` for the single highest-priority action and `button-secondary` for the companion action.
+3. Use `hero-photo-card` or `agent-console-card` when a page needs visual energy; avoid invented dashboard data.
+4. For editorial pages, combine `blog-filter-chip`, `button-pill-outline`, and `research-table` instead of generic marketing cards.
+5. Keep component examples structurally honest: placeholder product frames are better than invented product content.
 
-- [ ] 正文对比度 WCAG AA（`body` on `canvas` ≥ 4.5:1）
-- [ ] emerald 按钮文字使用 `primary-foreground`，禁止低对比文字 on 高亮 emerald
-- [ ] 图标按钮最小触控 36×36（Popup 密集区可接受，但主 CTA ≥ 40px）
-- [ ] Progress 带 `aria-label`
+## Known Gaps
 
----
-
-## 5. 彻底优化方案（分阶段）
-
-### Phase 1 — 地基清理 ✅
-
-| 任务 | 状态 |
-|------|------|
-| 删除 `primaryBlue` | 已完成 |
-| `cal-*` → `eh-*` | 已完成 |
-| 统一魔法圆角 | 已完成 |
-
-### Phase 2 — Token 与双轨统一 ✅
-
-| 任务 | 状态 |
-|------|------|
-| NextUI 同步注释块 | 已写入 `tokens.css` 头部 |
-| 玻璃色温决策 | 通用 panel emerald 环境光；信息池保留冷青 |
-| 字体自托管 | `@fontsource/inter` + `@fontsource/roboto-mono` |
-
-### Phase 3 — 组件提炼 ✅
-
-| 任务 | 状态 |
-|------|------|
-| `EhButton` | `src/components/eh-button.tsx`（`appearance` 属性） |
-| `EhSectionLabel` | `src/components/eh-section-label.tsx` |
-| `EhProgress` | `EhProgressBar` / `EhDownloadProgressPanel` / `EhDownloadResultProgress` |
-| 图标迁移 | Popup 改用 lucide，删除 `popup/components/icons.tsx` |
-
-### Phase 4 — 密度与一致性打磨 ✅
-
-| 任务 | 状态 |
-|------|------|
-| `--popup-footer-h` token | 已加入 `tokens.css` |
-| Options / Popup 输入框 | 统一 `eh-text-input--page` / `--modal` |
-| 表格行高 | `td` 统一 `py-2` |
-| StatusCard 标题 | standalone `text-xl` → `text-lg` |
-
-### Phase 5 — 动效与 a11y 验收 ✅
-
-| 任务 | 状态 |
-|------|------|
-| `prefers-reduced-motion` | 按钮 scale、玻璃脉冲、GitHub 链接图标 |
-| 文案 em dash 清理 | UI 可见文案改为 hyphen |
-| 表单 label | 下载路径输入增加 `aria-label` |
-
----
-
-## 6. 交付前检查（Product UI 版）
-
-- [ ] 所有颜色来自 `tokens.css` 或 Tailwind 语义类
-- [ ] 无蓝紫渐变、无 `primaryBlue`、无 Cal.com 遗留命名
-- [ ] 圆角符合 Shape Lock 表
-- [ ] Popup 与 Options 按钮样式同源
-- [ ] 主 CTA 每屏唯一意图
-- [ ] 数字 tabular-nums
-- [ ] 无 em dash 装饰文案
-- [ ] reduced-motion 已处理动态装饰
-- [ ] 新文案已加入 `assets/_locales`
-
----
-
-## 7. 文件索引
-
-| 文件 | 职责 |
-|------|------|
-| `src/styles/tokens.css` | 颜色与效果 token 定义 |
-| `src/styles/index.css` | 全局 base + 组件 class + 工具 class |
-| `src/styles/popup.css` | Popup 视口尺寸锁 |
-| `src/styles/options.css` | Options 布局与 page 设置变体 |
-| `tailwind.config.js` | Tailwind 映射 + NextUI 主题 |
-| `src/app.tsx` | NextUIProvider + Toaster 主题 |
-| `src/components/eh-table.tsx` | 表格样式契约 |
-| `src/components/status-card.tsx` | 状态卡变体 |
-| `src/components/settings.tsx` | 设置表单共享组件 |
-
----
-
-## 8. 已知差距（Known Gaps）
-
-- NextUI 色值与 CSS 变量 **手动双写**，暂无构建期自动同步
-- Popup 玻璃体系保留 **冷青信息池** 与 emerald 主光并存；新增状态卡需避免再引入第三种环境光
-- Inter 为功能字体，非品牌 display；后续可考虑 **DM Sans** 或 **Geist** 仅用于标题
-- `framer-motion` 已安装但使用有限；新动效优先 CSS，避免扩 bundle
-- 内容脚本注入 UI 未纳入本规范，需单独审计
+- Exact proprietary font files are not bundled; use the documented fallbacks when implementing externally.
+- Mobile screenshots were not regenerated in this public update, so mobile behavior is documented from the desktop system and existing responsive patterns.
+- Some live pages lazy-load content blocks late; blank testimonial placeholders are documented as placeholder skeleton surfaces rather than filled testimonial cards.

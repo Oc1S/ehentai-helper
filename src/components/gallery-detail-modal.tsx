@@ -1,31 +1,13 @@
 import { type FC, useMemo, useState } from 'react';
-import {
-  Chip,
-  type ChipProps,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  Tabs,
-} from '@nextui-org/react';
 
 import type { GalleryImageState, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-import { ehTableClassNames, EhTableFrame } from './eh-table';
-import { SearchIcon } from './icons/SearchIcon';
+import { EhTableFrame } from './eh-table';
+import { Modal, type PillTone, SegmentedTabs, StatusPill, TextField } from './ui-primitives';
 
-const STATE_COLOR: Record<GalleryImageState, ChipProps['color']> = {
+const STATE_COLOR: Record<GalleryImageState, PillTone> = {
   complete: 'success',
   in_progress: 'warning',
   interrupted: 'danger',
@@ -110,149 +92,125 @@ export const GalleryDetailModal: FC<{
   const columns = detailColumns(showAction);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
-      <ModalContent>
-        {(close) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1.5">
-              <span className="line-clamp-1 text-base font-semibold text-ink">
-                {record?.galleryName || t('galleryDetails')}
-              </span>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                <span>
-                  {t('total')}: {record?.total ?? 0}
-                </span>
-                <Chip color="success" size="sm" variant="flat">
-                  {t('countDone', String(counts.complete))}
-                </Chip>
-                <Chip color="warning" size="sm" variant="flat">
-                  {t('countInProgressShort', String(counts.in_progress))}
-                </Chip>
-                <Chip color="danger" size="sm" variant="flat">
-                  {t('countFailedShort', String(counts.interrupted))}
-                </Chip>
-              </div>
-            </ModalHeader>
-            <ModalBody className="gap-3">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <Input
-                  isClearable
-                  size="sm"
-                  placeholder={t('searchDetail')}
-                  startContent={<SearchIcon />}
-                  className="max-w-[320px] flex-1"
-                  value={keyword}
-                  onValueChange={setKeyword}
-                  onClear={() => setKeyword('')}
-                />
-                <Tabs
-                  size="sm"
-                  selectedKey={filter}
-                  onSelectionChange={(k) => {
-                    if (typeof k === 'string') setFilter(k as FilterKey);
-                  }}
-                  aria-label="state filter"
-                >
-                  {summaryTabs().map((tab) => (
-                    <Tab key={tab.id} title={tab.label} />
-                  ))}
-                </Tabs>
-                <span className="text-xs text-muted">
-                  {t('itemsCount', String(filteredRows.length))}
-                </span>
-              </div>
-              <EhTableFrame className="max-h-[420px] flex-none">
-                <Table
-                  aria-label="gallery image records"
-                  isHeaderSticky
-                  removeWrapper
-                  classNames={ehTableClassNames()}
-                >
-                  <TableHeader columns={columns}>
-                    {(col) => (
-                      <TableColumn key={col.key} width={col.width}>
-                        {col.label}
-                      </TableColumn>
-                    )}
-                  </TableHeader>
-                  <TableBody items={filteredRows} emptyContent={t('noRecords')}>
-                    {(row) => (
-                      <TableRow key={row.index}>
-                        {(columnKey) => {
-                          switch (columnKey) {
-                            case 'index':
-                              return <TableCell>{row.index}</TableCell>;
-                            case 'state':
-                              return (
-                                <TableCell>
-                                  <Chip color={STATE_COLOR[row.state]} size="sm" variant="flat">
-                                    {stateLabel(row.state)}
-                                  </Chip>
-                                </TableCell>
-                              );
-                            case 'file':
-                              return (
-                                <TableCell className="eh-table-cell--clip">
-                                  <div className="flex min-w-0 flex-col gap-0.5">
-                                    <span className="eh-url-link text-ink" title={row.filename || ''}>
-                                      {trimFilename(row.filename) || '-'}
-                                    </span>
-                                    {row.sourceUrl ? (
-                                      <a
-                                        href={row.sourceUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
-                                        title={row.sourceUrl}
-                                      >
-                                        {row.sourceUrl}
-                                      </a>
-                                    ) : null}
-                                    {row.error ? (
-                                      <span className="text-xs text-error">{row.error}</span>
-                                    ) : null}
-                                  </div>
-                                </TableCell>
-                              );
-                            case 'action':
-                              return (
-                                <TableCell>
-                                  {onRetryIndex && row.state === 'interrupted' ? (
-                                    <EhButton
-                                      variant="primary"
-                                      ehSize="sm"
-                                      onPress={() => onRetryIndex(row.index)}
-                                    >
-                                      {t('retry')}
-                                    </EhButton>
-                                  ) : (
-                                    '-'
-                                  )}
-                                </TableCell>
-                              );
-                            default:
-                              return <TableCell>-</TableCell>;
-                          }
-                        }}
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </EhTableFrame>
-            </ModalBody>
-            <ModalFooter className="gap-2">
-              {onRetryAllFailed && counts.interrupted > 0 && (
-                <EhButton variant="primary" ehSize="sm" onPress={onRetryAllFailed}>
-                  {t('retryAllFailed', String(counts.interrupted))}
-                </EhButton>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <div className="flex flex-col gap-1.5">
+          <span className="line-clamp-1 text-base font-semibold text-ink">
+            {record?.galleryName || t('galleryDetails')}
+          </span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+            <span>
+              {t('total')}: {record?.total ?? 0}
+            </span>
+            <StatusPill tone="success">{t('countDone', String(counts.complete))}</StatusPill>
+            <StatusPill tone="warning">
+              {t('countInProgressShort', String(counts.in_progress))}
+            </StatusPill>
+            <StatusPill tone="danger">
+              {t('countFailedShort', String(counts.interrupted))}
+            </StatusPill>
+          </div>
+        </div>
+      }
+      footer={
+        <>
+          {onRetryAllFailed && counts.interrupted > 0 && (
+            <EhButton variant="primary" ehSize="sm" onPress={onRetryAllFailed}>
+              {t('retryAllFailed', String(counts.interrupted))}
+            </EhButton>
+          )}
+          <EhButton variant="secondary" ehSize="sm" onPress={onClose}>
+            {t('close')}
+          </EhButton>
+        </>
+      }
+      size="xl"
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <TextField
+            placeholder={t('searchDetail')}
+            className="max-w-[320px] flex-1"
+            value={keyword}
+            onValueChange={setKeyword}
+            isClearable
+          />
+          <SegmentedTabs
+            items={summaryTabs()}
+            selectedKey={filter}
+            onSelectionChange={setFilter}
+            ariaLabel="state filter"
+          />
+          <span className="text-xs text-muted">{t('itemsCount', String(filteredRows.length))}</span>
+        </div>
+        <EhTableFrame className="max-h-[420px] flex-none">
+          <table className="eh-data-table" aria-label="gallery image records">
+            <thead>
+              <tr>
+                {columns.map((col) => (
+                  <th key={col.key} style={{ width: col.width }}>
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="py-10 text-center text-muted-soft">
+                    {t('noRecords')}
+                  </td>
+                </tr>
+              ) : (
+                filteredRows.map((row) => (
+                  <tr key={row.index}>
+                    <td>{row.index}</td>
+                    <td>
+                      <StatusPill tone={STATE_COLOR[row.state]}>{stateLabel(row.state)}</StatusPill>
+                    </td>
+                    <td className="eh-table-cell--clip">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="eh-url-link text-ink" title={row.filename || ''}>
+                          {trimFilename(row.filename) || '-'}
+                        </span>
+                        {row.sourceUrl ? (
+                          <a
+                            href={row.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
+                            title={row.sourceUrl}
+                          >
+                            {row.sourceUrl}
+                          </a>
+                        ) : null}
+                        {row.error ? <span className="text-xs text-error">{row.error}</span> : null}
+                      </div>
+                    </td>
+                    {showAction ? (
+                      <td>
+                        {onRetryIndex && row.state === 'interrupted' ? (
+                          <EhButton
+                            variant="primary"
+                            ehSize="sm"
+                            onPress={() => onRetryIndex(row.index)}
+                          >
+                            {t('retry')}
+                          </EhButton>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                    ) : null}
+                  </tr>
+                ))
               )}
-              <EhButton variant="secondary" ehSize="sm" onPress={close}>
-                {t('close')}
-              </EhButton>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
+            </tbody>
+          </table>
+        </EhTableFrame>
+      </div>
     </Modal>
   );
 };

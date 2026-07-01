@@ -1,19 +1,5 @@
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
-import {
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from '@nextui-org/react';
 
 import { useStorageSuspense } from '@/hooks';
 import {
@@ -27,8 +13,9 @@ import {
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-import { ehTableClassNames, EhTableFrame } from './eh-table';
+import { EhTableFrame } from './eh-table';
 import { GalleryDetailModal } from './gallery-detail-modal';
+import { Modal, TextField } from './ui-primitives';
 
 const columns = () => [
   { key: 'name', label: t('colName') },
@@ -82,13 +69,11 @@ export const History: FC = () => {
         ])}
       </p>
       <div className="flex shrink-0 flex-wrap items-center gap-2.5">
-        <Input
-          size="sm"
+        <TextField
           placeholder={t('searchByName')}
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onValueChange={setKeyword}
           isClearable
-          onClear={() => setKeyword('')}
           className="max-w-[280px] flex-1"
         />
         <span className="text-xs text-muted">
@@ -100,133 +85,137 @@ export const History: FC = () => {
         </EhButton>
       </div>
       <EhTableFrame>
-        <Table
-          aria-label="download history"
-          isHeaderSticky
-          removeWrapper
-          classNames={ehTableClassNames()}
-        >
-          <TableHeader columns={columns()}>
-            {(col) => (
-              <TableColumn
-                key={col.key}
-                width={
-                  col.key === 'name'
-                    ? 220
-                    : col.key === 'status'
-                      ? 108
-                      : col.key === 'time'
-                        ? 128
-                        : col.key === 'op'
-                          ? 148
-                          : 64
-                }
-              >
-                {col.label}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody items={filteredData} emptyContent={t('noHistory')}>
-            {(item) => (
-              <TableRow key={item.timestamp}>
-                <TableCell className="eh-table-cell--clip">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="eh-url-link text-xs text-primary underline underline-offset-2"
-                    title={item.name}
-                  >
-                    {item.name}
-                  </a>
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs text-muted">
-                  {formatStatus(galleryRecords[item.url], item.range)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-muted-soft">
-                  {item.range[0]}-{item.range[1]}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-muted-soft">
-                  {formatTime(item.timestamp)}
-                </TableCell>
-                <TableCell className="py-1.5">
-                  <div className="flex flex-nowrap items-center gap-0.5">
-                    <EhButton
-                      variant="secondary"
-                      ehSize="sm"
-                      disabled={!galleryRecords[item.url]}
-                      onPress={() => setActiveUrl(item.url)}
+        <table className="eh-data-table" aria-label="download history">
+          <thead>
+            <tr>
+              {columns().map((col) => (
+                <th
+                  key={col.key}
+                  style={{
+                    width:
+                      col.key === 'name'
+                        ? 220
+                        : col.key === 'status'
+                          ? 108
+                          : col.key === 'time'
+                            ? 128
+                            : col.key === 'op'
+                              ? 148
+                              : 64,
+                  }}
+                >
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.length === 0 ? (
+              <tr>
+                <td colSpan={columns().length} className="py-10 text-center text-muted-soft">
+                  {t('noHistory')}
+                </td>
+              </tr>
+            ) : (
+              filteredData.map((item) => (
+                <tr key={item.timestamp}>
+                  <td className="eh-table-cell--clip">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="eh-url-link text-xs text-[var(--eh-action-blue-hex)] underline underline-offset-2"
+                      title={item.name}
                     >
-                      {t('detail')}
-                    </EhButton>
-                    <EhButton variant="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
-                      {t('delete')}
-                    </EhButton>
-                  </div>
-                </TableCell>
-              </TableRow>
+                      {item.name}
+                    </a>
+                  </td>
+                  <td className="whitespace-nowrap text-xs text-muted">
+                    {formatStatus(galleryRecords[item.url], item.range)}
+                  </td>
+                  <td className="whitespace-nowrap text-muted-soft">
+                    {item.range[0]}-{item.range[1]}
+                  </td>
+                  <td className="whitespace-nowrap text-muted-soft">{formatTime(item.timestamp)}</td>
+                  <td className="py-1.5">
+                    <div className="flex flex-nowrap items-center gap-1">
+                      <EhButton
+                        variant="secondary"
+                        ehSize="sm"
+                        disabled={!galleryRecords[item.url]}
+                        onPress={() => setActiveUrl(item.url)}
+                      >
+                        {t('detail')}
+                      </EhButton>
+                      <EhButton variant="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
+                        {t('delete')}
+                      </EhButton>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </EhTableFrame>
       <GalleryDetailModal
         isOpen={activeUrl !== null}
         onClose={() => setActiveUrl(null)}
         record={activeRecord}
       />
-      <Modal isOpen={confirmClear} onClose={() => setConfirmClear(false)} size="sm">
-        <ModalContent>
-          {(close) => (
-            <>
-              <ModalHeader>{t('clearAll')}</ModalHeader>
-              <ModalBody className="text-sm text-muted">{t('confirmClearAll')}</ModalBody>
-              <ModalFooter>
-                <EhButton variant="secondary" ehSize="sm" onPress={close}>
-                  {t('cancel')}
-                </EhButton>
-                <EhButton
-                  variant="danger"
-                  ehSize="sm"
-                  onPress={() => {
-                    downloadHistoryStorage.clear();
-                    galleryRecordsStorage.clear();
-                    close();
-                  }}
-                >
-                  {t('clearAll')}
-                </EhButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+      <Modal
+        isOpen={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        size="sm"
+        title={<h2 className="text-base font-medium text-ink">{t('clearAll')}</h2>}
+        footer={
+          <>
+            <EhButton variant="secondary" ehSize="sm" onPress={() => setConfirmClear(false)}>
+              {t('cancel')}
+            </EhButton>
+            <EhButton
+              variant="danger"
+              ehSize="sm"
+              onPress={() => {
+                downloadHistoryStorage.clear();
+                galleryRecordsStorage.clear();
+                setConfirmClear(false);
+              }}
+            >
+              {t('clearAll')}
+            </EhButton>
+          </>
+        }
+      >
+        <p className="text-sm text-muted">{t('confirmClearAll')}</p>
       </Modal>
-      <Modal isOpen={deleteTarget !== null} onClose={() => setDeleteTarget(null)} size="sm">
-        <ModalContent>
-          {(close) => (
-            <>
-              <ModalHeader>{t('delete')}</ModalHeader>
-              <ModalBody className="text-sm text-muted">{t('confirmDelete')}</ModalBody>
-              <ModalFooter>
-                <EhButton variant="secondary" ehSize="sm" onPress={close}>
-                  {t('cancel')}
-                </EhButton>
-                <EhButton
-                  variant="danger"
-                  ehSize="sm"
-                  onPress={() => {
-                    if (deleteTarget) {
-                      downloadHistoryStorage.remove(deleteTarget.timestamp);
-                      galleryRecordsStorage.removeGallery(deleteTarget.url);
-                    }
-                    close();
-                  }}
-                >
-                  {t('delete')}
-                </EhButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+      <Modal
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        size="sm"
+        title={<h2 className="text-base font-medium text-ink">{t('delete')}</h2>}
+        footer={
+          <>
+            <EhButton variant="secondary" ehSize="sm" onPress={() => setDeleteTarget(null)}>
+              {t('cancel')}
+            </EhButton>
+            <EhButton
+              variant="danger"
+              ehSize="sm"
+              onPress={() => {
+                if (deleteTarget) {
+                  downloadHistoryStorage.remove(deleteTarget.timestamp);
+                  galleryRecordsStorage.removeGallery(deleteTarget.url);
+                }
+                setDeleteTarget(null);
+              }}
+            >
+              {t('delete')}
+            </EhButton>
+          </>
+        }
+      >
+        <p className="text-sm text-muted">{t('confirmDelete')}</p>
       </Modal>
     </div>
   );

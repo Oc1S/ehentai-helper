@@ -1,23 +1,5 @@
 import type { ComponentProps, FC } from 'react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import {
-  Chip,
-  type ChipProps,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Pagination,
-  type Selection,
-  type SortDescriptor,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from '@nextui-org/react';
 import { toast } from 'sonner';
 
 import { retryFailedDownload } from '@/download/client';
@@ -31,9 +13,15 @@ import {
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-import { ehTableClassNames, EhTableFrame } from './eh-table';
+import { EhTableFrame } from './eh-table';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { SearchIcon } from './icons/SearchIcon';
+import {
+  CheckControl,
+  PaginationControls,
+  type PillTone,
+  StatusPill,
+  TextField,
+} from './ui-primitives';
 
 const pageSize = 6;
 
@@ -59,7 +47,7 @@ const stateMap: Record<DownloadState, ReactNode> = {
   complete: <>{t('stateComplete')}</>,
 };
 
-const statusColorMap: Record<DownloadState, ChipProps['color']> = {
+const statusColorMap: Record<DownloadState, PillTone> = {
   complete: 'success',
   in_progress: 'warning',
   interrupted: 'danger',
@@ -74,12 +62,9 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
 
   const [downloadList, setDownloadList] = useState(list);
   const [page, setPage] = useState(1);
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: 'displayIndex',
-    direction: 'ascending',
-  });
   const [filterValue, setFilterValue] = useState('');
-  const [statusFilter, setStatusFilter] = useState<Selection>('all');
+  const [statusFilter, setStatusFilter] = useState<Set<DownloadState>>(new Set());
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     setDownloadList(list);
@@ -109,9 +94,19 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
     }
 
     next = filterValue ? next.filter((item) => item.filename.includes(filterValue)) : next;
-    next = statusFilter === 'all' ? next : next.filter((item) => statusFilter.has(item.state));
+    next = statusFilter.size === 0 ? next : next.filter((item) => statusFilter.has(item.state));
     return next;
   }, [downloadList, filterValue, statusFilter, indexMap, filterTaskId]);
+
+  const toggleStatus = (state: DownloadState, checked: boolean) => {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(state);
+      else next.delete(state);
+      return next;
+    });
+    setPage(1);
+  };
 
   const retryViaOrchestrator = async (entry: (typeof indexMap)[string]) => {
     const record = entry.galleryUrl ? galleryRecords[entry.galleryUrl] : undefined;
@@ -162,9 +157,9 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
         return <span className="font-mono text-xs text-muted">{item.displayIndex ?? '-'}</span>;
       case 'state':
         return (
-          <Chip className="capitalize" color={statusColorMap[item.state]} size="sm" variant="flat">
+          <StatusPill tone={statusColorMap[item.state]} className="capitalize">
             {stateMap[item.state]}
-          </Chip>
+          </StatusPill>
         );
       case 'filename':
         return <span className="line-clamp-1">{item.filename}</span>;
@@ -178,79 +173,74 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="flex shrink-0 flex-wrap items-center gap-2.5">
-        <Input
-          isClearable
+        <TextField
           className="max-w-[320px] flex-1"
           placeholder={t('searchFilename')}
-          startContent={<SearchIcon />}
-          size="sm"
-          onClear={() => setFilterValue('')}
+          isClearable
           value={filterValue}
           onValueChange={(value) => {
-            if (value) {
-              setPage(1);
-              setFilterValue(value);
-            } else {
-              setFilterValue('');
-            }
+            setPage(1);
+            setFilterValue(value);
           }}
         />
-        <Dropdown>
-          <DropdownTrigger>
-            <EhButton
-              variant="secondary"
-              ehSize="sm"
-              endContent={<ChevronDownIcon className="text-small" />}
-            >
-              {t('filter')}
-            </EhButton>
-          </DropdownTrigger>
-          <DropdownMenu
-            disallowEmptySelection
-            closeOnSelect={false}
-            selectedKeys={statusFilter}
-            selectionMode="multiple"
-            onSelectionChange={setStatusFilter}
+        <div className="relative">
+          <EhButton
+            variant="secondary"
+            ehSize="sm"
+            endContent={<ChevronDownIcon className="text-small" />}
+            onPress={() => setFilterOpen((prev) => !prev)}
           >
-            {stateSelections.map((state) => (
-              <DropdownItem key={state.id} className="capitalize">
-                {state.label}
-              </DropdownItem>
-            ))}
-          </DropdownMenu>
-        </Dropdown>
+            {t('filter')}
+          </EhButton>
+          {filterOpen ? (
+            <div className="absolute left-0 top-11 z-20 w-44 rounded-eh-sm border border-hairline bg-white p-2 shadow-card-elevated">
+              <div className="flex flex-col gap-2">
+                {stateSelections.map((state) => (
+                  <CheckControl
+                    key={state.id}
+                    checked={statusFilter.has(state.id)}
+                    onCheckedChange={(checked) => toggleStatus(state.id, checked)}
+                    label={<span className="capitalize">{state.label}</span>}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
         <span className="text-xs text-muted">{t('itemsCount', String(filteredList.length))}</span>
       </div>
       <EhTableFrame>
-        <Table
-          isHeaderSticky
-          sortDescriptor={sortDescriptor}
-          onSortChange={setSortDescriptor}
-          removeWrapper
-          classNames={ehTableClassNames()}
-        >
-          <TableHeader columns={columns()}>
-            {(col) => (
-              <TableColumn key={col.key} width={col.width}>
-                {col.label}
-              </TableColumn>
+        <table className="eh-data-table" aria-label="downloads">
+          <thead>
+            <tr>
+              {columns().map((col) => (
+                <th key={col.key} style={{ width: col.width }}>
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredList.length === 0 ? (
+              <tr>
+                <td colSpan={columns().length} className="py-10 text-center text-muted-soft">
+                  {t('noRecords')}
+                </td>
+              </tr>
+            ) : (
+              filteredList.slice((page - 1) * pageSize, page * pageSize).map((item) => (
+                <tr key={item.id}>
+                  {columns().map((col) => (
+                    <td key={col.key}>{renderCell(item, col.key)}</td>
+                  ))}
+                </tr>
+              ))
             )}
-          </TableHeader>
-          <TableBody items={filteredList.slice((page - 1) * pageSize, page * pageSize)}>
-            {(item) => (
-              <TableRow key={item.id}>
-                {(key) => <TableCell>{renderCell(item, key as string)}</TableCell>}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </EhTableFrame>
       <div className="flex shrink-0 items-center justify-center pt-1">
-        <Pagination
-          isCompact
-          showControls
-          color="primary"
-          size="sm"
+        <PaginationControls
           total={Math.max(1, Math.ceil(filteredList.length / pageSize))}
           page={page}
           onChange={setPage}

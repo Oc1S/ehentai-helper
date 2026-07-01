@@ -83,8 +83,8 @@ export const EhButton = ({
   );
 
   const tapMotion = {
-    whileTap: isDisabled ? undefined : { scale: 0.97 as const },
-    transition: { type: 'spring' as const, visualDuration: 0.3, bounce: 0.3 },
+    whileTap: isDisabled ? undefined : { scale: 0.95 as const },
+    transition: { type: 'spring' as const, visualDuration: 0.25, bounce: 0.3 },
   };
 
   if (as === 'a' && href) {

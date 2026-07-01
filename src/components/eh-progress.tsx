@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Progress } from '@nextui-org/react';
 
 import { t } from '@/utils/i18n';
 
@@ -12,7 +11,7 @@ type EhProgressBarProps = {
   className?: string;
 };
 
-/** 单色 NextUI 进度条，或双色（成功 + 失败）自定义条 */
+/** 单色或双色（成功 + 失败）原生进度条 */
 export const EhProgressBar = ({
   value,
   max,
@@ -25,42 +24,39 @@ export const EhProgressBar = ({
   const successWidth = successPercent ?? 0;
   const failedWidth = failedPercent ?? 0;
 
-  if (isSegmented) {
-    return (
-      <div
-        className={`flex h-2 w-full overflow-hidden rounded-full bg-[rgb(8_8_9/0.45)] ${className}`.trim()}
-        role="progressbar"
-        aria-valuenow={value}
-        aria-valuemin={0}
-        aria-valuemax={max}
-        aria-label={ariaLabel}
-      >
-        {successWidth > 0 ? (
-          <div
-            className="h-full bg-brand-accent motion-safe:transition-[width] motion-safe:duration-300"
-            style={{ width: `${successWidth}%` }}
-          />
-        ) : null}
-        {failedWidth > 0 ? (
-          <div
-            className="h-full bg-error motion-safe:transition-[width] motion-safe:duration-300"
-            style={{ width: `${failedWidth}%` }}
-          />
-        ) : null}
-      </div>
-    );
-  }
+  const percent = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
 
   return (
-    <Progress
+    <div
+      className={`flex h-2 w-full overflow-hidden rounded-full bg-[rgba(0,60,51,0.12)] ${className}`.trim()}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={max}
       aria-label={ariaLabel}
-      value={value}
-      minValue={0}
-      maxValue={max}
-      color="primary"
-      size="sm"
-      className={className}
-    />
+    >
+      {isSegmented ? (
+        <>
+          {successWidth > 0 ? (
+            <div
+              className="h-full bg-success motion-safe:transition-[width] motion-safe:duration-300"
+              style={{ width: `${successWidth}%` }}
+            />
+          ) : null}
+          {failedWidth > 0 ? (
+            <div
+              className="h-full bg-error motion-safe:transition-[width] motion-safe:duration-300"
+              style={{ width: `${failedWidth}%` }}
+            />
+          ) : null}
+        </>
+      ) : (
+        <div
+          className="h-full bg-primary motion-safe:transition-[width] motion-safe:duration-300"
+          style={{ width: `${percent}%` }}
+        />
+      )}
+    </div>
   );
 };
 
@@ -85,13 +81,13 @@ export const EhDownloadProgressPanel = ({
           <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
             {t('progress')}
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-brand-accent">{percent}%</p>
+          <p className="mt-1 text-2xl font-medium tabular-nums text-primary">{percent}%</p>
         </div>
         <div className="text-right">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
             {t('completed')}
           </p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
+          <p className="mt-1 text-lg font-medium tabular-nums text-ink">
             {completeCount}
             <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
           </p>

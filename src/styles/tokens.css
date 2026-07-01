@@ -1,187 +1,165 @@
 /**
- * Emerald 暗色主题 — 全项目颜色 token 唯一来源
+ * Cohere-inspired editorial control system.
  * Tailwind: rgb(var(--eh-*) / <alpha-value>)
- * 普通 CSS: var(--eh-*-hex) 或 var(--eh-hairline)
- *
- * ── NextUI 同步清单（改 token 时须同步 tailwind.config.js → nextui.themes.dark）──
- * background      → --eh-canvas-hex
- * foreground      → --eh-body-hex
- * focus           → --eh-brand-accent-hex
- * divider         → --eh-hairline
- * content1        → --eh-surface-card-hex
- * content3        → --eh-surface-strong-hex
- * primary.*       → --eh-primary-* / --eh-primary-fg-hex
- * success.DEFAULT → --eh-success-hex
- * danger.*        → --eh-error-* / --eh-error-bright-hex
- *
- * ── 玻璃色温策略 ──
- * 通用 glass-panel：祖母绿环境光（--eh-glass-ambient-gold，历史命名）
- * 信息池 glass-card-pool / StatusCard info：冷青环境光（--eh-glass-ambient-cyan*）
+ * Plain CSS: var(--eh-*-hex) or var(--eh-hairline)
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* 画布与文字 */
-  --eh-canvas: 9 9 11;
-  --eh-canvas-hex: #09090b;
-  --eh-ink: 250 250 250;
-  --eh-ink-hex: #fafafa;
-  --eh-body: 228 228 231;
-  --eh-body-hex: #e4e4e7;
-  --eh-muted: 161 161 170;
-  --eh-muted-hex: #a1a1aa;
-  --eh-muted-soft: 113 113 122;
-  --eh-muted-soft-hex: #71717a;
+  --eh-canvas: 255 255 255;
+  --eh-canvas-hex: #ffffff;
+  --eh-ink: 33 33 33;
+  --eh-ink-hex: #212121;
+  --eh-body: 45 45 48;
+  --eh-body-hex: #2d2d30;
+  --eh-muted: 117 117 138;
+  --eh-muted-hex: #75758a;
+  --eh-muted-soft: 147 147 159;
+  --eh-muted-soft-hex: #93939f;
 
   /* 表面层级 */
-  --eh-surface-soft: 20 20 20;
-  --eh-surface-soft-hex: #141414;
-  --eh-surface-card: 24 24 27;
-  --eh-surface-card-hex: #18181b;
-  --eh-surface-strong: 39 39 42;
-  --eh-surface-strong-hex: #27272a;
-  --eh-surface-dark: 5 5 5;
-  --eh-surface-dark-hex: #050505;
-  --eh-surface-dark-elevated-hex: #121212;
+  --eh-surface-soft: 248 248 246;
+  --eh-surface-soft-hex: #f8f8f6;
+  --eh-surface-card: 255 255 255;
+  --eh-surface-card-hex: #ffffff;
+  --eh-surface-strong: 241 245 255;
+  --eh-surface-strong-hex: #f1f5ff;
+  --eh-surface-dark: 0 60 51;
+  --eh-surface-dark-hex: #003c33;
+  --eh-surface-dark-elevated-hex: #072821;
 
-  /* 品牌 / 按钮 — Mono + Emerald */
-  --eh-brand-accent: 52 211 153;
-  --eh-brand-accent-hex: #34d399;
-  --eh-brand-accent-bright-hex: #6ee7b7;
-  --eh-brand-primary: 26 26 30;
-  --eh-brand-primary-hex: #1a1a1e;
-  --eh-brand-primary-active-hex: #0a0a0c;
-  --eh-primary: 5 150 105;
-  --eh-primary-hex: #059669;
-  --eh-primary-hover-hex: #047857;
-  --eh-primary-fg: 236 253 245;
-  --eh-primary-fg-hex: #ecfdf5;
-  --eh-on-primary-hex: #ecfdf5;
-  --eh-primary-50: #021a14;
-  --eh-primary-100: #042f24;
-  --eh-primary-200: #064e3b;
-  --eh-primary-300: #047857;
-  --eh-primary-400: #059669;
-  --eh-primary-500: #10b981;
-  --eh-primary-600: #34d399;
-  --eh-primary-700: #6ee7b7;
-  --eh-primary-800: #a7f3d0;
-  --eh-primary-900: #d1fae5;
+  /* 品牌 / 按钮 */
+  --eh-brand-accent: 255 119 89;
+  --eh-brand-accent-hex: #ff7759;
+  --eh-brand-accent-bright-hex: #ffad9b;
+  --eh-brand-helper-hex: #d9e6ff;
+  --eh-brand-primary: 23 23 28;
+  --eh-brand-primary-hex: #17171c;
+  --eh-brand-primary-active-hex: #000000;
+  --eh-primary: 0 60 51;
+  --eh-primary-hex: #003c33;
+  --eh-primary-hover-hex: #002f28;
+  --eh-primary-fg: 255 255 255;
+  --eh-primary-fg-hex: #ffffff;
+  --eh-on-primary-hex: #ffffff;
+  --eh-primary-50: #edfce9;
+  --eh-primary-100: #d9f6d6;
+  --eh-primary-200: #a7d9c8;
+  --eh-primary-300: #72b9a7;
+  --eh-primary-400: #327e70;
+  --eh-primary-500: #003c33;
+  --eh-primary-600: #07342d;
+  --eh-primary-700: #062a25;
+  --eh-primary-800: #041d19;
+  --eh-primary-900: #020f0d;
 
   /* 按钮圆角 */
-  --eh-btn-radius: 6px;
-  --eh-btn-radius-lg: 8px;
+  --eh-btn-radius: 32px;
+  --eh-btn-radius-lg: 32px;
 
   /* 描边与阴影 */
-  --eh-hairline: rgba(250, 250, 250, 0.08);
-  --eh-hairline-soft: rgba(250, 250, 250, 0.04);
-  --eh-glow: 0 0 0 1px rgba(52, 211, 153, 0.14), 0 4px 16px rgba(0, 0, 0, 0.4);
-  --eh-glow-dot: 0 0 4px rgba(52, 211, 153, 0.4);
-  --eh-glow-dot-soft: 0 0 4px rgba(5, 150, 105, 0.3);
-  --eh-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --eh-shadow-card-elevated: 0 8px 28px rgba(0, 0, 0, 0.55);
-  --eh-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --eh-hairline: #d9d9dd;
+  --eh-hairline-soft: #e5e7eb;
+  --eh-glow: 0 0 0 1px rgba(76, 110, 230, 0.18);
+  --eh-glow-dot: 0 0 0 3px rgba(76, 110, 230, 0.12);
+  --eh-glow-dot-soft: 0 0 0 3px rgba(255, 119, 89, 0.14);
+  --eh-shadow-card: none;
+  --eh-shadow-card-elevated: 0 20px 70px rgba(0, 0, 0, 0.18);
+  --eh-shadow-pill: none;
   --eh-glass-bg: linear-gradient(
-    165deg,
-    rgb(14 18 20 / 0.22) 0%,
-    rgb(10 10 11 / 0.26) 55%,
-    rgb(6 6 7 / 0.28) 100%
+    180deg,
+    rgb(255 255 255 / 0.95) 0%,
+    rgb(248 248 246 / 0.82) 100%
   );
   --eh-glass-bg-hover: linear-gradient(
-    165deg,
-    rgb(16 20 22 / 0.26) 0%,
-    rgb(12 12 13 / 0.3) 55%,
-    rgb(8 8 9 / 0.32) 100%
+    180deg,
+    rgb(255 255 255 / 1) 0%,
+    rgb(248 248 246 / 0.94) 100%
   );
   --eh-glass-frost: linear-gradient(
-    165deg,
-    rgba(52, 211, 153, 0.018) 0%,
-    rgba(80, 88, 92, 0.01) 42%,
-    transparent 100%
+    180deg,
+    rgba(255, 255, 255, 0.38) 0%,
+    transparent 68%
   );
-  --eh-glass-border: rgba(82, 82, 91, 0.14);
-  --eh-glass-border-hover: rgba(113, 113, 122, 0.18);
-  --eh-glass-ambient: rgb(48 52 54 / 0.04);
-  --eh-glass-ambient-hover: rgb(56 62 64 / 0.058);
-  --eh-glass-ambient-gold: rgb(52 211 153 / 0.06);
-  --eh-glass-ambient-gold-hover: rgb(52 211 153 / 0.09);
-  --eh-glass-ambient-cyan: rgb(40 78 90 / 0.055);
-  --eh-glass-ambient-cyan-strong: rgb(48 92 104 / 0.085);
+  --eh-glass-border: #d9d9dd;
+  --eh-glass-border-hover: #b9bbc4;
+  --eh-glass-ambient: rgb(0 60 51 / 0.08);
+  --eh-glass-ambient-hover: rgb(0 60 51 / 0.12);
+  --eh-glass-ambient-gold: rgb(255 119 89 / 0.055);
+  --eh-glass-ambient-gold-hover: rgb(255 119 89 / 0.08);
+  --eh-glass-ambient-cyan: rgb(24 99 220 / 0.08);
+  --eh-glass-ambient-cyan-strong: rgb(24 99 220 / 0.12);
   --eh-glass-bg-pool: linear-gradient(
-    165deg,
-    rgb(16 28 32 / 0.24) 0%,
-    rgb(13 15 19 / 0.28) 55%,
-    rgb(11 12 15 / 0.3) 100%
+    180deg,
+    rgb(255 255 255 / 1) 0%,
+    rgb(241 245 255 / 0.82) 100%
   );
   --eh-glass-frost-pool: linear-gradient(
-    165deg,
-    rgba(88, 138, 152, 0.03) 0%,
-    rgba(48, 72, 82, 0.014) 42%,
-    transparent 100%
+    180deg,
+    rgba(24, 99, 220, 0.035) 0%,
+    transparent 72%
   );
-  --eh-glass-border-pool: rgba(72, 112, 124, 0.1);
+  --eh-glass-border-pool: #d9d9dd;
   --eh-glass-highlight-pool: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(108, 158, 172, 0.05) 50%,
+    rgba(24, 99, 220, 0.12) 50%,
     transparent 100%
   );
 
-  /* Popup · 祖母绿微光 */
-  --eh-popup-bg: linear-gradient(180deg, #090a09 0%, #060706 46%, #030403 100%);
+  /* Popup */
+  --eh-popup-bg: linear-gradient(180deg, #ffffff 0%, #fcfcfb 54%, #f8f8f6 100%);
   --eh-popup-ambient-top: radial-gradient(
-    ellipse 115% 52% at 50% 0%,
-    rgba(52, 211, 153, 0.07) 0%,
-    rgba(5, 150, 105, 0.028) 42%,
-    transparent 76%
+    ellipse 100% 42% at 50% 0%,
+    rgba(0, 60, 51, 0.1) 0%,
+    rgba(0, 60, 51, 0.04) 42%,
+    transparent 74%
   );
   --eh-popup-ambient-body: radial-gradient(
     ellipse 92% 72% at 50% 54%,
-    rgba(52, 211, 153, 0.045) 0%,
-    rgba(5, 150, 105, 0.016) 44%,
+    rgba(255, 119, 89, 0.025) 0%,
+    rgba(255, 173, 155, 0.012) 44%,
     transparent 78%
   );
   --eh-glass-elevation:
-    inset 0 1px 0 rgba(130, 125, 118, 0.045),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
-    0 0 0 1px rgba(72, 88, 92, 0.06),
-    0 2px 6px rgba(0, 0, 0, 0.22),
-    0 10px 28px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    0 0 0 1px rgba(217, 217, 221, 0.88);
   --eh-glass-elevation-hover:
-    inset 0 1px 0 rgba(145, 140, 132, 0.055),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(88, 104, 108, 0.09),
-    0 4px 10px rgba(0, 0, 0, 0.26),
-    0 14px 36px rgba(0, 0, 0, 0.2);
-  --eh-glass-glow: 0 0 0 1px rgba(64, 104, 116, 0.05), 0 4px 18px rgba(0, 0, 0, 0.2);
-  --eh-glass-inset: inset 0 1px 0 rgba(130, 125, 118, 0.04);
-  --eh-glass-inset-hover: inset 0 1px 0 rgba(145, 140, 132, 0.055);
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 0 0 1px rgba(185, 187, 196, 0.95);
+  --eh-glass-glow: 0 0 0 1px rgba(217, 217, 221, 0.9);
+  --eh-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --eh-glass-inset-hover: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --eh-glass-highlight: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(52, 211, 153, 0.02) 50%,
+    rgba(255, 119, 89, 0.14) 50%,
     transparent 100%
   );
 
   /* 语义色 */
-  --eh-success-hex: #4ade80;
-  --eh-success: 74 222 128;
+  --eh-success-hex: #047857;
+  --eh-success: 4 120 87;
   --eh-warning-hex: #f59e0b;
-  --eh-error: 244 63 94;
-  --eh-error-hex: #f43f5e;
-  --eh-error-bright-hex: #fb7185;
-  --eh-section-label-hex: #34d399;
+  --eh-error: 179 0 0;
+  --eh-error-hex: #b30000;
+  --eh-error-bright-hex: #d02424;
+  --eh-section-label-hex: #003c33;
+  --eh-action-blue-hex: #1863dc;
+  --eh-coral-hex: #ff7759;
+  --eh-soft-coral-hex: #ffad9b;
 
   /* 滚动条 */
-  --eh-scrollbar-thumb: rgba(52, 211, 153, 0.22);
-  --eh-scrollbar-thumb-hover: rgba(52, 211, 153, 0.36);
+  --eh-scrollbar-thumb: rgba(0, 60, 51, 0.3);
+  --eh-scrollbar-thumb-hover: rgba(0, 60, 51, 0.46);
   --eh-scrollbar-track: transparent;
 
   /* Popup 布局 */
   --popup-footer-h: 52px;
 
   /* Options 页布局 */
-  --options-content-w: 800px;
-  --options-header-h: 56px;
-  --options-gutter: 24px;
+  --options-content-w: 1120px;
+  --options-header-h: 72px;
+  --options-gutter: 32px;
 }

@@ -14,12 +14,12 @@
   }
 
   html {
-    @apply dark;
+    background: var(--eh-canvas-hex);
   }
 
   html,
   body {
-    @apply m-0 h-full w-full p-0 bg-background text-foreground;
+    @apply m-0 h-full w-full p-0 bg-canvas text-body;
     font-family:
       'Inter',
       -apple-system,
@@ -36,6 +36,13 @@
 
   button {
     outline: none;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--eh-action-blue-hex);
+    outline-offset: 2px;
   }
 }
 
@@ -64,15 +71,49 @@
     @apply w-full flex-1 text-xs text-body;
   }
 
-  .eh-modal-footer {
-    @apply flex flex-row justify-end gap-2 px-5 py-2.5 backdrop-blur-md;
+  .eh-settings-row--overlay {
+    @apply flex-row items-start gap-4 py-3.5;
+    border-bottom: 1px solid var(--eh-hairline-soft);
+  }
+
+  .eh-settings-row--overlay:last-child {
+    border-bottom: 0;
+  }
+
+  .eh-settings-label--overlay {
+    @apply w-[190px] shrink-0 pt-1 text-[13px] font-medium text-muted;
+  }
+
+  .eh-settings-field--overlay {
+    @apply min-w-0 flex-1 text-[13px] text-body;
+  }
+
+  .eh-settings-panel--overlay {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .eh-settings-panel--overlay .eh-settings-group {
+    @apply flex flex-col gap-1;
+  }
+
+  .eh-settings-panel--overlay .eh-settings-group+.eh-settings-group {
+    @apply mt-3;
+  }
+
+  .eh-settings-panel--overlay .eh-settings-group__rows {
     border-top: 1px solid var(--eh-hairline-soft);
-    background: rgb(8 8 9 / 0.28);
+  }
+
+  .eh-settings-panel--overlay .eh-settings-section-title {
+    @apply px-1 text-[11px] font-medium uppercase text-primary;
+    letter-spacing: 0;
   }
 
   /* ── EhButton 统一体系 ── */
   .eh-btn {
-    @apply inline-flex shrink-0 cursor-pointer items-center justify-center border-0 font-medium transition-colors;
+    @apply inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border font-medium transition-colors;
     border-radius: var(--eh-btn-radius, 6px);
     background-image: none;
     white-space: nowrap;
@@ -105,47 +146,43 @@
   }
 
   .eh-btn--primary {
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.38);
-    background: rgb(var(--eh-brand-accent) / 0.12);
-    color: var(--eh-brand-accent-bright-hex);
-    backdrop-filter: blur(8px);
-    box-shadow: inset 0 1px 0 rgb(var(--eh-brand-accent) / 0.06);
+    border-color: var(--eh-brand-primary-hex);
+    background: var(--eh-brand-primary-hex);
+    color: #ffffff;
+    box-shadow: none;
   }
 
   .eh-btn--primary:hover {
-    background: rgb(var(--eh-brand-accent) / 0.18);
-    border-color: rgb(var(--eh-brand-accent) / 0.48);
+    background: var(--eh-brand-primary-active-hex);
+    border-color: var(--eh-brand-primary-active-hex);
   }
 
   .eh-btn--secondary {
-    border: 1px solid var(--eh-glass-border);
-    background: rgb(8 8 9 / 0.35);
-    color: var(--eh-muted-hex);
-    backdrop-filter: blur(4px);
-    box-shadow: inset 0 1px 0 rgb(250 250 250 / 0.04);
+    border-color: var(--eh-hairline);
+    background: #ffffff;
+    color: var(--eh-ink-hex);
+    box-shadow: none;
   }
 
   .eh-btn--secondary:hover {
-    border-color: var(--eh-glass-border-hover);
-    background: rgb(12 12 13 / 0.45);
-    color: var(--eh-body-hex);
+    background: var(--eh-surface-soft-hex);
+    border-color: var(--eh-muted-soft-hex);
   }
 
   .eh-btn--danger {
-    border: 1px solid rgb(var(--eh-error) / 0.28);
-    background: rgb(var(--eh-error) / 0.08);
-    color: var(--eh-error-bright-hex);
-    backdrop-filter: blur(8px);
+    border-color: rgb(var(--eh-error) / 0.26);
+    background: rgb(var(--eh-error) / 0.06);
+    color: var(--eh-error-hex);
   }
 
   .eh-btn--danger:hover {
-    background: rgb(var(--eh-error) / 0.12);
-    border-color: rgb(var(--eh-error) / 0.38);
+    background: rgb(var(--eh-error) / 0.1);
+    border-color: rgb(var(--eh-error) / 0.42);
   }
 
   .eh-btn--link {
     @apply h-auto min-h-0 min-w-0 border-0 bg-transparent p-0 font-normal underline-offset-2;
-    color: var(--eh-brand-accent-hex);
+    color: var(--eh-action-blue-hex);
   }
 
   .eh-btn--link:hover {
@@ -154,15 +191,14 @@
 
   .eh-btn--icon {
     @apply h-7 w-7 min-h-0 min-w-0 p-0;
-    border: 1px solid var(--eh-glass-border);
-    background: rgb(8 8 9 / 0.35);
+    border: 1px solid var(--eh-hairline);
+    background: #ffffff;
     color: var(--eh-muted-hex);
-    backdrop-filter: blur(4px);
   }
 
   .eh-btn--icon:hover {
-    border-color: var(--eh-glass-border-hover);
-    background: rgb(12 12 13 / 0.45);
+    border-color: var(--eh-muted-soft-hex);
+    background: var(--eh-surface-soft-hex);
     color: var(--eh-body-hex);
   }
 
@@ -178,9 +214,9 @@
 
   .eh-btn__icon {
     @apply flex shrink-0 items-center justify-center rounded-eh-md;
-    border: 1px solid rgb(var(--eh-brand-accent) / 0.22);
-    background: rgb(var(--eh-brand-accent) / 0.1);
-    color: var(--eh-brand-accent-bright-hex);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    background: rgb(255 255 255 / 0.12);
+    color: #ffffff;
   }
 
   .eh-btn--lg .eh-btn__icon {
@@ -188,18 +224,30 @@
   }
 
   .eh-text-input {
-    @apply flex-1 rounded-eh-md border px-2.5 py-1.5 text-ink outline-none transition-colors placeholder:text-muted-soft;
+    @apply flex-1 rounded-eh-sm border px-2.5 py-1.5 text-ink outline-none transition-colors placeholder:text-muted-soft;
   }
 
   .eh-text-input--modal {
-    border-color: var(--eh-glass-border);
-    background: rgb(8 8 9 / 0.28);
-    backdrop-filter: blur(4px);
+    border-color: var(--eh-hairline);
+    background: #ffffff;
   }
 
   .eh-text-input--modal:focus {
-    border-color: rgb(var(--eh-brand-accent) / 0.35);
-    background: rgb(10 10 11 / 0.4);
+    border-color: var(--eh-action-blue-hex);
+    background: #ffffff;
+  }
+
+  .eh-text-input--overlay {
+    width: 100%;
+    max-width: 420px;
+    border-color: var(--eh-hairline);
+    background: #ffffff;
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-text-input--overlay:focus {
+    border-color: var(--eh-action-blue-hex);
+    background: #ffffff;
   }
 
   .eh-text-input--page {
@@ -207,11 +255,11 @@
     max-width: 420px;
     padding: 8px 10px;
     border-color: var(--eh-hairline);
-    background-color: var(--eh-surface-card-hex);
+    background-color: #ffffff;
   }
 
   .eh-text-input--page:focus {
-    border-color: var(--eh-brand-accent-hex);
+    border-color: var(--eh-action-blue-hex);
   }
 
   .eh-number-input {
@@ -238,9 +286,9 @@
   }
 
   .eh-github-star-link {
-    @apply relative flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 no-underline;
-    border-color: rgb(var(--eh-brand-accent) / 0.32);
-    background: rgb(var(--eh-brand-accent) / 0.1);
+    @apply relative flex w-full items-center gap-3 rounded-eh-sm border px-3.5 py-3 no-underline;
+    border-color: var(--eh-hairline);
+    background: #ffffff;
     color: var(--eh-body-hex);
     transition:
       background-color 0.2s ease,
@@ -255,14 +303,14 @@
   }
 
   .eh-github-star-link__icon {
-    color: var(--eh-brand-accent-hex);
+    color: var(--eh-action-blue-hex);
     transition: transform 0.2s ease;
   }
 
   .eh-github-star-link:hover {
-    border-color: rgb(var(--eh-brand-accent) / 0.48);
-    background: rgb(var(--eh-brand-accent) / 0.16);
-    box-shadow: 0 0 18px rgb(var(--eh-brand-accent) / 0.2);
+    border-color: var(--eh-muted-soft-hex);
+    background: var(--eh-surface-soft-hex);
+    box-shadow: none;
   }
 
   .eh-github-star-link:active {
@@ -281,6 +329,286 @@
 
   .eh-github-star-link:hover .eh-github-star-link__icon {
     transform: translate(1px, -1px);
+  }
+
+  .eh-field {
+    @apply flex h-9 min-w-0 items-center gap-2 rounded-eh-sm border px-3 transition-colors;
+    border-color: var(--eh-hairline);
+    background: #ffffff;
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-field:focus-within {
+    border-color: var(--eh-action-blue-hex);
+    box-shadow: 0 0 0 3px rgba(24, 99, 220, 0.1);
+  }
+
+  .eh-field__input {
+    @apply min-w-0 flex-1 border-0 bg-transparent p-0 text-[13px] text-ink outline-none placeholder:text-muted-soft;
+  }
+
+  .eh-field__clear {
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-muted-soft transition-colors;
+  }
+
+  .eh-field__clear:hover {
+    background: var(--eh-surface-soft-hex);
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-pill {
+    @apply inline-flex h-6 shrink-0 items-center rounded-full border px-2.5 text-[11px] font-medium leading-none;
+  }
+
+  .eh-pill--neutral {
+    border-color: var(--eh-hairline);
+    background: #ffffff;
+    color: var(--eh-muted-hex);
+  }
+
+  .eh-pill--success {
+    border-color: rgba(4, 120, 87, 0.22);
+    background: rgba(4, 120, 87, 0.07);
+    color: var(--eh-success-hex);
+  }
+
+  .eh-pill--warning {
+    border-color: rgba(245, 158, 11, 0.24);
+    background: rgba(245, 158, 11, 0.08);
+    color: #9a5a00;
+  }
+
+  .eh-pill--danger {
+    border-color: rgba(179, 0, 0, 0.22);
+    background: rgba(179, 0, 0, 0.06);
+    color: var(--eh-error-hex);
+  }
+
+  .eh-pill--coral {
+    border-color: var(--eh-soft-coral-hex);
+    background: rgba(255, 119, 89, 0.1);
+    color: #8d2f1d;
+  }
+
+  .eh-pill--blue {
+    border-color: rgba(24, 99, 220, 0.22);
+    background: rgba(24, 99, 220, 0.07);
+    color: var(--eh-action-blue-hex);
+  }
+
+  .eh-spinner {
+    @apply inline-block shrink-0 rounded-full border-2;
+    border-color: rgba(0, 60, 51, 0.18);
+    border-top-color: var(--eh-primary-hex);
+    animation: eh-spin 800ms linear infinite;
+  }
+
+  .eh-spinner--sm {
+    @apply h-4 w-4;
+  }
+
+  .eh-spinner--md {
+    @apply h-6 w-6;
+  }
+
+  .eh-spinner--lg {
+    @apply h-9 w-9;
+  }
+
+  @keyframes eh-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .eh-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-5;
+    isolation: isolate;
+  }
+
+  .eh-modal__scrim {
+    @apply absolute inset-0 h-full w-full;
+    background: rgba(23, 23, 28, 0.54);
+    backdrop-filter: blur(8px);
+  }
+
+  .eh-modal__panel {
+    @apply relative z-10 flex max-h-[88vh] w-full flex-col overflow-hidden rounded-eh-md border;
+    border-color: var(--eh-hairline);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(248, 248, 246, 1) 100%);
+    box-shadow: var(--eh-shadow-card-elevated);
+  }
+
+  .eh-modal__panel::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--eh-brand-primary-hex);
+    pointer-events: none;
+  }
+
+  .eh-modal__panel--sm {
+    max-width: 380px;
+  }
+
+  .eh-modal__panel--md {
+    max-width: 560px;
+  }
+
+  .eh-modal__panel--lg {
+    max-width: 760px;
+  }
+
+  .eh-modal__panel--xl {
+    max-width: 920px;
+  }
+
+  .eh-modal__header {
+    @apply flex shrink-0 items-start gap-4 border-b px-5 py-4 pr-14;
+    border-color: var(--eh-hairline-soft);
+    background: #ffffff;
+  }
+
+  .eh-modal__body {
+    @apply min-h-0 flex-1 overflow-y-auto p-5;
+    background: #ffffff;
+  }
+
+  .eh-modal__footer {
+    @apply flex shrink-0 justify-end gap-2 border-t px-5 py-3;
+    border-color: var(--eh-hairline-soft);
+    background: var(--eh-surface-soft-hex);
+  }
+
+  .eh-modal__close {
+    @apply absolute right-3 top-3 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors;
+    border: 1px solid var(--eh-hairline-soft);
+    background: #ffffff;
+  }
+
+  .eh-modal__close:hover {
+    background: var(--eh-surface-soft-hex);
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-segmented {
+    @apply inline-flex min-h-9 items-center rounded-full border bg-white p-0.5;
+    border-color: var(--eh-hairline);
+  }
+
+  .eh-segmented__item {
+    @apply flex h-8 items-center rounded-full px-3 text-xs text-muted transition-colors;
+  }
+
+  .eh-segmented__item:hover {
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-segmented__item--active {
+    background: var(--eh-brand-primary-hex);
+    color: #ffffff;
+  }
+
+  .eh-pagination {
+    @apply inline-flex items-center gap-1 rounded-full border bg-white p-1;
+    border-color: var(--eh-hairline);
+  }
+
+  .eh-pagination__button {
+    @apply flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors;
+  }
+
+  .eh-pagination__button:hover:not(:disabled) {
+    background: var(--eh-surface-soft-hex);
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-pagination__button:disabled {
+    @apply cursor-not-allowed opacity-35;
+  }
+
+  .eh-pagination__label {
+    @apply min-w-12 px-1 text-center font-mono text-xs text-muted;
+  }
+
+  .eh-check {
+    @apply inline-flex cursor-pointer items-center gap-2 text-sm text-body;
+  }
+
+  .eh-check__box {
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-eh-xs border bg-white text-white transition-colors;
+    border-color: var(--eh-hairline);
+  }
+
+  .eh-check input:checked + .eh-check__box {
+    border-color: var(--eh-brand-primary-hex);
+    background: var(--eh-brand-primary-hex);
+  }
+
+  .eh-check__label {
+    @apply text-sm text-body;
+  }
+
+  .eh-radio-cards {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .eh-radio-card {
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-[13px] text-muted transition-colors;
+    border-color: var(--eh-hairline);
+  }
+
+  .eh-radio-card:hover {
+    border-color: var(--eh-muted-soft-hex);
+    color: var(--eh-ink-hex);
+  }
+
+  .eh-radio-card--active {
+    border-color: var(--eh-brand-primary-hex);
+    background: var(--eh-brand-primary-hex);
+    color: #ffffff;
+  }
+
+  .eh-radio-card__dot {
+    @apply h-2 w-2 rounded-full border;
+    border-color: currentColor;
+  }
+
+  .eh-radio-card--active .eh-radio-card__dot {
+    background: currentColor;
+  }
+
+  .eh-table-frame {
+    @apply min-h-0 flex-1 overflow-auto rounded-eh-sm border bg-white;
+    border-color: var(--eh-hairline);
+  }
+
+  .eh-data-table {
+    @apply min-w-full table-fixed border-separate border-spacing-0 text-left;
+  }
+
+  .eh-data-table th {
+    @apply sticky top-0 z-10 h-9 border-b bg-white px-3 text-xs font-medium text-muted;
+    border-color: var(--eh-hairline-soft);
+  }
+
+  .eh-data-table td {
+    @apply border-b px-3 py-2.5 text-xs text-body;
+    border-color: var(--eh-hairline-soft);
+  }
+
+  .eh-data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .eh-data-table tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  .eh-data-table tbody tr:hover {
+    background: rgba(238, 236, 231, 0.58);
   }
 }
 
@@ -319,8 +647,8 @@
     z-index: 0;
     pointer-events: none;
     background: radial-gradient(ellipse 68% 42% at 50% -6%,
-        rgba(52, 211, 153, 0.11) 0%,
-        rgba(5, 150, 105, 0.035) 48%,
+        rgba(0, 60, 51, 0.045) 0%,
+        rgba(0, 60, 51, 0.015) 48%,
         transparent 72%);
   }
 
@@ -329,8 +657,45 @@
     z-index: 1;
   }
 
+  .eh-settings-overlay {
+    background:
+      radial-gradient(ellipse 70% 38% at 78% -10%, rgba(24, 99, 220, 0.08), transparent 70%),
+      linear-gradient(180deg, #ffffff 0%, #fcfcfb 56%, #f8f8f6 100%);
+    color: var(--eh-body-hex);
+  }
+
+  .eh-settings-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 60, 51, 0.035), transparent 28%);
+  }
+
+  .eh-settings-overlay>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  .eh-settings-overlay__header {
+    @apply flex h-popup-header shrink-0 items-center gap-3 px-4;
+    border-bottom: 1px solid var(--eh-hairline-soft);
+    background: #ffffff;
+  }
+
+  .eh-settings-overlay__back {
+    @apply mr-0.5;
+  }
+
+  .eh-settings-overlay__footer {
+    @apply flex h-popup-footer shrink-0 items-center justify-end px-5 py-2.5;
+    border-top: 1px solid var(--eh-hairline-soft);
+    background: #ffffff;
+  }
+
   .glass-panel {
-    @apply relative overflow-hidden backdrop-blur-md;
+    @apply relative overflow-hidden;
     border: 1px solid var(--eh-glass-border);
     background: var(--eh-glass-bg);
     box-shadow: var(--eh-glass-elevation);
@@ -410,7 +775,7 @@
   }
 
   .glass-card {
-    @apply relative overflow-hidden backdrop-blur-md;
+    @apply relative overflow-hidden;
     border: 1px solid var(--eh-glass-border);
     background: var(--eh-glass-bg);
     box-shadow: var(--eh-glass-elevation);

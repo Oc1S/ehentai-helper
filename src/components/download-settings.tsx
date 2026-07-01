@@ -1,13 +1,6 @@
-import { useState } from 'react';
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  useDisclosure,
-} from '@nextui-org/react';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useMounted } from '@/hooks';
@@ -37,7 +30,7 @@ export const DownloadSettings = ({
   disabled?: boolean;
   pathPreview?: string;
 }) => {
-  const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
   useMounted(() => {
@@ -45,6 +38,19 @@ export const DownloadSettings = ({
       setConfig({ ...DEFAULT_CONFIG, ...items });
     });
   });
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleSave = () => {
     const intermediateDownloadPath = formatDownloadDir(config.intermediateDownloadPath);
@@ -59,56 +65,68 @@ export const DownloadSettings = ({
 
     configStorage.set(updatedConfig).then(() => {
       toast.success(t('settingsSaved'));
-      onClose();
+      setIsOpen(false);
     });
   };
+
+  const settingsOverlay = isOpen ? (
+    <section
+      className="eh-settings-overlay fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eh-popup-settings-title"
+    >
+      <header className="eh-settings-overlay__header">
+        <EhButton
+          isIconOnly
+          ehSize="sm"
+          onPress={() => setIsOpen(false)}
+          aria-label={t('close')}
+          className="eh-settings-overlay__back"
+        >
+          <ArrowLeft size={16} strokeWidth={1.9} />
+        </EhButton>
+        <div className="min-w-0">
+          <h1
+            id="eh-popup-settings-title"
+            className="truncate text-[15px] font-semibold tracking-tight text-ink"
+          >
+            {t('settings')}
+          </h1>
+          <p className="mt-0.5 truncate text-xs text-muted-soft">{t('downloadSettings')}</p>
+        </div>
+      </header>
+
+      <div className="scrollbar-glass min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <Settings
+          config={config}
+          setConfig={setConfig}
+          variant="overlay"
+          pathPreview={pathPreview}
+        />
+      </div>
+
+      <footer className="eh-settings-overlay__footer">
+        <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
+          {t('saveSettings')}
+        </EhButton>
+      </footer>
+    </section>
+  ) : null;
 
   return (
     <>
       <EhButton
         isIconOnly
         ehSize="sm"
-        onPress={onOpen}
+        onPress={() => setIsOpen(true)}
         disabled={disabled}
         aria-label={t('settings')}
       >
         <SettingsIcon size={15} strokeWidth={1.75} />
       </EhButton>
 
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="xl"
-        scrollBehavior="inside"
-        backdrop="blur"
-        hideCloseButton
-        classNames={{
-          backdrop: 'bg-[rgb(0_0_0/0.58)] backdrop-blur-md',
-          wrapper: 'items-center px-4',
-          base: 'border-0 bg-transparent shadow-none',
-        }}
-      >
-        <ModalContent className="glass-panel my-3 max-h-[min(540px,88vh)] border border-[var(--eh-glass-border)] bg-transparent shadow-[var(--eh-glass-elevation)]">
-          {(close) => (
-            <>
-              <ModalHeader className="border-b border-[var(--eh-hairline-soft)] px-5 py-3">
-                <span className="text-sm font-medium tracking-tight text-ink">{t('settings')}</span>
-              </ModalHeader>
-              <ModalBody className="scrollbar-glass px-5 py-4">
-                <Settings config={config} setConfig={setConfig} pathPreview={pathPreview} />
-              </ModalBody>
-              <ModalFooter className="eh-modal-footer">
-                <EhButton variant="secondary" ehSize="sm" onPress={close}>
-                  {t('cancel')}
-                </EhButton>
-                <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
-                  {t('saveSettings')}
-                </EhButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      {settingsOverlay ? createPortal(settingsOverlay, document.body) : null}
     </>
   );
 };

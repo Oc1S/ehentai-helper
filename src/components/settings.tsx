@@ -1,5 +1,4 @@
 import { type FC, type ReactNode } from 'react';
-import { Checkbox, Input, Radio, RadioGroup, Tooltip } from '@nextui-org/react';
 
 import {
   type Config,
@@ -10,6 +9,8 @@ import {
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
+import { CheckControl, RadioCards } from './ui-primitives';
+
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
     return null;
@@ -26,32 +27,28 @@ const Row = ({
   label,
   content,
   variant,
-}: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'page' }) => (
+}: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'overlay' | 'page' }) => (
   <div
     className={
-      variant === 'page'
-        ? 'eh-settings-row eh-settings-row--page'
-        : 'eh-settings-row eh-settings-row--modal'
+      variant === 'modal'
+        ? 'eh-settings-row eh-settings-row--modal'
+        : `eh-settings-row eh-settings-row--${variant}`
     }
   >
     <div
       className={
-        variant === 'page'
-          ? 'eh-settings-label eh-settings-label--page'
-          : variant === 'modal'
-            ? 'eh-settings-label--modal'
-            : 'eh-settings-label'
+        variant === 'modal'
+          ? 'eh-settings-label--modal'
+          : `eh-settings-label eh-settings-label--${variant}`
       }
     >
       {label}
     </div>
     <div
       className={
-        variant === 'page'
-          ? 'eh-settings-field eh-settings-field--page'
-          : variant === 'modal'
-            ? 'eh-settings-field--modal'
-            : 'eh-settings-field'
+        variant === 'modal'
+          ? 'eh-settings-field--modal'
+          : `eh-settings-field eh-settings-field--${variant}`
       }
     >
       {content}
@@ -64,13 +61,17 @@ const TextInput = ({
   variant,
   id,
   ...rest
-}: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'page' }) => (
+}: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'overlay' | 'page' }) => (
   <input
     type="text"
     id={id}
     className={[
       'eh-text-input',
-      variant === 'page' ? 'eh-text-input--page text-sm' : 'eh-text-input--modal text-xs',
+      variant === 'page'
+        ? 'eh-text-input--page text-sm'
+        : variant === 'overlay'
+          ? 'eh-text-input--overlay text-[13px]'
+          : 'eh-text-input--modal text-xs',
       className,
     ]
       .filter(Boolean)
@@ -80,15 +81,15 @@ const TextInput = ({
 );
 
 const HintLabel = ({ label, hint }: { label: string; hint: string }) => (
-  <Tooltip content={hint} closeDelay={200} placement="top-start">
-    <span className="cursor-help border-b border-dotted border-muted-soft/80">{label}</span>
-  </Tooltip>
+  <span className="cursor-help border-b border-dotted border-muted-soft/80" title={hint}>
+    {label}
+  </span>
 );
 
 export const Settings: FC<{
   config: Config;
   setConfig: (config: Config) => void;
-  variant?: 'modal' | 'page';
+  variant?: 'modal' | 'overlay' | 'page';
   pathPreview?: string;
 }> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
   type ConfigKey = keyof Config;
@@ -121,138 +122,132 @@ export const Settings: FC<{
     saveOriginalImages: {
       label: t('saveOriginalImages'),
       content: (
-        <Checkbox
-          isSelected={config.saveOriginalImages}
-          onChange={(e) => {
-            setConfig({ ...config, saveOriginalImages: e.target.checked });
-          }}
+        <CheckControl
+          checked={config.saveOriginalImages}
+          onCheckedChange={(checked) => setConfig({ ...config, saveOriginalImages: checked })}
         />
       ),
     },
     saveGalleryInfo: {
       label: t('saveGalleryInfo'),
       content: (
-        <Checkbox
-          isSelected={config.saveGalleryInfo}
-          onChange={(e) => {
-            setConfig({ ...config, saveGalleryInfo: e.target.checked });
-          }}
+        <CheckControl
+          checked={config.saveGalleryInfo}
+          onCheckedChange={(checked) => setConfig({ ...config, saveGalleryInfo: checked })}
         />
       ),
     },
     filenameConflictAction: {
       label: <HintLabel label={t('filenameConflictAction')} hint={t('filenameConflictHint')} />,
       content: (
-        <RadioGroup
-          orientation="horizontal"
-          size={variant === 'modal' ? 'sm' : 'md'}
+        <RadioCards
           value={config.filenameConflictAction}
-          onValueChange={(val: chrome.downloads.FilenameConflictAction) =>
+          onChange={(val: chrome.downloads.FilenameConflictAction) =>
             setConfig({
               ...config,
               filenameConflictAction: val,
             })
           }
-        >
-          <Radio value="uniquify">{t('uniquify')}</Radio>
-          <Radio value="overwrite">{t('overwrite')}</Radio>
-        </RadioGroup>
+          items={[
+            { value: 'uniquify', label: t('uniquify') },
+            { value: 'overwrite', label: t('overwrite') },
+          ]}
+        />
       ),
     },
     downloadInterval: {
       label: <HintLabel label={t('downloadInterval')} hint={t('downloadIntervalHint')} />,
       content: (
-        <Input
-          type="number"
-          placeholder="300"
-          value={String(config.downloadInterval)}
-          endContent={<span className="text-xs text-muted-soft">ms</span>}
-          className="w-28"
-          size="sm"
-          classNames={
-            variant === 'modal'
-              ? {
-                  input: 'text-xs',
-                  inputWrapper:
-                    'h-8 min-h-8 border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.28)] shadow-none backdrop-blur-sm data-[hover=true]:bg-[rgb(10_10_11/0.35)] group-data-[focus=true]:border-brand-accent/35',
-                }
-              : undefined
-          }
-          onChange={(e) => {
-            const val = +e.target.value;
-            if (Number.isNaN(val) || val < 0) return;
-            setConfig({ ...config, downloadInterval: val });
-          }}
-        />
+        <div className="relative w-28">
+          <input
+            type="number"
+            placeholder="300"
+            value={String(config.downloadInterval)}
+            className={`eh-text-input ${
+              variant === 'page'
+                ? 'eh-text-input--page'
+                : variant === 'overlay'
+                  ? 'eh-text-input--overlay text-[13px]'
+                  : 'eh-text-input--modal text-xs'
+            } pr-8`}
+            onChange={(e) => {
+              const val = +e.target.value;
+              if (Number.isNaN(val) || val < 0) return;
+              setConfig({ ...config, downloadInterval: val });
+            }}
+          />
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-soft">
+            ms
+          </span>
+        </div>
       ),
     },
     fileNameRule: {
       label: t('fileNameRule'),
       content: (
-        <RadioGroup
-          orientation="horizontal"
-          size={variant === 'modal' ? 'sm' : 'md'}
+        <RadioCards
           value={config.fileNameRule}
-          onValueChange={(val) =>
+          onChange={(val) =>
             setConfig({
               ...config,
               fileNameRule: val,
             })
           }
-        >
-          <Radio value="[index]">{'[Index]'}</Radio>
-          <Radio value="[name]">{'[Name]'}</Radio>
-          <Radio value="[index]_[total]">{'[Index]_[Total]'}</Radio>
-        </RadioGroup>
+          items={[
+            { value: '[index]', label: '[Index]' },
+            { value: '[name]', label: '[Name]' },
+            { value: '[index]_[total]', label: '[Index]_[Total]' },
+          ]}
+        />
       ),
     },
     imageFormat: {
       label: <HintLabel label={t('imageFormat')} hint={t('imageFormatHint')} />,
       content: (
-        <RadioGroup
-          orientation="horizontal"
-          size={variant === 'modal' ? 'sm' : 'md'}
+        <RadioCards
           value={config.imageFormat}
-          onValueChange={(val) =>
+          onChange={(val) =>
             setConfig({
               ...config,
               imageFormat: val as ImageFormat,
             })
           }
-        >
-          <Radio value="original">{t('formatOriginal')}</Radio>
-          <Radio value="jpg">JPG</Radio>
-          <Radio value="png">PNG</Radio>
-          <Radio value="webp">WebP</Radio>
-        </RadioGroup>
+          items={[
+            { value: 'original', label: t('formatOriginal') },
+            { value: 'jpg', label: 'JPG' },
+            { value: 'png', label: 'PNG' },
+            { value: 'webp', label: 'WebP' },
+          ]}
+        />
       ),
     },
     outputMode: {
       label: <HintLabel label={t('output')} hint={t('outputHint')} />,
       content: (
-        <RadioGroup
-          orientation="horizontal"
-          size={variant === 'modal' ? 'sm' : 'md'}
+        <RadioCards
           value={config.outputMode ?? 'files'}
-          onValueChange={(val) =>
+          onChange={(val) =>
             setConfig({
               ...config,
               outputMode: val as OutputMode,
             })
           }
-        >
-          <Radio value="files">{t('outputModeFiles')}</Radio>
-          <Radio value="cbz">{t('outputModeCbz')}</Radio>
-          <Radio value="both">{t('outputModeBoth')}</Radio>
-        </RadioGroup>
+          items={[
+            { value: 'files', label: t('outputModeFiles') },
+            { value: 'cbz', label: t('outputModeCbz') },
+            { value: 'both', label: t('outputModeBoth') },
+          ]}
+        />
       ),
     },
   };
 
   const panelClass =
     variant === 'page'
-      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 shadow-card eh-settings-panel--page'
-      : 'flex flex-col gap-5 rounded-eh-cta border border-[var(--eh-glass-border)] bg-[rgb(8_8_9/0.22)] p-3.5 backdrop-blur-sm eh-settings-panel--modal';
+      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 eh-settings-panel--page'
+      : variant === 'overlay'
+        ? 'flex flex-col gap-4 eh-settings-panel--overlay'
+        : 'flex flex-col gap-5 rounded-eh-lg border border-hairline bg-white p-3.5 eh-settings-panel--modal';
 
   const pageGroups: { title: string; keys: ConfigKey[] }[] = [
     { title: t('settingsGroupLocation'), keys: ['intermediateDownloadPath'] },
@@ -276,15 +271,19 @@ export const Settings: FC<{
   return (
     <div className={panelClass}>
       {pathPreview ? (
-        <p className="text-xs leading-relaxed text-muted">
+        <p
+          className="text-xs leading-relaxed text-muted"
+        >
           {t('pathPreview')}{' '}
-          <span className="font-mono text-brand-accent">
+          <span
+            className="font-mono text-primary"
+          >
             {t('defaultFolder')}
             {pathPreview}
           </span>
         </p>
       ) : null}
-      {variant === 'page'
+      {variant !== 'modal'
         ? pageGroups.map((group) => (
             <section key={group.title} className="eh-settings-group">
               <h2 className="eh-settings-section-title">{group.title}</h2>
