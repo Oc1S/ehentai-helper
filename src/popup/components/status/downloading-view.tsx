@@ -34,7 +34,7 @@ export const DownloadingView = ({
           </h3>
           <div className="mt-2.5 flex items-center gap-2">
             <Spinner size="sm" />
-            <span className="text-[13px] font-medium text-brand-accent">
+            <span className="text-[13px] font-normal text-warning">
               {t('downloadingImages')}
             </span>
           </div>

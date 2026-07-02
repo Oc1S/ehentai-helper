@@ -10,7 +10,7 @@ const ICON_STROKE = 1.5;
 export const LoadingStatusView = () => (
   <div className="flex h-full flex-col items-center justify-center gap-3">
     <Spinner size="lg" />
-    <p className="animate-pulse text-[13px] font-medium text-muted">{t('initializing')}</p>
+    <p className="animate-pulse text-[13px] font-normal text-muted">{t('initializing')}</p>
   </div>
 );
 

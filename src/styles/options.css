@@ -3,8 +3,8 @@
 .options-root {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 52% 30% at 78% 0%, rgba(24, 99, 220, 0.045), transparent 72%),
-    linear-gradient(180deg, #ffffff 0%, #fbfbfa 100%);
+    radial-gradient(ellipse 52% 30% at 78% 0%, rgba(84, 168, 136, 0.055), transparent 72%),
+    rgb(251, 250, 247);
 }
 
 .options-shell {
@@ -30,8 +30,8 @@
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 22px;
   background:
-    radial-gradient(ellipse 46% 80% at 90% 0%, rgba(217, 230, 255, 0.18), transparent 72%),
-    linear-gradient(135deg, #003c33 0%, #061f1b 100%);
+    radial-gradient(ellipse 46% 80% at 90% 0%, rgba(194, 138, 0, 0.16), transparent 72%),
+    linear-gradient(135deg, #17171c 0%, #000000 100%);
   color: #ffffff;
 }
 
@@ -103,15 +103,23 @@
 }
 
 .options-shell .eh-settings-group__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   border-top: 1px solid var(--eh-hairline-soft);
+  padding-top: 10px;
 }
 
 .options-shell .eh-settings-row--page {
   flex-direction: row;
   align-items: flex-start;
   gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--eh-hairline-soft);
+  padding: 10px 0 12px;
+  border-bottom: 0;
+}
+
+.options-shell .eh-settings-row--page:hover {
+  background: var(--eh-hover-bg);
 }
 
 .options-shell .eh-settings-row--page:last-child {
@@ -123,8 +131,8 @@
   flex-shrink: 0;
   padding-top: 2px;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--eh-muted-hex);
+  font-weight: 400;
+  color: var(--eh-ink-hex);
 }
 
 .options-shell .eh-settings-field--page {
@@ -138,7 +146,7 @@
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
-  color: var(--eh-primary-hex);
+  color: var(--eh-ink-hex);
 }
 
 @media (max-width: 840px) {

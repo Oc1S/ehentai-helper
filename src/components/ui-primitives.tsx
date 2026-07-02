@@ -1,6 +1,7 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 
 type TextFieldProps = {
@@ -71,6 +72,20 @@ export const Spinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => (
   <span className={`eh-spinner eh-spinner--${size}`} aria-hidden />
 );
 
+const modalRootMotion = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
+} as const;
+
+const modalPanelMotion = {
+  initial: { opacity: 0, y: 10, scale: 0.985, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -6, scale: 0.992, filter: 'blur(3px)' },
+  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+} as const;
+
 export const Modal = ({
   isOpen,
   onClose,
@@ -97,28 +112,41 @@ export const Modal = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return createPortal(
-    <div className="eh-modal" role="presentation">
-      <button type="button" className="eh-modal__scrim" aria-label="Close" onClick={onClose} />
-      <section
-        className={`eh-modal__panel eh-modal__panel--${size}`}
-        role="dialog"
-        aria-modal="true"
-      >
-        {title ? (
-          <header className="eh-modal__header">
-            <div className="min-w-0 flex-1">{title}</div>
-            <button type="button" className="eh-modal__close" aria-label="Close" onClick={onClose}>
-              <X size={16} strokeWidth={1.75} />
-            </button>
-          </header>
-        ) : null}
-        <div className="eh-modal__body scrollbar-glass">{children}</div>
-        {footer ? <footer className="eh-modal__footer">{footer}</footer> : null}
-      </section>
-    </div>,
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.div className="eh-modal" role="presentation" {...modalRootMotion}>
+          <button
+            type="button"
+            className="eh-modal__scrim"
+            aria-label="Close"
+            onClick={onClose}
+          />
+          <motion.section
+            className={`eh-modal__panel eh-modal__panel--${size}`}
+            role="dialog"
+            aria-modal="true"
+            {...modalPanelMotion}
+          >
+            {title ? (
+              <header className="eh-modal__header">
+                <div className="min-w-0 flex-1">{title}</div>
+                <button
+                  type="button"
+                  className="eh-modal__close"
+                  aria-label="Close"
+                  onClick={onClose}
+                >
+                  <X size={16} strokeWidth={1.75} />
+                </button>
+              </header>
+            ) : null}
+            <div className="eh-modal__body scrollbar-glass">{children}</div>
+            {footer ? <footer className="eh-modal__footer">{footer}</footer> : null}
+          </motion.section>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
     document.body
   );
 };

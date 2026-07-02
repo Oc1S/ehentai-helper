@@ -39,10 +39,14 @@
   }
 
   button:focus-visible,
-  a:focus-visible,
-  input:focus-visible {
+  a:focus-visible {
     outline: 2px solid var(--eh-action-blue-hex);
     outline-offset: 2px;
+  }
+
+  input:focus,
+  input:focus-visible {
+    outline: none;
   }
 }
 
@@ -56,7 +60,7 @@
   }
 
   .eh-settings-label {
-    @apply w-full shrink-0 text-sm font-medium text-muted sm:w-[200px];
+    @apply w-full shrink-0 text-sm font-normal text-ink sm:w-[200px];
   }
 
   .eh-settings-label--modal {
@@ -72,30 +76,34 @@
   }
 
   .eh-settings-row--overlay {
-    @apply flex-row items-start gap-4 py-3.5;
-    border-bottom: 1px solid var(--eh-hairline-soft);
+    @apply flex-row items-start gap-4 rounded-eh-sm px-1 py-2.5;
+    border-bottom: 0;
   }
 
   .eh-settings-row--overlay:last-child {
     border-bottom: 0;
   }
 
+  .eh-settings-row--overlay:hover {
+    background: var(--eh-hover-bg);
+  }
+
   .eh-settings-label--overlay {
-    @apply w-[190px] shrink-0 pt-1 text-[13px] font-medium text-muted;
+    @apply w-[168px] shrink-0 pt-1 text-[13px] font-normal text-ink;
   }
 
   .eh-settings-field--overlay {
-    @apply min-w-0 flex-1 text-[13px] text-body;
+    @apply min-w-0 flex-1 text-[13px] leading-snug text-body;
   }
 
   .eh-settings-panel--overlay {
     width: 100%;
-    max-width: 720px;
+    max-width: 680px;
     margin: 0 auto;
   }
 
   .eh-settings-panel--overlay .eh-settings-group {
-    @apply flex flex-col gap-1;
+    @apply flex flex-col gap-3 rounded-eh-sm border border-hairline-soft bg-white px-4 py-4;
   }
 
   .eh-settings-panel--overlay .eh-settings-group+.eh-settings-group {
@@ -103,12 +111,39 @@
   }
 
   .eh-settings-panel--overlay .eh-settings-group__rows {
+    @apply flex flex-col gap-2;
     border-top: 1px solid var(--eh-hairline-soft);
+    padding-top: 10px;
   }
 
   .eh-settings-panel--overlay .eh-settings-section-title {
-    @apply px-1 text-[11px] font-medium uppercase text-primary;
+    @apply text-xs font-medium text-ink;
     letter-spacing: 0;
+  }
+
+  .eh-settings-panel--overlay .eh-radio-card {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+
+  .eh-settings-panel--overlay .eh-check__label {
+    @apply text-[13px];
+  }
+
+  .eh-default-folder-button {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid #e4dacb;
+    border-radius: 9999px;
+    background: #ffffff;
+    color: #6f6253;
+    text-decoration: none;
+  }
+
+  .eh-default-folder-button:hover {
+    background: var(--eh-hover-bg);
+    color: var(--eh-ink-hex);
+    text-decoration: none;
   }
 
   /* ── EhButton 统一体系 ── */
@@ -165,8 +200,8 @@
   }
 
   .eh-btn--secondary:hover {
-    background: var(--eh-surface-soft-hex);
-    border-color: var(--eh-muted-soft-hex);
+    background: var(--eh-hover-bg);
+    border-color: var(--eh-hairline);
   }
 
   .eh-btn--danger {
@@ -197,8 +232,8 @@
   }
 
   .eh-btn--icon:hover {
-    border-color: var(--eh-muted-soft-hex);
-    background: var(--eh-surface-soft-hex);
+    border-color: var(--eh-hairline);
+    background: var(--eh-hover-bg);
     color: var(--eh-body-hex);
   }
 
@@ -213,14 +248,14 @@
   }
 
   .eh-btn__icon {
-    @apply flex shrink-0 items-center justify-center rounded-eh-md;
-    border: 1px solid rgb(255 255 255 / 0.18);
-    background: rgb(255 255 255 / 0.12);
-    color: #ffffff;
+    @apply flex shrink-0 items-center justify-center;
+    border: 0;
+    background: transparent;
+    color: currentColor;
   }
 
   .eh-btn--lg .eh-btn__icon {
-    @apply h-8 w-8;
+    @apply h-auto w-auto;
   }
 
   .eh-text-input {
@@ -233,7 +268,7 @@
   }
 
   .eh-text-input--modal:focus {
-    border-color: var(--eh-action-blue-hex);
+    border-color: var(--eh-hairline);
     background: #ffffff;
   }
 
@@ -246,7 +281,7 @@
   }
 
   .eh-text-input--overlay:focus {
-    border-color: var(--eh-action-blue-hex);
+    border-color: var(--eh-hairline);
     background: #ffffff;
   }
 
@@ -259,7 +294,7 @@
   }
 
   .eh-text-input--page:focus {
-    border-color: var(--eh-action-blue-hex);
+    border-color: var(--eh-hairline);
   }
 
   .eh-number-input {
@@ -308,8 +343,8 @@
   }
 
   .eh-github-star-link:hover {
-    border-color: var(--eh-muted-soft-hex);
-    background: var(--eh-surface-soft-hex);
+    border-color: var(--eh-hairline);
+    background: var(--eh-hover-bg);
     box-shadow: none;
   }
 
@@ -339,8 +374,8 @@
   }
 
   .eh-field:focus-within {
-    border-color: var(--eh-action-blue-hex);
-    box-shadow: 0 0 0 3px rgba(24, 99, 220, 0.1);
+    border-color: var(--eh-hairline);
+    box-shadow: none;
   }
 
   .eh-field__input {
@@ -352,7 +387,7 @@
   }
 
   .eh-field__clear:hover {
-    background: var(--eh-surface-soft-hex);
+    background: var(--eh-hover-bg);
     color: var(--eh-ink-hex);
   }
 
@@ -367,15 +402,15 @@
   }
 
   .eh-pill--success {
-    border-color: rgba(4, 120, 87, 0.22);
-    background: rgba(4, 120, 87, 0.07);
+    border-color: rgba(4, 120, 87, 0.2);
+    background: rgba(4, 120, 87, 0.06);
     color: var(--eh-success-hex);
   }
 
   .eh-pill--warning {
-    border-color: rgba(245, 158, 11, 0.24);
-    background: rgba(245, 158, 11, 0.08);
-    color: #9a5a00;
+    border-color: rgba(154, 90, 0, 0.22);
+    background: rgba(154, 90, 0, 0.07);
+    color: var(--eh-warning-hex);
   }
 
   .eh-pill--danger {
@@ -428,8 +463,8 @@
 
   .eh-modal__scrim {
     @apply absolute inset-0 h-full w-full;
-    background: rgba(23, 23, 28, 0.54);
-    backdrop-filter: blur(8px);
+    background: rgba(248, 248, 246, 0.82);
+    backdrop-filter: blur(10px);
   }
 
   .eh-modal__panel {
@@ -444,8 +479,8 @@
     content: '';
     position: absolute;
     inset: 0 0 auto;
-    height: 4px;
-    background: var(--eh-brand-primary-hex);
+    height: 1px;
+    background: var(--eh-hairline-soft);
     pointer-events: none;
   }
 
@@ -489,7 +524,7 @@
   }
 
   .eh-modal__close:hover {
-    background: var(--eh-surface-soft-hex);
+    background: var(--eh-hover-bg);
     color: var(--eh-ink-hex);
   }
 
@@ -503,6 +538,7 @@
   }
 
   .eh-segmented__item:hover {
+    background: var(--eh-hover-bg);
     color: var(--eh-ink-hex);
   }
 
@@ -521,7 +557,7 @@
   }
 
   .eh-pagination__button:hover:not(:disabled) {
-    background: var(--eh-surface-soft-hex);
+    background: var(--eh-hover-bg);
     color: var(--eh-ink-hex);
   }
 
@@ -561,13 +597,20 @@
   }
 
   .eh-radio-card:hover {
-    border-color: var(--eh-muted-soft-hex);
+    border-color: var(--eh-hairline);
+    background: var(--eh-hover-bg);
     color: var(--eh-ink-hex);
   }
 
   .eh-radio-card--active {
     border-color: var(--eh-brand-primary-hex);
     background: var(--eh-brand-primary-hex);
+    color: #ffffff;
+  }
+
+  .eh-radio-card--active:hover {
+    border-color: var(--eh-brand-primary-active-hex);
+    background: var(--eh-brand-primary-active-hex);
     color: #ffffff;
   }
 
@@ -590,7 +633,7 @@
   }
 
   .eh-data-table th {
-    @apply sticky top-0 z-10 h-9 border-b bg-white px-3 text-xs font-medium text-muted;
+    @apply sticky top-0 z-10 h-9 border-b bg-white px-3 text-xs font-normal text-muted;
     border-color: var(--eh-hairline-soft);
   }
 
@@ -608,7 +651,7 @@
   }
 
   .eh-data-table tbody tr:hover {
-    background: rgba(238, 236, 231, 0.58);
+    background: var(--eh-hover-bg);
   }
 }
 
@@ -619,7 +662,7 @@
   }
 
   .scrollbar-glass::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
   }
 
   .scrollbar-glass::-webkit-scrollbar-track {
@@ -647,8 +690,8 @@
     z-index: 0;
     pointer-events: none;
     background: radial-gradient(ellipse 68% 42% at 50% -6%,
-        rgba(0, 60, 51, 0.045) 0%,
-        rgba(0, 60, 51, 0.015) 48%,
+        rgba(84, 168, 136, 0.055) 0%,
+        rgba(84, 168, 136, 0.016) 48%,
         transparent 72%);
   }
 
@@ -659,8 +702,8 @@
 
   .eh-settings-overlay {
     background:
-      radial-gradient(ellipse 70% 38% at 78% -10%, rgba(24, 99, 220, 0.08), transparent 70%),
-      linear-gradient(180deg, #ffffff 0%, #fcfcfb 56%, #f8f8f6 100%);
+      radial-gradient(ellipse 70% 38% at 78% -10%, rgba(84, 168, 136, 0.06), transparent 70%),
+      #fbfaf7;
     color: var(--eh-body-hex);
   }
 
@@ -670,7 +713,7 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(0, 60, 51, 0.035), transparent 28%);
+    background: linear-gradient(180deg, rgba(84, 168, 136, 0.026), transparent 28%);
   }
 
   .eh-settings-overlay>* {
@@ -680,8 +723,8 @@
 
   .eh-settings-overlay__header {
     @apply flex h-popup-header shrink-0 items-center gap-3 px-4;
-    border-bottom: 1px solid var(--eh-hairline-soft);
-    background: #ffffff;
+    border-bottom: 0;
+    background: transparent;
   }
 
   .eh-settings-overlay__back {
@@ -739,15 +782,15 @@
   }
 
   .glass-panel:hover {
-    background: var(--eh-glass-bg-hover);
-    border-color: var(--eh-glass-border-hover);
-    box-shadow: var(--eh-glass-elevation-hover);
+    background: var(--eh-hover-bg);
+    border-color: var(--eh-glass-border);
+    box-shadow: var(--eh-glass-elevation);
   }
 
   .glass-panel:hover::after {
-    opacity: 0.75;
-    background: var(--eh-glass-ambient-gold-hover);
-    transform: scale(1.03);
+    opacity: 0.55;
+    background: var(--eh-glass-ambient);
+    transform: none;
   }
 
   .glass-panel-live::after {
@@ -786,22 +829,22 @@
   }
 
   .glass-card:hover {
-    background: var(--eh-glass-bg-hover);
-    border-color: var(--eh-glass-border-hover);
-    box-shadow: var(--eh-glass-elevation-hover);
+    background: var(--eh-hover-bg);
+    border-color: var(--eh-glass-border);
+    box-shadow: var(--eh-glass-elevation);
   }
 
   .glass-card-static {
     background: var(--eh-glass-bg-hover);
-    border-color: var(--eh-glass-border-hover);
-    box-shadow: var(--eh-glass-elevation-hover);
+    border-color: var(--eh-glass-border);
+    box-shadow: var(--eh-glass-elevation);
     transition: none;
   }
 
   .glass-card-static:hover {
-    background: var(--eh-glass-bg-hover);
-    border-color: var(--eh-glass-border-hover);
-    box-shadow: var(--eh-glass-elevation-hover);
+    background: var(--eh-hover-bg);
+    border-color: var(--eh-glass-border);
+    box-shadow: var(--eh-glass-elevation);
   }
 
   .glass-card-pool.glass-card-static {

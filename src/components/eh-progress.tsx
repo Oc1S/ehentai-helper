@@ -28,7 +28,7 @@ export const EhProgressBar = ({
 
   return (
     <div
-      className={`flex h-2 w-full overflow-hidden rounded-full bg-[rgba(0,60,51,0.12)] ${className}`.trim()}
+      className={`flex h-2 w-full overflow-hidden rounded-full bg-[rgba(23,23,28,0.1)] ${className}`.trim()}
       role="progressbar"
       aria-valuenow={value}
       aria-valuemin={0}
@@ -78,18 +78,18 @@ export const EhDownloadProgressPanel = ({
     <div className="w-full space-y-4">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
+          <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
             {t('progress')}
           </p>
           <p className="mt-1 text-2xl font-medium tabular-nums text-primary">{percent}%</p>
         </div>
         <div className="text-right">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
+          <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
             {t('completed')}
           </p>
           <p className="mt-1 text-lg font-medium tabular-nums text-ink">
             {completeCount}
-            <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
+            <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
           </p>
         </div>
       </div>

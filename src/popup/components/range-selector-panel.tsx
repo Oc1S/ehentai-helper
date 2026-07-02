@@ -16,7 +16,7 @@ export const RangeSelectorContent = ({
     <>
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold tracking-tight text-ink">{t('downloadRange')}</span>
-        <span className="flex h-6 shrink-0 items-center justify-center rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 font-mono text-xs font-bold text-brand-accent">
+        <span className="flex h-6 shrink-0 items-center justify-center rounded-full border border-[var(--eh-hairline)] bg-[rgba(23,23,28,0.045)] px-2 font-mono text-xs font-normal text-ink">
           {range[0]} - {range[1]}
         </span>
       </div>

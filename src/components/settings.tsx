@@ -102,7 +102,7 @@ export const Settings: FC<{
           <EhButton
             variant="link"
             ehSize="sm"
-            className={variant === 'page' ? 'text-[13px]' : 'text-xs'}
+            className={`eh-default-folder-button ${variant === 'page' ? 'text-[13px]' : 'text-xs'}`}
             onPress={() => {
               chrome.downloads.showDefaultFolder();
             }}
@@ -270,14 +270,10 @@ export const Settings: FC<{
 
   return (
     <div className={panelClass}>
-      {pathPreview ? (
-        <p
-          className="text-xs leading-relaxed text-muted"
-        >
+      {pathPreview && variant === 'page' ? (
+        <p className="text-xs leading-relaxed text-muted">
           {t('pathPreview')}{' '}
-          <span
-            className="font-mono text-primary"
-          >
+          <span className="font-mono text-primary">
             {t('defaultFolder')}
             {pathPreview}
           </span>

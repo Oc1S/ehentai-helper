@@ -17,12 +17,12 @@ export const PopupHeader = ({
   isDownloading: boolean;
   pathPreview?: string;
 }) => (
-  <header className="grid h-popup-header shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 bg-[var(--eh-surface-dark-hex)] px-4 text-white">
-    <span className="min-w-0 truncate text-[15px] font-medium tracking-tight text-white">
+  <header className="grid h-popup-header shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 text-ink">
+    <span className="min-w-0 truncate text-[15px] font-medium tracking-tight text-ink">
       E-Hentai <span className="text-[var(--eh-brand-helper-hex)]">Helper</span>
     </span>
     <nav role="tablist" aria-label="popup tabs" className="z-10 justify-self-center">
-      <div className="flex items-center gap-0.5 rounded-full border border-white/15 bg-black/10 p-0.5">
+      <div className="flex items-center gap-0.5 rounded-full border border-hairline bg-white p-0.5">
         {POPUP_TABS.map((tab) => {
           const isActive = selectedTab === tab.key;
           return (
@@ -33,7 +33,9 @@ export const PopupHeader = ({
               aria-selected={isActive}
               onClick={() => onSelectTab(tab.key)}
               className={`flex h-8 items-center gap-1 rounded-full px-3 text-xs font-normal transition-colors ${
-                isActive ? 'bg-[var(--eh-brand-primary-active-hex)] text-white shadow-card' : 'text-white/62 hover:text-white'
+                isActive
+                  ? 'bg-[var(--eh-brand-primary-active-hex)] text-white shadow-card'
+                  : 'text-muted hover:text-ink'
               }`}
             >
               {tab.label()}

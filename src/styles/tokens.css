@@ -7,8 +7,8 @@
   color-scheme: light;
 
   /* 画布与文字 */
-  --eh-canvas: 255 255 255;
-  --eh-canvas-hex: #ffffff;
+  --eh-canvas: 251 250 247;
+  --eh-canvas-hex: #fbfaf7;
   --eh-ink: 33 33 33;
   --eh-ink-hex: #212121;
   --eh-body: 45 45 48;
@@ -19,40 +19,40 @@
   --eh-muted-soft-hex: #93939f;
 
   /* 表面层级 */
-  --eh-surface-soft: 248 248 246;
-  --eh-surface-soft-hex: #f8f8f6;
+  --eh-surface-soft: 251 250 247;
+  --eh-surface-soft-hex: #fbfaf7;
   --eh-surface-card: 255 255 255;
   --eh-surface-card-hex: #ffffff;
   --eh-surface-strong: 241 245 255;
   --eh-surface-strong-hex: #f1f5ff;
-  --eh-surface-dark: 0 60 51;
-  --eh-surface-dark-hex: #003c33;
-  --eh-surface-dark-elevated-hex: #072821;
+  --eh-surface-dark: 23 23 28;
+  --eh-surface-dark-hex: #17171c;
+  --eh-surface-dark-elevated-hex: #24242a;
 
   /* 品牌 / 按钮 */
   --eh-brand-accent: 255 119 89;
   --eh-brand-accent-hex: #ff7759;
   --eh-brand-accent-bright-hex: #ffad9b;
-  --eh-brand-helper-hex: #d9e6ff;
+  --eh-brand-helper-hex: #c28a00;
   --eh-brand-primary: 23 23 28;
   --eh-brand-primary-hex: #17171c;
   --eh-brand-primary-active-hex: #000000;
-  --eh-primary: 0 60 51;
-  --eh-primary-hex: #003c33;
-  --eh-primary-hover-hex: #002f28;
+  --eh-primary: 23 23 28;
+  --eh-primary-hex: #17171c;
+  --eh-primary-hover-hex: #000000;
   --eh-primary-fg: 255 255 255;
   --eh-primary-fg-hex: #ffffff;
   --eh-on-primary-hex: #ffffff;
-  --eh-primary-50: #edfce9;
-  --eh-primary-100: #d9f6d6;
-  --eh-primary-200: #a7d9c8;
-  --eh-primary-300: #72b9a7;
-  --eh-primary-400: #327e70;
-  --eh-primary-500: #003c33;
-  --eh-primary-600: #07342d;
-  --eh-primary-700: #062a25;
-  --eh-primary-800: #041d19;
-  --eh-primary-900: #020f0d;
+  --eh-primary-50: #f6f1e8;
+  --eh-primary-100: #ece4d7;
+  --eh-primary-200: #d8cbb8;
+  --eh-primary-300: #b9aa95;
+  --eh-primary-400: #6f6253;
+  --eh-primary-500: #17171c;
+  --eh-primary-600: #111115;
+  --eh-primary-700: #0c0c0f;
+  --eh-primary-800: #060608;
+  --eh-primary-900: #000000;
 
   /* 按钮圆角 */
   --eh-btn-radius: 32px;
@@ -67,6 +67,8 @@
   --eh-shadow-card: none;
   --eh-shadow-card-elevated: 0 20px 70px rgba(0, 0, 0, 0.18);
   --eh-shadow-pill: none;
+  --eh-hover-bg: rgba(23, 23, 28, 0.045);
+  --eh-hover-bg-strong: rgba(23, 23, 28, 0.07);
   --eh-glass-bg: linear-gradient(
     180deg,
     rgb(255 255 255 / 0.95) 0%,
@@ -84,8 +86,8 @@
   );
   --eh-glass-border: #d9d9dd;
   --eh-glass-border-hover: #b9bbc4;
-  --eh-glass-ambient: rgb(0 60 51 / 0.08);
-  --eh-glass-ambient-hover: rgb(0 60 51 / 0.12);
+  --eh-glass-ambient: rgb(23 23 28 / 0.06);
+  --eh-glass-ambient-hover: rgb(23 23 28 / 0.09);
   --eh-glass-ambient-gold: rgb(255 119 89 / 0.055);
   --eh-glass-ambient-gold-hover: rgb(255 119 89 / 0.08);
   --eh-glass-ambient-cyan: rgb(24 99 220 / 0.08);
@@ -109,17 +111,17 @@
   );
 
   /* Popup */
-  --eh-popup-bg: linear-gradient(180deg, #ffffff 0%, #fcfcfb 54%, #f8f8f6 100%);
+  --eh-popup-bg: #fbfaf7;
   --eh-popup-ambient-top: radial-gradient(
     ellipse 100% 42% at 50% 0%,
-    rgba(0, 60, 51, 0.1) 0%,
-    rgba(0, 60, 51, 0.04) 42%,
+    rgba(84, 168, 136, 0.11) 0%,
+    rgba(84, 168, 136, 0.035) 42%,
     transparent 74%
   );
   --eh-popup-ambient-body: radial-gradient(
     ellipse 92% 72% at 50% 54%,
-    rgba(255, 119, 89, 0.025) 0%,
-    rgba(255, 173, 155, 0.012) 44%,
+    rgba(61, 144, 116, 0.04) 0%,
+    rgba(61, 144, 116, 0.014) 44%,
     transparent 78%
   );
   --eh-glass-elevation:
@@ -141,18 +143,18 @@
   /* 语义色 */
   --eh-success-hex: #047857;
   --eh-success: 4 120 87;
-  --eh-warning-hex: #f59e0b;
+  --eh-warning-hex: #9a5a00;
   --eh-error: 179 0 0;
   --eh-error-hex: #b30000;
   --eh-error-bright-hex: #d02424;
-  --eh-section-label-hex: #003c33;
+  --eh-section-label-hex: #17171c;
   --eh-action-blue-hex: #1863dc;
   --eh-coral-hex: #ff7759;
   --eh-soft-coral-hex: #ffad9b;
 
   /* 滚动条 */
-  --eh-scrollbar-thumb: rgba(0, 60, 51, 0.3);
-  --eh-scrollbar-thumb-hover: rgba(0, 60, 51, 0.46);
+  --eh-scrollbar-thumb: rgba(147, 147, 159, 0.42);
+  --eh-scrollbar-thumb-hover: rgba(117, 117, 138, 0.58);
   --eh-scrollbar-track: transparent;
 
   /* Popup 布局 */

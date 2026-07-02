@@ -33,7 +33,7 @@ export const DownloadResultSummary = ({
 
   const statusClass =
     variant === 'success'
-      ? 'text-brand-accent'
+      ? 'text-success'
       : variant === 'partial'
         ? 'text-warning'
         : 'text-error';
@@ -53,7 +53,7 @@ export const DownloadResultSummary = ({
         </h3>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-soft">
           <span>{t('thisDownloadRange')}</span>
-          <span className="rounded-full border border-brand-accent/20 bg-brand-accent/[0.08] px-2 py-0.5 font-mono text-xs font-bold text-brand-accent">
+          <span className="rounded-full border border-hairline bg-white px-2 py-0.5 font-mono text-xs font-normal text-ink">
             {rangeStart} - {rangeEnd}
           </span>
           <span>
@@ -64,17 +64,17 @@ export const DownloadResultSummary = ({
 
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className={`text-xs font-medium uppercase tracking-wide ${statusClass}`}>
+          <p className={`text-xs font-normal uppercase tracking-wide ${statusClass}`}>
             {statusLabel}
           </p>
           <p className={`mt-1 text-2xl font-semibold tabular-nums ${statusClass}`}>
             {completeCount}
-            <span className="text-sm font-medium text-muted"> / {downloadCount}</span>
+            <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
           </p>
         </div>
         {variant !== 'success' && failedCount > 0 ? (
           <div className="text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
+            <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
               {t('stateFailed')}
             </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-error">{failedCount}</p>

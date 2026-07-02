@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,9 +24,15 @@ const formatDownloadDir = (path: string) => {
   return path;
 };
 
+const settingsOverlayMotion = {
+  initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -8, filter: 'blur(3px)' },
+  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+} as const;
+
 export const DownloadSettings = ({
   disabled = false,
-  pathPreview,
 }: {
   disabled?: boolean;
   pathPreview?: string;
@@ -69,50 +76,48 @@ export const DownloadSettings = ({
     });
   };
 
-  const settingsOverlay = isOpen ? (
-    <section
-      className="eh-settings-overlay fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="eh-popup-settings-title"
-    >
-      <header className="eh-settings-overlay__header">
-        <EhButton
-          isIconOnly
-          ehSize="sm"
-          onPress={() => setIsOpen(false)}
-          aria-label={t('close')}
-          className="eh-settings-overlay__back"
+  const settingsOverlay = (
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.section
+          className="eh-settings-overlay fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden"
+          role="dialog"
+          aria-modal="true"
+          {...settingsOverlayMotion}
         >
-          <ArrowLeft size={16} strokeWidth={1.9} />
-        </EhButton>
-        <div className="min-w-0">
-          <h1
-            id="eh-popup-settings-title"
-            className="truncate text-[15px] font-semibold tracking-tight text-ink"
-          >
-            {t('settings')}
-          </h1>
-          <p className="mt-0.5 truncate text-xs text-muted-soft">{t('downloadSettings')}</p>
-        </div>
-      </header>
+          <header className="eh-settings-overlay__header">
+            <EhButton
+              isIconOnly
+              ehSize="sm"
+              onPress={() => setIsOpen(false)}
+              aria-label={t('close')}
+              className="eh-settings-overlay__back"
+            >
+              <ArrowLeft size={16} strokeWidth={1.9} />
+            </EhButton>
+            <div className="min-w-0">
+              <h1
+                id="eh-popup-settings-title"
+                className="truncate text-[15px] font-semibold tracking-tight text-ink"
+              >
+                {t('settings')}
+              </h1>
+            </div>
+          </header>
 
-      <div className="scrollbar-glass min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        <Settings
-          config={config}
-          setConfig={setConfig}
-          variant="overlay"
-          pathPreview={pathPreview}
-        />
-      </div>
+          <div className="scrollbar-glass min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <Settings config={config} setConfig={setConfig} variant="overlay" />
+          </div>
 
-      <footer className="eh-settings-overlay__footer">
-        <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
-          {t('saveSettings')}
-        </EhButton>
-      </footer>
-    </section>
-  ) : null;
+          <footer className="eh-settings-overlay__footer">
+            <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
+              {t('saveSettings')}
+            </EhButton>
+          </footer>
+        </motion.section>
+      ) : null}
+    </AnimatePresence>
+  );
 
   return (
     <>
@@ -126,7 +131,7 @@ export const DownloadSettings = ({
         <SettingsIcon size={15} strokeWidth={1.75} />
       </EhButton>
 
-      {settingsOverlay ? createPortal(settingsOverlay, document.body) : null}
+      {createPortal(settingsOverlay, document.body)}
     </>
   );
 };

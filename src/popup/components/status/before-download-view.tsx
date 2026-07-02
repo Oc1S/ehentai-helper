@@ -46,62 +46,95 @@ export const BeforeDownloadView = ({
   const rangeSelector = (
     <RangeSelectorContent range={range} setRange={setRange} maxValue={totalImages} />
   );
+  const galleryMeta = [galleryInfo.category, galleryInfo.uploader].filter(Boolean);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col px-4 py-3">
       <div className="scrollbar-glass flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto">
         <div className="glass-panel rounded-eh-2xl overflow-hidden">
-          <div className="p-4">
-            <div className="flex gap-3">
+          <div className="grid min-h-[238px] grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
+            <section className="flex min-w-0 gap-4 p-5 pr-4">
               {galleryInfo.coverUrl ? (
                 <img
                   src={galleryInfo.coverUrl}
                   alt=""
-                  className="h-[84px] w-[60px] shrink-0 rounded-lg border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
+                  className="h-[154px] w-[110px] shrink-0 rounded-eh-sm border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
                 />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <h2 className="line-clamp-3 text-[15px] font-bold leading-snug tracking-tight text-ink">
-                  {galleryInfo.name || ''}
-                </h2>
-                <p className="mt-1.5 text-xs font-medium text-muted">
-                  {totalImages} {t('imagesLabel')} · {numPages} {t('pagesLabel')}
-                </p>
+              ) : (
+                <div className="flex h-[154px] w-[110px] shrink-0 items-center justify-center rounded-eh-sm border border-[var(--eh-glass-border)] bg-white text-2xl font-normal text-muted-soft">
+                  {(galleryInfo.name || 'E').slice(0, 1)}
+                </div>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col">
+                <div className="min-w-0">
+                  {galleryMeta.length > 0 ? (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {galleryMeta.slice(0, 2).map((item) => (
+                        <span
+                          key={item}
+                          className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] bg-white px-2 py-0.5 text-[11px] font-normal text-muted"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <h2 className="line-clamp-4 text-[17px] font-semibold leading-snug tracking-tight text-ink">
+                    {galleryInfo.name || ''}
+                  </h2>
+                </div>
+                {galleryInfo.nameInJapanese ? (
+                  <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
+                    {galleryInfo.nameInJapanese}
+                  </p>
+                ) : null}
+                <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 text-xs text-muted-soft">
+                  <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-ink">
+                    {totalImages} {t('imagesLabel')}
+                  </span>
+                  <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-ink">
+                    {numPages} {t('pagesLabel')}
+                  </span>
+                </div>
               </div>
-            </div>
+            </section>
+
+            <aside className="flex min-w-0 flex-col border-l border-[var(--eh-hairline-soft)] bg-white/45 p-4">
+              <div className="flex min-h-0 flex-1 flex-col justify-center">
+                {rangeSelector ? (
+                  <div className="flex flex-col gap-3 rounded-eh-sm border border-[var(--eh-hairline-soft)] bg-white/70 px-3 py-3">
+                    {rangeSelector}
+                  </div>
+                ) : null}
+
+                {rangeSelector ? (
+                  <EhButton
+                    variant="primary"
+                    ehSize="lg"
+                    fullWidth
+                    className="mt-3"
+                    onPress={onStartDownload}
+                    startContent={
+                      <span className="eh-btn__icon">
+                        <Download size={17} strokeWidth={1.75} />
+                      </span>
+                    }
+                  >
+                    {t('startDownloadWithCount', String(downloadCount))}
+                  </EhButton>
+                ) : null}
+
+                {counts && trackedTotal > 0 ? (
+                  <PreviouslyTrackedSection
+                    counts={counts}
+                    missingCount={missingCount}
+                    onResumeMissing={onResumeMissing}
+                    onViewDetails={onViewDetails}
+                  />
+                ) : null}
+              </div>
+            </aside>
           </div>
-
-          {rangeSelector ? (
-            <>
-              <div className="flex flex-col gap-2.5 border-t border-[var(--eh-hairline-soft)] px-4 py-3.5">
-                {rangeSelector}
-              </div>
-              <div className="border-t border-[var(--eh-hairline-soft)] p-4 pt-3">
-                <EhButton
-                  variant="primary"
-                  ehSize="lg"
-                  fullWidth
-                  onPress={onStartDownload}
-                  startContent={
-                    <span className="eh-btn__icon">
-                      <Download size={17} strokeWidth={1.75} />
-                    </span>
-                  }
-                >
-                  {t('startDownloadWithCount', String(downloadCount))}
-                </EhButton>
-              </div>
-            </>
-          ) : null}
-
-          {counts && trackedTotal > 0 ? (
-            <PreviouslyTrackedSection
-              counts={counts}
-              missingCount={missingCount}
-              onResumeMissing={onResumeMissing}
-              onViewDetails={onViewDetails}
-            />
-          ) : null}
         </div>
       </div>
     </div>
@@ -119,8 +152,8 @@ const PreviouslyTrackedSection = ({
   onResumeMissing: () => void;
   onViewDetails: () => void;
 }) => (
-  <div className="border-t border-[var(--eh-hairline-soft)] px-4 py-3">
-    <p className="text-xs font-medium uppercase tracking-wide text-muted-soft">
+  <div className="mt-3 border-t border-[var(--eh-hairline-soft)] pt-3">
+    <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
       {t('previouslyTracked')}
     </p>
     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-soft">

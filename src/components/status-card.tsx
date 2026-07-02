@@ -43,7 +43,7 @@ export const StatusCard = ({
           aria-hidden
         />
         <div
-          className={`relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.03)] ${iconGlass} text-muted [&_svg]:h-5 [&_svg]:w-5`}
+          className={`relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(23,23,28,0.04)] ${iconGlass} text-muted [&_svg]:h-5 [&_svg]:w-5`}
         >
           {icon}
         </div>
@@ -74,7 +74,7 @@ export const StatusCard = ({
 
       <div className="relative z-10 flex flex-col items-center gap-4 text-center">
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(110,160,175,0.04)] ${iconGlass} ${
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(23,23,28,0.04)] ${iconGlass} ${
             variant === 'warning'
               ? 'text-warning/90'
               : variant === 'success'
