@@ -60,7 +60,6 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
         <BeforeDownloadView
           galleryInfo={galleryInfo}
           totalImages={galleryPageInfo.totalImages}
-          numPages={galleryPageInfo.numPages}
           range={range}
           setRange={setRange}
           galleryRecord={galleryRecords[getGalleryUrl()]}

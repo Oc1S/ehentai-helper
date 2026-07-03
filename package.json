@@ -24,10 +24,10 @@
     "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@types/chrome": "0.0.258",
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
+    "@types/chrome": "0.2.2",
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "@typescript-eslint/eslint-plugin": "8.54.0",
     "@typescript-eslint/parser": "8.54.0",
     "autoprefixer": "^10.4.20",

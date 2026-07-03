@@ -124,7 +124,7 @@ export const History: FC = () => {
                       href={item.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="eh-url-link text-xs text-[var(--eh-action-blue-hex)] underline underline-offset-2"
+                      className="eh-url-link text-xs text-[rgb(var(--eh-action-blue))] underline underline-offset-2"
                       title={item.name}
                     >
                       {item.name}

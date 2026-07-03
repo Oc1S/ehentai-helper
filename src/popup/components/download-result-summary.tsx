@@ -53,7 +53,7 @@ export const DownloadResultSummary = ({
         </h3>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-soft">
           <span>{t('thisDownloadRange')}</span>
-          <span className="rounded-full border border-hairline bg-white px-2 py-0.5 font-mono text-xs font-normal text-ink">
+          <span className="rounded-full border border-hairline px-2 py-0.5 font-mono text-xs font-normal text-ink">
             {rangeStart} - {rangeEnd}
           </span>
           <span>

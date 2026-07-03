@@ -28,7 +28,7 @@ export const EhProgressBar = ({
 
   return (
     <div
-      className={`flex h-2 w-full overflow-hidden rounded-full bg-[rgba(23,23,28,0.1)] ${className}`.trim()}
+      className={`flex h-2 w-full overflow-hidden rounded-full bg-[var(--eh-hairline-soft)] ${className}`.trim()}
       role="progressbar"
       aria-valuenow={value}
       aria-valuemin={0}
@@ -39,20 +39,20 @@ export const EhProgressBar = ({
         <>
           {successWidth > 0 ? (
             <div
-              className="h-full bg-success motion-safe:transition-[width] motion-safe:duration-300"
+              className="h-full bg-success transition-[width] duration-300"
               style={{ width: `${successWidth}%` }}
             />
           ) : null}
           {failedWidth > 0 ? (
             <div
-              className="h-full bg-error motion-safe:transition-[width] motion-safe:duration-300"
+              className="h-full bg-error transition-[width] duration-300"
               style={{ width: `${failedWidth}%` }}
             />
           ) : null}
         </>
       ) : (
         <div
-          className="h-full bg-primary motion-safe:transition-[width] motion-safe:duration-300"
+          className="h-full bg-primary transition-[width] duration-300"
           style={{ width: `${percent}%` }}
         />
       )}
@@ -93,11 +93,7 @@ export const EhDownloadProgressPanel = ({
           </p>
         </div>
       </div>
-      <EhProgressBar
-        value={settledCount}
-        max={downloadCount}
-        ariaLabel={t('downloadProgress')}
-      />
+      <EhProgressBar value={settledCount} max={downloadCount} ariaLabel={t('downloadProgress')} />
       <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-soft">
         <span className="text-success">{t('badgeComplete', String(completeCount))}</span>
         <span aria-hidden>·</span>

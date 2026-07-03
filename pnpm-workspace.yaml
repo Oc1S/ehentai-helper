@@ -5,6 +5,8 @@ allowBuilds:
   lmdb: true
   msgpackr-extract: true
   sharp: true
+minimumReleaseAgeExclude:
+  - '@types/chrome@0.2.2'
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'

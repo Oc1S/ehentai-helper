@@ -244,10 +244,10 @@ export const Settings: FC<{
 
   const panelClass =
     variant === 'page'
-      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline bg-surface-card p-6 eh-settings-panel--page'
+      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline p-6 eh-settings-panel--page'
       : variant === 'overlay'
         ? 'flex flex-col gap-4 eh-settings-panel--overlay'
-        : 'flex flex-col gap-5 rounded-eh-lg border border-hairline bg-white p-3.5 eh-settings-panel--modal';
+        : 'flex flex-col gap-5 rounded-eh-lg border border-hairline p-3.5 eh-settings-panel--modal';
 
   const pageGroups: { title: string; keys: ConfigKey[] }[] = [
     { title: t('settingsGroupLocation'), keys: ['intermediateDownloadPath'] },

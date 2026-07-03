@@ -193,7 +193,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
             {t('filter')}
           </EhButton>
           {filterOpen ? (
-            <div className="absolute left-0 top-11 z-20 w-44 rounded-eh-sm border border-hairline bg-white p-2 shadow-card-elevated">
+            <div className="absolute left-0 top-11 z-20 w-44 rounded-eh-sm border border-hairline bg-canvas p-2 shadow-card-elevated">
               <div className="flex flex-col gap-2">
                 {stateSelections.map((state) => (
                   <CheckControl

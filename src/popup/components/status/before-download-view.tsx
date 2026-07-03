@@ -10,7 +10,6 @@ import { RangeSelectorContent } from '../range-selector-panel';
 export const BeforeDownloadView = ({
   galleryInfo,
   totalImages,
-  numPages,
   range,
   setRange,
   galleryRecord,
@@ -20,7 +19,6 @@ export const BeforeDownloadView = ({
 }: {
   galleryInfo: GalleryInfo;
   totalImages: number;
-  numPages: number;
   range: [number, number];
   setRange: (range: [number, number]) => void;
   galleryRecord: GalleryRecord | undefined;
@@ -51,58 +49,52 @@ export const BeforeDownloadView = ({
   return (
     <div className="flex h-full min-h-0 w-full flex-col px-4 py-3">
       <div className="scrollbar-glass flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto">
-        <div className="glass-panel rounded-eh-2xl overflow-hidden">
-          <div className="grid min-h-[238px] grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
-            <section className="flex min-w-0 gap-4 p-5 pr-4">
-              {galleryInfo.coverUrl ? (
-                <img
-                  src={galleryInfo.coverUrl}
-                  alt=""
-                  className="h-[154px] w-[110px] shrink-0 rounded-eh-sm border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
-                />
-              ) : (
-                <div className="flex h-[154px] w-[110px] shrink-0 items-center justify-center rounded-eh-sm border border-[var(--eh-glass-border)] bg-white text-2xl font-normal text-muted-soft">
-                  {(galleryInfo.name || 'E').slice(0, 1)}
-                </div>
-              )}
-              <div className="flex min-w-0 flex-1 flex-col">
-                <div className="min-w-0">
-                  {galleryMeta.length > 0 ? (
-                    <div className="mb-2 flex flex-wrap gap-1.5">
-                      {galleryMeta.slice(0, 2).map((item) => (
-                        <span
-                          key={item}
-                          className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] bg-white px-2 py-0.5 text-[11px] font-normal text-muted"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                  <h2 className="line-clamp-4 text-[17px] font-semibold leading-snug tracking-tight text-ink">
+        <div className="glass-panel overflow-hidden rounded-eh-2xl">
+          <div className="grid min-h-[250px] grid-cols-[minmax(0,350px)_minmax(0,1fr)]">
+            <section className="flex min-w-0 flex-col justify-between gap-3 p-4 pr-3">
+              <div className="flex min-w-0 gap-3.5">
+                {galleryInfo.coverUrl ? (
+                  <img
+                    src={galleryInfo.coverUrl}
+                    alt=""
+                    className="h-[172px] w-[120px] shrink-0 rounded-eh-sm border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
+                  />
+                ) : (
+                  <div className="flex h-[172px] w-[120px] shrink-0 items-center justify-center rounded-eh-sm border border-[var(--eh-glass-border)] text-3xl font-normal text-muted-soft">
+                    {(galleryInfo.name || 'E').slice(0, 1)}
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <h2 className="line-clamp-5 text-[16px] font-semibold leading-snug tracking-tight text-ink">
                     {galleryInfo.name || ''}
                   </h2>
+                  {galleryInfo.nameInJapanese ? (
+                    <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted">
+                      {galleryInfo.nameInJapanese}
+                    </p>
+                  ) : null}
                 </div>
-                {galleryInfo.nameInJapanese ? (
-                  <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
-                    {galleryInfo.nameInJapanese}
-                  </p>
-                ) : null}
-                <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 text-xs text-muted-soft">
-                  <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-ink">
-                    {totalImages} {t('imagesLabel')}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 pt-1 text-xs text-muted-soft">
+                {galleryMeta.slice(0, 2).map((item) => (
+                  <span
+                    key={item}
+                    className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] px-2 py-0.5 text-[11px] font-normal text-muted"
+                  >
+                    {item}
                   </span>
-                  <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-ink">
-                    {numPages} {t('pagesLabel')}
-                  </span>
-                </div>
+                ))}
+                <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-0.5 text-[11px] font-normal text-ink">
+                  {totalImages} {t('imagesLabel')}
+                </span>
               </div>
             </section>
 
-            <aside className="flex min-w-0 flex-col border-l border-[var(--eh-hairline-soft)] bg-white/45 p-4">
+            <aside className="flex min-w-0 flex-col border-l border-[var(--eh-hairline)] p-4">
               <div className="flex min-h-0 flex-1 flex-col justify-center">
                 {rangeSelector ? (
-                  <div className="flex flex-col gap-3 rounded-eh-sm border border-[var(--eh-hairline-soft)] bg-white/70 px-3 py-3">
+                  <div className="flex flex-col gap-3 rounded-eh-sm border border-[var(--eh-hairline)] px-3 py-3">
                     {rangeSelector}
                   </div>
                 ) : null}

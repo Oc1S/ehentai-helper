@@ -76,14 +76,14 @@ const modalRootMotion = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
-  transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
+  transition: { type: 'spring', stiffness: 460, damping: 38, mass: 0.72 },
 } as const;
 
 const modalPanelMotion = {
-  initial: { opacity: 0, y: 10, scale: 0.985, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 12, scale: 0.985, filter: 'blur(4px)' },
   animate: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: -6, scale: 0.992, filter: 'blur(3px)' },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+  exit: { opacity: 0, y: 8, scale: 0.992, filter: 'blur(2px)' },
+  transition: { type: 'spring', stiffness: 420, damping: 34, mass: 0.82 },
 } as const;
 
 export const Modal = ({
@@ -93,6 +93,8 @@ export const Modal = ({
   children,
   footer,
   size = 'md',
+  panelClassName = '',
+  bodyClassName = '',
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -100,6 +102,8 @@ export const Modal = ({
   children: ReactNode;
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  panelClassName?: string;
+  bodyClassName?: string;
 }) => {
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -123,7 +127,7 @@ export const Modal = ({
             onClick={onClose}
           />
           <motion.section
-            className={`eh-modal__panel eh-modal__panel--${size}`}
+            className={`eh-modal__panel eh-modal__panel--${size} ${panelClassName}`.trim()}
             role="dialog"
             aria-modal="true"
             {...modalPanelMotion}
@@ -141,7 +145,9 @@ export const Modal = ({
                 </button>
               </header>
             ) : null}
-            <div className="eh-modal__body scrollbar-glass">{children}</div>
+            <div className={`eh-modal__body scrollbar-glass ${bodyClassName}`.trim()}>
+              {children}
+            </div>
             {footer ? <footer className="eh-modal__footer">{footer}</footer> : null}
           </motion.section>
         </motion.div>

@@ -3,8 +3,8 @@
 .options-root {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 52% 30% at 78% 0%, rgba(84, 168, 136, 0.055), transparent 72%),
-    rgb(251, 250, 247);
+    radial-gradient(ellipse 52% 30% at 78% 0%, rgb(var(--eh-ambient-rose) / 0.052), transparent 72%),
+    rgb(var(--eh-canvas));
 }
 
 .options-shell {
@@ -27,12 +27,12 @@
   gap: 24px;
   min-height: 124px;
   padding: 28px 32px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgb(var(--eh-primary-fg) / 0.16);
   border-radius: 22px;
   background:
-    radial-gradient(ellipse 46% 80% at 90% 0%, rgba(194, 138, 0, 0.16), transparent 72%),
-    linear-gradient(135deg, #17171c 0%, #000000 100%);
-  color: #ffffff;
+    radial-gradient(ellipse 46% 80% at 90% 0%, rgb(var(--eh-brand-helper) / 0.16), transparent 72%),
+    linear-gradient(135deg, rgb(var(--eh-brand-primary)) 0%, rgb(var(--eh-brand-primary-active)) 100%);
+  color: rgb(var(--eh-primary-fg));
 }
 
 .options-header__text {
@@ -48,18 +48,18 @@
   font-weight: 400;
   line-height: 0.98;
   letter-spacing: 0;
-  color: #ffffff;
+  color: rgb(var(--eh-primary-fg));
 }
 
 .options-header__desc {
   max-width: 620px;
   font-size: 15px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgb(var(--eh-primary-fg) / 0.72);
 }
 
 .options-header__accent {
-  color: var(--eh-brand-helper-hex);
+  color: rgb(var(--eh-brand-helper));
   font-weight: 500;
 }
 
@@ -84,7 +84,7 @@
   padding: 16px 18px;
   border: 1px solid var(--eh-hairline);
   border-radius: 8px;
-  background: #ffffff;
+  background: transparent;
 }
 
 .options-shell .eh-settings-group {
@@ -95,7 +95,7 @@
   padding: 18px;
   border: 1px solid var(--eh-hairline);
   border-radius: 8px;
-  background: #ffffff;
+  background: transparent;
 }
 
 .options-shell .eh-settings-group:first-of-type {
@@ -132,21 +132,21 @@
   padding-top: 2px;
   font-size: 13px;
   font-weight: 400;
-  color: var(--eh-ink-hex);
+  color: rgb(var(--eh-ink));
 }
 
 .options-shell .eh-settings-field--page {
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--eh-body-hex);
+  color: rgb(var(--eh-body));
 }
 
 .options-shell .eh-settings-section-title {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
-  color: var(--eh-ink-hex);
+  color: rgb(var(--eh-ink));
 }
 
 @media (max-width: 840px) {

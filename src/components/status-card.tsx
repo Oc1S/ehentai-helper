@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 type StatusVariant = 'info' | 'warning' | 'success' | 'error';
 
-const iconGlass = 'border-white/[0.04] bg-white/[0.025] backdrop-blur-sm';
+const iconGlass = 'border-[var(--eh-hairline-soft)] bg-transparent backdrop-blur-sm';
 
 const variantAmbient: Record<StatusVariant, string> = {
   info: 'glass-ambient-cyan',
@@ -19,7 +19,6 @@ export const StatusCard = ({
   title,
   description,
   children,
-  embedded = false,
   className = '',
 }: {
   variant: StatusVariant;
@@ -27,36 +26,9 @@ export const StatusCard = ({
   title: string;
   description?: ReactNode;
   children?: ReactNode;
-  embedded?: boolean;
   className?: string;
 }) => {
   const ambient = variantAmbient[variant];
-
-  if (embedded) {
-    return (
-      <div
-        className={`${cardShell} flex w-full items-start gap-3 rounded-eh-xl p-3 ${className}`.trim()}
-      >
-        <div className="glass-frost-pool pointer-events-none absolute inset-0" aria-hidden />
-        <div
-          className={`pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full opacity-70 blur-[64px] ${ambient}`}
-          aria-hidden
-        />
-        <div
-          className={`relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(23,23,28,0.04)] ${iconGlass} text-muted [&_svg]:h-5 [&_svg]:w-5`}
-        >
-          {icon}
-        </div>
-        <div className="relative z-10 flex flex-col gap-1 text-left">
-          <h3 className="text-[13px] font-semibold tracking-tight text-ink">{title}</h3>
-          {description && (
-            <div className="text-xs leading-relaxed text-muted">{description}</div>
-          )}
-          {children && <div className="mt-1">{children}</div>}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -74,7 +46,7 @@ export const StatusCard = ({
 
       <div className="relative z-10 flex flex-col items-center gap-4 text-center">
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(23,23,28,0.04)] ${iconGlass} ${
+          className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-none ${iconGlass} ${
             variant === 'warning'
               ? 'text-warning/90'
               : variant === 'success'

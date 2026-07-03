@@ -27,8 +27,8 @@ const formatDownloadDir = (path: string) => {
 const settingsOverlayMotion = {
   initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
   animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: -8, filter: 'blur(3px)' },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+  exit: { opacity: 0, y: 8, filter: 'blur(2px)' },
+  transition: { type: 'spring', stiffness: 420, damping: 36, mass: 0.78 },
 } as const;
 
 export const DownloadSettings = ({

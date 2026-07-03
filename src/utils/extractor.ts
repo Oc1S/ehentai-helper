@@ -16,15 +16,42 @@ const getTextContent = (node: Node | null | undefined): string => {
 };
 
 const normalizeImageUrl = (href: string | null | undefined): string => {
-  if (!href) return '';
-  if (href.startsWith('//')) return `https:${href}`;
-  return href;
+  const url = href?.trim().replace(/^['"]|['"]$/g, '') || '';
+  if (!url || url === 'none') return '';
+  if (url.startsWith('//')) return `https:${url}`;
+  return url;
+};
+
+const extractCssUrl = (value: string | null | undefined): string => {
+  if (!value) return '';
+  const match = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^'")]+))\s*\)/i.exec(value);
+  return normalizeImageUrl(match?.[1] || match?.[2] || match?.[3]);
 };
 
 const extractGalleryCoverUrl = (doc: Document): string => {
-  const coverImg = doc.querySelector('#gd1 img');
-  if (!coverImg) return '';
-  return normalizeImageUrl(coverImg.getAttribute('src') || coverImg.getAttribute('data-src'));
+  const coverRoot = doc.getElementById('gd1');
+  if (!coverRoot) return '';
+
+  const coverImg = coverRoot.querySelector('img');
+  const coverImgUrl = normalizeImageUrl(
+    coverImg?.getAttribute('src') ||
+      coverImg?.getAttribute('data-src') ||
+      coverImg?.getAttribute('data-original')
+  );
+  if (coverImgUrl) return coverImgUrl;
+
+  const styledElements = [
+    coverRoot,
+    ...Array.from(coverRoot.querySelectorAll<HTMLElement>('[style]')),
+  ];
+  for (const element of styledElements) {
+    const coverUrl = extractCssUrl(
+      element.getAttribute('style') || element.style.backgroundImage || element.style.background
+    );
+    if (coverUrl) return coverUrl;
+  }
+
+  return '';
 };
 
 export const extractGalleryInfo = async (htmlOrDoc: string | Document): Promise<GalleryInfo> => {

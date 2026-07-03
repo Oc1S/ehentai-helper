@@ -127,8 +127,10 @@ export const GalleryDetailModal: FC<{
         </>
       }
       size="xl"
+      panelClassName="h-[520px] max-h-[calc(100vh-40px)]"
+      bodyClassName="flex min-h-0 flex-col"
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex h-full min-h-0 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
           <TextField
             placeholder={t('searchDetail')}
@@ -145,7 +147,7 @@ export const GalleryDetailModal: FC<{
           />
           <span className="text-xs text-muted">{t('itemsCount', String(filteredRows.length))}</span>
         </div>
-        <EhTableFrame className="max-h-[420px] flex-none">
+        <EhTableFrame className="min-h-0 flex-1">
           <table className="eh-data-table" aria-label="gallery image records">
             <thead>
               <tr>

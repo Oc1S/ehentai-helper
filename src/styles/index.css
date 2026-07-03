@@ -14,7 +14,7 @@
   }
 
   html {
-    background: var(--eh-canvas-hex);
+    background: rgb(var(--eh-canvas));
   }
 
   html,
@@ -40,7 +40,7 @@
 
   button:focus-visible,
   a:focus-visible {
-    outline: 2px solid var(--eh-action-blue-hex);
+    outline: 2px solid rgb(var(--eh-action-blue));
     outline-offset: 2px;
   }
 
@@ -103,7 +103,8 @@
   }
 
   .eh-settings-panel--overlay .eh-settings-group {
-    @apply flex flex-col gap-3 rounded-eh-sm border border-hairline-soft bg-white px-4 py-4;
+    @apply flex flex-col gap-3 rounded-eh-sm border border-hairline px-4 py-4;
+    background: transparent;
   }
 
   .eh-settings-panel--overlay .eh-settings-group+.eh-settings-group {
@@ -133,16 +134,16 @@
     height: 28px;
     min-height: 28px;
     padding: 0 10px;
-    border: 1px solid #e4dacb;
+    border: 1px solid var(--eh-hairline);
     border-radius: 9999px;
-    background: #ffffff;
-    color: #6f6253;
+    background: transparent;
+    color: rgb(var(--eh-primary-400));
     text-decoration: none;
   }
 
   .eh-default-folder-button:hover {
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
     text-decoration: none;
   }
 
@@ -181,21 +182,21 @@
   }
 
   .eh-btn--primary {
-    border-color: var(--eh-brand-primary-hex);
-    background: var(--eh-brand-primary-hex);
-    color: #ffffff;
+    border-color: rgb(var(--eh-brand-primary));
+    background: rgb(var(--eh-brand-primary));
+    color: rgb(var(--eh-primary-fg));
     box-shadow: none;
   }
 
   .eh-btn--primary:hover {
-    background: var(--eh-brand-primary-active-hex);
-    border-color: var(--eh-brand-primary-active-hex);
+    background: rgb(var(--eh-brand-primary-active));
+    border-color: rgb(var(--eh-brand-primary-active));
   }
 
   .eh-btn--secondary {
     border-color: var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-ink-hex);
+    background: transparent;
+    color: rgb(var(--eh-ink));
     box-shadow: none;
   }
 
@@ -207,7 +208,7 @@
   .eh-btn--danger {
     border-color: rgb(var(--eh-error) / 0.26);
     background: rgb(var(--eh-error) / 0.06);
-    color: var(--eh-error-hex);
+    color: rgb(var(--eh-error));
   }
 
   .eh-btn--danger:hover {
@@ -217,7 +218,7 @@
 
   .eh-btn--link {
     @apply h-auto min-h-0 min-w-0 border-0 bg-transparent p-0 font-normal underline-offset-2;
-    color: var(--eh-action-blue-hex);
+    color: rgb(var(--eh-action-blue));
   }
 
   .eh-btn--link:hover {
@@ -227,14 +228,14 @@
   .eh-btn--icon {
     @apply h-7 w-7 min-h-0 min-w-0 p-0;
     border: 1px solid var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-muted-hex);
+    background: transparent;
+    color: rgb(var(--eh-muted));
   }
 
   .eh-btn--icon:hover {
     border-color: var(--eh-hairline);
     background: var(--eh-hover-bg);
-    color: var(--eh-body-hex);
+    color: rgb(var(--eh-body));
   }
 
   .eh-btn:active {
@@ -264,25 +265,25 @@
 
   .eh-text-input--modal {
     border-color: var(--eh-hairline);
-    background: #ffffff;
+    background: transparent;
   }
 
   .eh-text-input--modal:focus {
-    border-color: var(--eh-hairline);
-    background: #ffffff;
+    border-color: rgb(var(--eh-brand-primary-active));
+    background: transparent;
   }
 
   .eh-text-input--overlay {
     width: 100%;
     max-width: 420px;
     border-color: var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-ink-hex);
+    background: transparent;
+    color: rgb(var(--eh-ink));
   }
 
   .eh-text-input--overlay:focus {
-    border-color: var(--eh-hairline);
-    background: #ffffff;
+    border-color: rgb(var(--eh-brand-primary-active));
+    background: transparent;
   }
 
   .eh-text-input--page {
@@ -290,11 +291,11 @@
     max-width: 420px;
     padding: 8px 10px;
     border-color: var(--eh-hairline);
-    background-color: #ffffff;
+    background-color: transparent;
   }
 
   .eh-text-input--page:focus {
-    border-color: var(--eh-hairline);
+    border-color: rgb(var(--eh-brand-primary-active));
   }
 
   .eh-number-input {
@@ -323,8 +324,8 @@
   .eh-github-star-link {
     @apply relative flex w-full items-center gap-3 rounded-eh-sm border px-3.5 py-3 no-underline;
     border-color: var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-body-hex);
+    background: transparent;
+    color: rgb(var(--eh-body));
     transition:
       background-color 0.2s ease,
       border-color 0.2s ease,
@@ -334,11 +335,11 @@
 
   .eh-github-star-link__text {
     @apply flex-1 text-xs leading-relaxed;
-    color: var(--eh-body-hex);
+    color: rgb(var(--eh-body));
   }
 
   .eh-github-star-link__icon {
-    color: var(--eh-action-blue-hex);
+    color: rgb(var(--eh-action-blue));
     transition: transform 0.2s ease;
   }
 
@@ -369,12 +370,12 @@
   .eh-field {
     @apply flex h-9 min-w-0 items-center gap-2 rounded-eh-sm border px-3 transition-colors;
     border-color: var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-ink-hex);
+    background: transparent;
+    color: rgb(var(--eh-ink));
   }
 
   .eh-field:focus-within {
-    border-color: var(--eh-hairline);
+    border-color: rgb(var(--eh-brand-primary-active));
     box-shadow: none;
   }
 
@@ -388,7 +389,7 @@
 
   .eh-field__clear:hover {
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
   }
 
   .eh-pill {
@@ -397,44 +398,44 @@
 
   .eh-pill--neutral {
     border-color: var(--eh-hairline);
-    background: #ffffff;
-    color: var(--eh-muted-hex);
+    background: transparent;
+    color: rgb(var(--eh-muted));
   }
 
   .eh-pill--success {
-    border-color: rgba(4, 120, 87, 0.2);
-    background: rgba(4, 120, 87, 0.06);
-    color: var(--eh-success-hex);
+    border-color: rgb(var(--eh-success) / 0.2);
+    background: rgb(var(--eh-success) / 0.06);
+    color: rgb(var(--eh-success));
   }
 
   .eh-pill--warning {
-    border-color: rgba(154, 90, 0, 0.22);
-    background: rgba(154, 90, 0, 0.07);
-    color: var(--eh-warning-hex);
+    border-color: rgb(var(--eh-warning) / 0.22);
+    background: rgb(var(--eh-warning) / 0.07);
+    color: rgb(var(--eh-warning));
   }
 
   .eh-pill--danger {
-    border-color: rgba(179, 0, 0, 0.22);
-    background: rgba(179, 0, 0, 0.06);
-    color: var(--eh-error-hex);
+    border-color: rgb(var(--eh-error) / 0.22);
+    background: rgb(var(--eh-error) / 0.06);
+    color: rgb(var(--eh-error));
   }
 
   .eh-pill--coral {
-    border-color: var(--eh-soft-coral-hex);
-    background: rgba(255, 119, 89, 0.1);
-    color: #8d2f1d;
+    border-color: rgb(var(--eh-soft-coral));
+    background: rgb(var(--eh-brand-accent) / 0.1);
+    color: rgb(var(--eh-coral-deep));
   }
 
   .eh-pill--blue {
-    border-color: rgba(24, 99, 220, 0.22);
-    background: rgba(24, 99, 220, 0.07);
-    color: var(--eh-action-blue-hex);
+    border-color: rgb(var(--eh-action-blue) / 0.22);
+    background: rgb(var(--eh-action-blue) / 0.07);
+    color: rgb(var(--eh-action-blue));
   }
 
   .eh-spinner {
     @apply inline-block shrink-0 rounded-full border-2;
-    border-color: rgba(0, 60, 51, 0.18);
-    border-top-color: var(--eh-primary-hex);
+    border-color: rgb(var(--eh-brand-primary) / 0.18);
+    border-top-color: rgb(var(--eh-primary));
     animation: eh-spin 800ms linear infinite;
   }
 
@@ -463,15 +464,14 @@
 
   .eh-modal__scrim {
     @apply absolute inset-0 h-full w-full;
-    background: rgba(248, 248, 246, 0.82);
+    background: rgb(var(--eh-canvas) / 0.82);
     backdrop-filter: blur(10px);
   }
 
   .eh-modal__panel {
     @apply relative z-10 flex max-h-[88vh] w-full flex-col overflow-hidden rounded-eh-md border;
     border-color: var(--eh-hairline);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(248, 248, 246, 1) 100%);
+    background: rgb(var(--eh-canvas));
     box-shadow: var(--eh-shadow-card-elevated);
   }
 
@@ -502,35 +502,36 @@
 
   .eh-modal__header {
     @apply flex shrink-0 items-start gap-4 border-b px-5 py-4 pr-14;
-    border-color: var(--eh-hairline-soft);
-    background: #ffffff;
+    border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-modal__body {
     @apply min-h-0 flex-1 overflow-y-auto p-5;
-    background: #ffffff;
+    background: transparent;
   }
 
   .eh-modal__footer {
     @apply flex shrink-0 justify-end gap-2 border-t px-5 py-3;
-    border-color: var(--eh-hairline-soft);
-    background: var(--eh-surface-soft-hex);
+    border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-modal__close {
     @apply absolute right-3 top-3 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors;
-    border: 1px solid var(--eh-hairline-soft);
-    background: #ffffff;
+    border: 1px solid var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-modal__close:hover {
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
   }
 
   .eh-segmented {
-    @apply inline-flex min-h-9 items-center rounded-full border bg-white p-0.5;
+    @apply inline-flex min-h-9 items-center rounded-full border p-0.5;
     border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-segmented__item {
@@ -539,17 +540,18 @@
 
   .eh-segmented__item:hover {
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
   }
 
   .eh-segmented__item--active {
-    background: var(--eh-brand-primary-hex);
-    color: #ffffff;
+    background: rgb(var(--eh-brand-primary));
+    color: rgb(var(--eh-primary-fg));
   }
 
   .eh-pagination {
-    @apply inline-flex items-center gap-1 rounded-full border bg-white p-1;
+    @apply inline-flex items-center gap-1 rounded-full border p-1;
     border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-pagination__button {
@@ -558,7 +560,7 @@
 
   .eh-pagination__button:hover:not(:disabled) {
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
   }
 
   .eh-pagination__button:disabled {
@@ -574,13 +576,14 @@
   }
 
   .eh-check__box {
-    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-eh-xs border bg-white text-white transition-colors;
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-eh-xs border text-primary-foreground transition-colors;
     border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-check input:checked + .eh-check__box {
-    border-color: var(--eh-brand-primary-hex);
-    background: var(--eh-brand-primary-hex);
+    border-color: rgb(var(--eh-brand-primary));
+    background: rgb(var(--eh-brand-primary));
   }
 
   .eh-check__label {
@@ -592,26 +595,27 @@
   }
 
   .eh-radio-card {
-    @apply inline-flex cursor-pointer items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-[13px] text-muted transition-colors;
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] text-muted transition-colors;
     border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-radio-card:hover {
     border-color: var(--eh-hairline);
     background: var(--eh-hover-bg);
-    color: var(--eh-ink-hex);
+    color: rgb(var(--eh-ink));
   }
 
   .eh-radio-card--active {
-    border-color: var(--eh-brand-primary-hex);
-    background: var(--eh-brand-primary-hex);
-    color: #ffffff;
+    border-color: rgb(var(--eh-brand-primary));
+    background: rgb(var(--eh-brand-primary));
+    color: rgb(var(--eh-primary-fg));
   }
 
   .eh-radio-card--active:hover {
-    border-color: var(--eh-brand-primary-active-hex);
-    background: var(--eh-brand-primary-active-hex);
-    color: #ffffff;
+    border-color: rgb(var(--eh-brand-primary-active));
+    background: rgb(var(--eh-brand-primary-active));
+    color: rgb(var(--eh-primary-fg));
   }
 
   .eh-radio-card__dot {
@@ -624,8 +628,9 @@
   }
 
   .eh-table-frame {
-    @apply min-h-0 flex-1 overflow-auto rounded-eh-sm border bg-white;
+    @apply min-h-0 flex-1 overflow-auto rounded-eh-sm border;
     border-color: var(--eh-hairline);
+    background: transparent;
   }
 
   .eh-data-table {
@@ -633,13 +638,14 @@
   }
 
   .eh-data-table th {
-    @apply sticky top-0 z-10 h-9 border-b bg-white px-3 text-xs font-normal text-muted;
-    border-color: var(--eh-hairline-soft);
+    @apply sticky top-0 z-10 h-9 border-b px-3 text-xs font-normal text-muted;
+    border-color: var(--eh-hairline);
+    background: rgb(var(--eh-canvas));
   }
 
   .eh-data-table td {
     @apply border-b px-3 py-2.5 text-xs text-body;
-    border-color: var(--eh-hairline-soft);
+    border-color: var(--eh-hairline);
   }
 
   .eh-data-table tbody tr:last-child td {
@@ -690,8 +696,8 @@
     z-index: 0;
     pointer-events: none;
     background: radial-gradient(ellipse 68% 42% at 50% -6%,
-        rgba(84, 168, 136, 0.055) 0%,
-        rgba(84, 168, 136, 0.016) 48%,
+        rgb(var(--eh-ambient-rose) / 0.052) 0%,
+        rgb(var(--eh-ambient-rose) / 0.014) 48%,
         transparent 72%);
   }
 
@@ -702,9 +708,9 @@
 
   .eh-settings-overlay {
     background:
-      radial-gradient(ellipse 70% 38% at 78% -10%, rgba(84, 168, 136, 0.06), transparent 70%),
-      #fbfaf7;
-    color: var(--eh-body-hex);
+      radial-gradient(ellipse 70% 38% at 78% -10%, rgb(var(--eh-ambient-rose) / 0.055), transparent 70%),
+      rgb(var(--eh-canvas));
+    color: rgb(var(--eh-body));
   }
 
   .eh-settings-overlay::before {
@@ -713,7 +719,7 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: linear-gradient(180deg, rgba(84, 168, 136, 0.026), transparent 28%);
+    background: linear-gradient(180deg, rgb(var(--eh-ambient-rose) / 0.022), transparent 28%);
   }
 
   .eh-settings-overlay>* {
@@ -733,8 +739,8 @@
 
   .eh-settings-overlay__footer {
     @apply flex h-popup-footer shrink-0 items-center justify-end px-5 py-2.5;
-    border-top: 1px solid var(--eh-hairline-soft);
-    background: #ffffff;
+    border-top: 1px solid var(--eh-hairline);
+    background: transparent;
   }
 
   .glass-panel {
@@ -782,14 +788,14 @@
   }
 
   .glass-panel:hover {
-    background: var(--eh-hover-bg);
+    background: var(--eh-glass-bg);
     border-color: var(--eh-glass-border);
     box-shadow: var(--eh-glass-elevation);
   }
 
   .glass-panel:hover::after {
     opacity: 0.55;
-    background: var(--eh-glass-ambient);
+    background: var(--eh-glass-ambient-gold);
     transform: none;
   }
 
@@ -829,7 +835,7 @@
   }
 
   .glass-card:hover {
-    background: var(--eh-hover-bg);
+    background: var(--eh-glass-bg);
     border-color: var(--eh-glass-border);
     box-shadow: var(--eh-glass-elevation);
   }
@@ -842,7 +848,7 @@
   }
 
   .glass-card-static:hover {
-    background: var(--eh-hover-bg);
+    background: var(--eh-glass-bg-hover);
     border-color: var(--eh-glass-border);
     box-shadow: var(--eh-glass-elevation);
   }

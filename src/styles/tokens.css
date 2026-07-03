@@ -1,160 +1,122 @@
 /**
  * Cohere-inspired editorial control system.
- * Tailwind: rgb(var(--eh-*) / <alpha-value>)
- * Plain CSS: var(--eh-*-hex) or var(--eh-hairline)
+ * Color primitives are RGB channels:
+ *   rgb(var(--eh-ink))
+ *   rgb(var(--eh-ink) / 0.72)
+ * Composite tokens such as borders, shadows and gradients remain complete CSS values.
  */
 :root {
   color-scheme: light;
 
   /* 画布与文字 */
-  --eh-canvas: 251 250 247;
-  --eh-canvas-hex: #fbfaf7;
+  --eh-canvas: 247 244 237;
   --eh-ink: 33 33 33;
-  --eh-ink-hex: #212121;
   --eh-body: 45 45 48;
-  --eh-body-hex: #2d2d30;
   --eh-muted: 117 117 138;
-  --eh-muted-hex: #75758a;
   --eh-muted-soft: 147 147 159;
-  --eh-muted-soft-hex: #93939f;
 
   /* 表面层级 */
-  --eh-surface-soft: 251 250 247;
-  --eh-surface-soft-hex: #fbfaf7;
-  --eh-surface-card: 255 255 255;
-  --eh-surface-card-hex: #ffffff;
+  --eh-surface-soft: 247 244 237;
+  --eh-surface-card: 247 244 237;
   --eh-surface-strong: 241 245 255;
-  --eh-surface-strong-hex: #f1f5ff;
   --eh-surface-dark: 23 23 28;
-  --eh-surface-dark-hex: #17171c;
-  --eh-surface-dark-elevated-hex: #24242a;
+  --eh-surface-dark-elevated: 36 36 42;
 
   /* 品牌 / 按钮 */
   --eh-brand-accent: 255 119 89;
-  --eh-brand-accent-hex: #ff7759;
-  --eh-brand-accent-bright-hex: #ffad9b;
-  --eh-brand-helper-hex: #c28a00;
+  --eh-brand-accent-bright: 255 173 155;
+  --eh-brand-helper: 194 138 0;
   --eh-brand-primary: 23 23 28;
-  --eh-brand-primary-hex: #17171c;
-  --eh-brand-primary-active-hex: #000000;
+  --eh-brand-primary-active: 0 0 0;
   --eh-primary: 23 23 28;
-  --eh-primary-hex: #17171c;
-  --eh-primary-hover-hex: #000000;
+  --eh-primary-hover: 0 0 0;
   --eh-primary-fg: 255 255 255;
-  --eh-primary-fg-hex: #ffffff;
-  --eh-on-primary-hex: #ffffff;
-  --eh-primary-50: #f6f1e8;
-  --eh-primary-100: #ece4d7;
-  --eh-primary-200: #d8cbb8;
-  --eh-primary-300: #b9aa95;
-  --eh-primary-400: #6f6253;
-  --eh-primary-500: #17171c;
-  --eh-primary-600: #111115;
-  --eh-primary-700: #0c0c0f;
-  --eh-primary-800: #060608;
-  --eh-primary-900: #000000;
+  --eh-on-primary: 255 255 255;
+  --eh-primary-50: 246 241 232;
+  --eh-primary-100: 236 228 215;
+  --eh-primary-200: 216 203 184;
+  --eh-primary-300: 185 170 149;
+  --eh-primary-400: 111 98 83;
+  --eh-primary-500: 23 23 28;
+  --eh-primary-600: 17 17 21;
+  --eh-primary-700: 12 12 15;
+  --eh-primary-800: 6 6 8;
+  --eh-primary-900: 0 0 0;
+  --eh-ambient-rose: 196 116 132;
+  --eh-ambient-plum: 164 92 108;
+  --eh-coral-deep: 141 47 29;
 
   /* 按钮圆角 */
   --eh-btn-radius: 32px;
   --eh-btn-radius-lg: 32px;
 
   /* 描边与阴影 */
-  --eh-hairline: #d9d9dd;
-  --eh-hairline-soft: #e5e7eb;
-  --eh-glow: 0 0 0 1px rgba(76, 110, 230, 0.18);
-  --eh-glow-dot: 0 0 0 3px rgba(76, 110, 230, 0.12);
-  --eh-glow-dot-soft: 0 0 0 3px rgba(255, 119, 89, 0.14);
+  --eh-hairline: rgb(var(--eh-brand-primary) / 0.22);
+  --eh-hairline-soft: rgb(var(--eh-brand-primary) / 0.12);
+  --eh-glow: 0 0 0 1px rgb(var(--eh-action-blue) / 0.18);
+  --eh-glow-dot: 0 0 0 3px rgb(var(--eh-action-blue) / 0.12);
+  --eh-glow-dot-soft: 0 0 0 3px rgb(var(--eh-brand-accent) / 0.14);
   --eh-shadow-card: none;
-  --eh-shadow-card-elevated: 0 20px 70px rgba(0, 0, 0, 0.18);
+  --eh-shadow-card-elevated: 0 20px 70px rgb(0 0 0 / 0.18);
   --eh-shadow-pill: none;
-  --eh-hover-bg: rgba(23, 23, 28, 0.045);
-  --eh-hover-bg-strong: rgba(23, 23, 28, 0.07);
-  --eh-glass-bg: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 0.95) 0%,
-    rgb(248 248 246 / 0.82) 100%
-  );
-  --eh-glass-bg-hover: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 1) 0%,
-    rgb(248 248 246 / 0.94) 100%
-  );
-  --eh-glass-frost: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.38) 0%,
-    transparent 68%
-  );
-  --eh-glass-border: #d9d9dd;
-  --eh-glass-border-hover: #b9bbc4;
-  --eh-glass-ambient: rgb(23 23 28 / 0.06);
-  --eh-glass-ambient-hover: rgb(23 23 28 / 0.09);
-  --eh-glass-ambient-gold: rgb(255 119 89 / 0.055);
-  --eh-glass-ambient-gold-hover: rgb(255 119 89 / 0.08);
-  --eh-glass-ambient-cyan: rgb(24 99 220 / 0.08);
-  --eh-glass-ambient-cyan-strong: rgb(24 99 220 / 0.12);
-  --eh-glass-bg-pool: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 1) 0%,
-    rgb(241 245 255 / 0.82) 100%
-  );
-  --eh-glass-frost-pool: linear-gradient(
-    180deg,
-    rgba(24, 99, 220, 0.035) 0%,
-    transparent 72%
-  );
-  --eh-glass-border-pool: #d9d9dd;
-  --eh-glass-highlight-pool: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(24, 99, 220, 0.12) 50%,
-    transparent 100%
-  );
+  --eh-hover-bg: rgb(var(--eh-brand-primary) / 0.045);
+  --eh-hover-bg-strong: rgb(var(--eh-brand-primary) / 0.07);
+  --eh-glass-bg: transparent;
+  --eh-glass-bg-hover: transparent;
+  --eh-glass-frost: transparent;
+  --eh-glass-border: rgb(var(--eh-brand-primary) / 0.18);
+  --eh-glass-border-hover: rgb(var(--eh-brand-primary) / 0.26);
+  --eh-glass-ambient: rgb(var(--eh-brand-primary) / 0.06);
+  --eh-glass-ambient-hover: rgb(var(--eh-brand-primary) / 0.09);
+  --eh-glass-ambient-gold: rgb(var(--eh-brand-accent) / 0.055);
+  --eh-glass-ambient-gold-hover: rgb(var(--eh-brand-accent) / 0.08);
+  --eh-glass-ambient-cyan: rgb(var(--eh-action-blue) / 0.08);
+  --eh-glass-ambient-cyan-strong: rgb(var(--eh-action-blue) / 0.12);
+  --eh-glass-bg-pool: transparent;
+  --eh-glass-frost-pool: transparent;
+  --eh-glass-border-pool: rgb(217 217 221);
+  --eh-glass-highlight-pool: linear-gradient(90deg,
+      transparent 0%,
+      rgb(var(--eh-action-blue) / 0.12) 50%,
+      transparent 100%);
 
   /* Popup */
-  --eh-popup-bg: #fbfaf7;
-  --eh-popup-ambient-top: radial-gradient(
-    ellipse 100% 42% at 50% 0%,
-    rgba(84, 168, 136, 0.11) 0%,
-    rgba(84, 168, 136, 0.035) 42%,
-    transparent 74%
-  );
-  --eh-popup-ambient-body: radial-gradient(
-    ellipse 92% 72% at 50% 54%,
-    rgba(61, 144, 116, 0.04) 0%,
-    rgba(61, 144, 116, 0.014) 44%,
-    transparent 78%
-  );
+  --eh-popup-bg: rgb(var(--eh-canvas));
+  --eh-popup-ambient-top: radial-gradient(ellipse 100% 42% at 50% 0%,
+      rgb(var(--eh-ambient-rose) / 0.105) 0%,
+      rgb(var(--eh-ambient-rose) / 0.032) 42%,
+      transparent 74%);
+  --eh-popup-ambient-body: radial-gradient(ellipse 92% 72% at 50% 54%,
+      rgb(var(--eh-ambient-plum) / 0.034) 0%,
+      rgb(var(--eh-ambient-plum) / 0.012) 44%,
+      transparent 78%);
   --eh-glass-elevation:
-    inset 0 1px 0 rgba(255, 255, 255, 0.62),
-    0 0 0 1px rgba(217, 217, 221, 0.88);
+    inset 0 1px 0 rgb(var(--eh-canvas) / 0.62),
+    0 0 0 1px rgb(var(--eh-brand-primary) / 0.16);
   --eh-glass-elevation-hover:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 0 0 1px rgba(185, 187, 196, 0.95);
-  --eh-glass-glow: 0 0 0 1px rgba(217, 217, 221, 0.9);
-  --eh-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --eh-glass-inset-hover: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  --eh-glass-highlight: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 119, 89, 0.14) 50%,
-    transparent 100%
-  );
+    inset 0 1px 0 rgb(var(--eh-canvas) / 0.72),
+    0 0 0 1px rgb(var(--eh-brand-primary) / 0.2);
+  --eh-glass-glow: 0 0 0 1px rgb(var(--eh-brand-primary) / 0.16);
+  --eh-glass-inset: inset 0 1px 0 rgb(var(--eh-canvas) / 0.62);
+  --eh-glass-inset-hover: inset 0 1px 0 rgb(var(--eh-canvas) / 0.72);
+  --eh-glass-highlight: linear-gradient(90deg,
+      transparent 0%,
+      rgb(var(--eh-brand-accent) / 0.14) 50%,
+      transparent 100%);
 
   /* 语义色 */
-  --eh-success-hex: #047857;
   --eh-success: 4 120 87;
-  --eh-warning-hex: #9a5a00;
+  --eh-warning: 154 90 0;
   --eh-error: 179 0 0;
-  --eh-error-hex: #b30000;
-  --eh-error-bright-hex: #d02424;
-  --eh-section-label-hex: #17171c;
-  --eh-action-blue-hex: #1863dc;
-  --eh-coral-hex: #ff7759;
-  --eh-soft-coral-hex: #ffad9b;
+  --eh-error-bright: 208 36 36;
+  --eh-section-label: 23 23 28;
+  --eh-action-blue: 24 99 220;
+  --eh-coral: 255 119 89;
+  --eh-soft-coral: 255 173 155;
 
   /* 滚动条 */
-  --eh-scrollbar-thumb: rgba(147, 147, 159, 0.42);
-  --eh-scrollbar-thumb-hover: rgba(117, 117, 138, 0.58);
+  --eh-scrollbar-thumb: rgb(var(--eh-muted-soft) / 0.42);
+  --eh-scrollbar-thumb-hover: rgb(var(--eh-muted) / 0.58);
   --eh-scrollbar-track: transparent;
 
   /* Popup 布局 */
