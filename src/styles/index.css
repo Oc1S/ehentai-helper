@@ -600,14 +600,16 @@
   }
 
   .eh-segmented {
-    @apply inline-flex min-h-9 items-center gap-0.5 rounded-full border p-0.5;
+    @apply relative inline-flex min-h-9 items-center gap-0.5 overflow-hidden rounded-full border p-0.5;
     border-color: var(--eh-hairline);
     background: transparent;
+    isolation: isolate;
   }
 
   .eh-segmented__item {
     @apply relative flex h-8 items-center overflow-hidden rounded-full px-3 text-xs text-muted transition-colors;
     isolation: isolate;
+    z-index: 1;
   }
 
   .eh-segmented__item:not([data-active='true']):hover {

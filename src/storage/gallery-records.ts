@@ -6,6 +6,7 @@ export type GalleryImageState = 'in_progress' | 'complete' | 'interrupted';
 export type GalleryImageRecord = {
   index: number;
   sourceUrl: string;
+  taskId?: string;
   filename?: string;
   state: GalleryImageState;
   chromeDownloadId?: number;

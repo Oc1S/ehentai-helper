@@ -74,6 +74,7 @@ export const registerDownloadIndex = async (params: RegisterDownloadParams) => {
   await galleryRecordsStorage.upsertImage(params.galleryUrl, {
     index: params.index,
     sourceUrl: params.sourceUrl ?? '',
+    taskId: params.taskId ?? undefined,
     state: 'in_progress',
     chromeDownloadId: params.id,
     updatedAt: Date.now(),

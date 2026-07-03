@@ -1,7 +1,8 @@
 export const countRangeProgress = (
-  record: { images: Record<string, { state: string }> } | undefined,
+  record: { images: Record<string, { state: string; taskId?: string }> } | undefined,
   rangeStart: number,
-  rangeEnd: number
+  rangeEnd: number,
+  taskId?: string
 ) => {
   let completeCount = 0;
   let failedCount = 0;
@@ -11,6 +12,7 @@ export const countRangeProgress = (
   for (let i = rangeStart; i <= rangeEnd; i++) {
     const img = record.images[String(i)];
     if (!img) continue;
+    if (taskId && img.taskId !== taskId) continue;
     if (img.state === 'complete') completeCount++;
     else if (img.state === 'interrupted') failedCount++;
     else if (img.state === 'in_progress') inProgressCount++;
@@ -19,8 +21,9 @@ export const countRangeProgress = (
 };
 
 export const countIndicesProgress = (
-  record: { images: Record<string, { state: string }> } | undefined,
-  indices: number[]
+  record: { images: Record<string, { state: string; taskId?: string }> } | undefined,
+  indices: number[],
+  taskId?: string
 ) => {
   let completeCount = 0;
   let failedCount = 0;
@@ -28,6 +31,7 @@ export const countIndicesProgress = (
   for (const i of indices) {
     const img = record?.images[String(i)];
     if (!img) continue;
+    if (taskId && img.taskId !== taskId) continue;
     if (img.state === 'complete') completeCount++;
     else if (img.state === 'interrupted') failedCount++;
     else if (img.state === 'in_progress') inProgressCount++;

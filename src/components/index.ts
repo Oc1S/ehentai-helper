@@ -5,6 +5,6 @@ export * from './eh-button';
 export * from './eh-progress';
 export * from './eh-section-label';
 export * from './gallery-detail-modal';
-export * from './Noise';
+export * from './noise-bg';
 export * from './page-selector';
 export * from './settings';

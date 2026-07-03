@@ -28,7 +28,7 @@ const settingsOverlayMotion = {
   initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
   animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
   exit: { opacity: 0, y: 8, filter: 'blur(2px)' },
-  transition: { type: 'spring', stiffness: 420, damping: 36, mass: 0.78 },
+  transition: { type: 'spring', visualDuration: 0.3, bounce: 0.12 },
 } as const;
 
 export const DownloadSettings = ({

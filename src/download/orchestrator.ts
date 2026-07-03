@@ -120,6 +120,7 @@ const markImageComplete = async (galleryUrl: string, index: number, sourceUrl: s
   await galleryRecordsStorage.upsertImage(galleryUrl, {
     index,
     sourceUrl,
+    taskId: activeTaskId ?? undefined,
     state: 'complete',
     updatedAt: Date.now(),
   });
@@ -128,10 +129,13 @@ const markImageComplete = async (galleryUrl: string, index: number, sourceUrl: s
 
 const getCompleteIndices = (
   task: ActiveDownloadTask,
-  images: Record<string, { state: string }> | undefined
+  images: Record<string, { state: string; taskId?: string }> | undefined
 ): number[] => {
   const indices = task.targetIndices ?? rangeIndices(task.rangeStart, task.rangeEnd);
-  return indices.filter((i) => images?.[String(i)]?.state === 'complete');
+  return indices.filter((i) => {
+    const img = images?.[String(i)];
+    return img?.taskId === task.taskId && img.state === 'complete';
+  });
 };
 
 const maybePackCbz = async (task: ActiveDownloadTask, config: Config, galleryUrl: string) => {
@@ -157,6 +161,7 @@ const markImageFailed = async (
   await galleryRecordsStorage.upsertImage(galleryUrl, {
     index,
     sourceUrl,
+    taskId: activeTaskId ?? undefined,
     state: 'interrupted',
     error,
     updatedAt: Date.now(),
@@ -174,7 +179,7 @@ const markImageFailed = async (
 
 const countTargetTerminal = (
   task: ActiveDownloadTask,
-  images: Record<string, { state: string }> | undefined
+  images: Record<string, { state: string; taskId?: string }> | undefined
 ) => {
   let complete = 0;
   let interrupted = 0;
@@ -183,7 +188,7 @@ const countTargetTerminal = (
 
   for (const i of indices) {
     const img = images?.[String(i)];
-    if (!img) continue;
+    if (!img || img.taskId !== task.taskId) continue;
     if (img.state === 'complete') complete++;
     else if (img.state === 'interrupted') interrupted++;
     else if (img.state === 'in_progress') inProgress++;

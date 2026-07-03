@@ -107,10 +107,19 @@ export const usePopupController = () => {
       activeTask?.galleryUrl === galleryFrontPageUrl.current &&
       activeTask.targetIndices?.length
     ) {
-      return countIndicesProgress(record, activeTask.targetIndices);
+      return countIndicesProgress(record, activeTask.targetIndices, activeTask.taskId);
+    }
+    if (optimisticTaskStatus === StatusEnum.Downloading) {
+      return { completeCount: 0, failedCount: 0, inProgressCount: 0 };
     }
     return countRangeProgress(record, progressRange.start, progressRange.end);
-  }, [galleryRecords, activeTask, progressRange.start, progressRange.end]);
+  }, [
+    galleryRecords,
+    activeTask,
+    optimisticTaskStatus,
+    progressRange.start,
+    progressRange.end,
+  ]);
 
   const buildJobPayload = (
     indices?: number[],
