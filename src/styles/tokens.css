@@ -9,7 +9,8 @@
   color-scheme: light;
 
   /* 画布与文字 */
-  --eh-canvas: 247 244 237;
+  /* --eh-canvas: 247 244 237; */
+  --eh-canvas: 255 255 255;
   --eh-ink: 33 33 33;
   --eh-body: 45 45 48;
   --eh-muted: 117 117 138;
@@ -44,6 +45,7 @@
   --eh-primary-900: 0 0 0;
   --eh-ambient-rose: 196 116 132;
   --eh-ambient-plum: 164 92 108;
+  --eh-ambient-lilac: 118 104 156;
   --eh-coral-deep: 141 47 29;
 
   /* 按钮圆角 */

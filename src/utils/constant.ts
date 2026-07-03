@@ -12,7 +12,7 @@ export type Config = {
   intermediateDownloadPath: string;
   saveOriginalImages: boolean;
   saveGalleryInfo: boolean;
-  filenameConflictAction: chrome.downloads.FilenameConflictAction;
+  filenameConflictAction: `${chrome.downloads.FilenameConflictAction}`;
   downloadInterval: number;
   fileNameRule: string;
   imageFormat: ImageFormat;

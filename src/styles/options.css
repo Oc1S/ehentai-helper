@@ -72,7 +72,7 @@
   display: grid;
   grid-auto-flow: dense;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 12px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -91,8 +91,8 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px;
+  gap: 10px;
+  padding: 16px;
   border: 1px solid var(--eh-hairline);
   border-radius: 8px;
   background: transparent;
@@ -105,9 +105,9 @@
 .options-shell .eh-settings-group__rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   border-top: 1px solid var(--eh-hairline-soft);
-  padding-top: 10px;
+  padding-top: 9px;
 }
 
 .options-shell .eh-settings-row--page {

@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
@@ -157,35 +157,60 @@ export const Modal = ({
   );
 };
 
+const segmentedIndicatorMotion = {
+  type: 'spring',
+  stiffness: 520,
+  damping: 42,
+  mass: 0.62,
+} as const;
+
 export const SegmentedTabs = <T extends string>({
   items,
   selectedKey,
   onSelectionChange,
   ariaLabel,
+  className = '',
+  layoutId,
 }: {
-  items: { id: T; label: string }[];
+  items: ReadonlyArray<{ id: T; label: string }>;
   selectedKey: T;
   onSelectionChange: (key: T) => void;
   ariaLabel: string;
-}) => (
-  <div className="eh-segmented" role="tablist" aria-label={ariaLabel}>
-    {items.map((item) => {
-      const isSelected = item.id === selectedKey;
-      return (
-        <button
-          key={item.id}
-          type="button"
-          role="tab"
-          aria-selected={isSelected}
-          className={`eh-segmented__item ${isSelected ? 'eh-segmented__item--active' : ''}`}
-          onClick={() => onSelectionChange(item.id)}
-        >
-          {item.label}
-        </button>
-      );
-    })}
-  </div>
-);
+  className?: string;
+  layoutId?: string;
+}) => {
+  const generatedId = useId().replace(/:/g, '');
+  const indicatorLayoutId = layoutId ?? `eh-segmented-indicator-${generatedId}`;
+
+  return (
+    <div className={`eh-segmented ${className}`.trim()} role="tablist" aria-label={ariaLabel}>
+      {items.map((item) => {
+        const isSelected = item.id === selectedKey;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={isSelected}
+            data-active={isSelected ? 'true' : 'false'}
+            className="eh-segmented__item"
+            onClick={() => onSelectionChange(item.id)}
+          >
+            {isSelected ? (
+              <motion.span
+                layoutId={indicatorLayoutId}
+                className="eh-segmented__indicator"
+                initial={false}
+                transition={segmentedIndicatorMotion}
+              />
+            ) : null}
+            <span className="eh-segmented__label">{item.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 export const PaginationControls = ({
   page,
@@ -242,7 +267,7 @@ export const CheckControl = ({
       onChange={(event) => onCheckedChange(event.target.checked)}
     />
     <span className="eh-check__box" aria-hidden>
-      {checked ? <Check size={13} strokeWidth={2} /> : null}
+      <Check className="eh-check__mark" size={13} strokeWidth={2} />
     </span>
     {label ? <span className="eh-check__label">{label}</span> : null}
   </label>

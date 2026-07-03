@@ -116,14 +116,14 @@ export const GalleryDetailModal: FC<{
       }
       footer={
         <>
+          <EhButton variant="secondary" ehSize="sm" onPress={onClose}>
+            {t('close')}
+          </EhButton>
           {onRetryAllFailed && counts.interrupted > 0 && (
             <EhButton variant="primary" ehSize="sm" onPress={onRetryAllFailed}>
               {t('retryAllFailed', String(counts.interrupted))}
             </EhButton>
           )}
-          <EhButton variant="secondary" ehSize="sm" onPress={onClose}>
-            {t('close')}
-          </EhButton>
         </>
       }
       size="xl"
@@ -139,7 +139,7 @@ export const GalleryDetailModal: FC<{
             onValueChange={setKeyword}
             isClearable
           />
-          <SegmentedTabs
+          <SegmentedTabs<FilterKey>
             items={summaryTabs()}
             selectedKey={filter}
             onSelectionChange={setFilter}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useMounted } from '@/hooks';
@@ -86,15 +86,6 @@ export const DownloadSettings = ({
           {...settingsOverlayMotion}
         >
           <header className="eh-settings-overlay__header">
-            <EhButton
-              isIconOnly
-              ehSize="sm"
-              onPress={() => setIsOpen(false)}
-              aria-label={t('close')}
-              className="eh-settings-overlay__back"
-            >
-              <ArrowLeft size={16} strokeWidth={1.9} />
-            </EhButton>
             <div className="min-w-0">
               <h1
                 id="eh-popup-settings-title"
@@ -103,6 +94,15 @@ export const DownloadSettings = ({
                 {t('settings')}
               </h1>
             </div>
+            <EhButton
+              isIconOnly
+              ehSize="sm"
+              onPress={() => setIsOpen(false)}
+              aria-label={t('close')}
+              className="eh-settings-overlay__close"
+            >
+              <X size={16} strokeWidth={1.9} />
+            </EhButton>
           </header>
 
           <div className="scrollbar-glass min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -110,6 +110,9 @@ export const DownloadSettings = ({
           </div>
 
           <footer className="eh-settings-overlay__footer">
+            <EhButton variant="secondary" ehSize="sm" onPress={() => setIsOpen(false)}>
+              {t('cancel')}
+            </EhButton>
             <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
               {t('saveSettings')}
             </EhButton>

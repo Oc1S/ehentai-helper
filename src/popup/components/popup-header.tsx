@@ -1,9 +1,10 @@
 import { DownloadSettings } from '@/components/download-settings';
+import { SegmentedTabs } from '@/components/ui-primitives';
 import { t } from '@/utils/i18n';
 
 const POPUP_TABS = [
-  { key: 'info', label: () => t('galleryTab') },
-  { key: 'history', label: () => t('historyTab') },
+  { id: 'info', label: t('galleryTab') },
+  { id: 'history', label: t('historyTab') },
 ] as const;
 
 export const PopupHeader = ({
@@ -21,28 +22,14 @@ export const PopupHeader = ({
     <span className="min-w-0 truncate text-[15px] font-medium tracking-tight text-ink">
       E-Hentai <span className="text-[rgb(var(--eh-brand-helper))]">Helper</span>
     </span>
-    <nav role="tablist" aria-label="popup tabs" className="z-10 justify-self-center">
-      <div className="flex items-center gap-0.5 rounded-full border border-hairline p-0.5">
-        {POPUP_TABS.map((tab) => {
-          const isActive = selectedTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => onSelectTab(tab.key)}
-              className={`flex h-8 items-center gap-1 rounded-full px-3 text-xs font-normal transition-colors ${
-                isActive
-                  ? 'bg-[rgb(var(--eh-brand-primary-active))] text-primary-foreground shadow-card'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              {tab.label()}
-            </button>
-          );
-        })}
-      </div>
+    <nav className="z-10 justify-self-center" aria-label="popup sections">
+      <SegmentedTabs
+        items={POPUP_TABS}
+        selectedKey={selectedTab}
+        onSelectionChange={onSelectTab}
+        ariaLabel="popup tabs"
+        layoutId="popup-tabs-active-bg"
+      />
     </nav>
     <div className="min-w-0 justify-self-end">
       <DownloadSettings disabled={isDownloading} pathPreview={pathPreview} />

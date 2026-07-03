@@ -1,4 +1,5 @@
 import { type FC, type ReactNode } from 'react';
+import { Tooltip } from '@base-ui/react/tooltip';
 
 import {
   type Config,
@@ -81,9 +82,23 @@ const TextInput = ({
 );
 
 const HintLabel = ({ label, hint }: { label: string; hint: string }) => (
-  <span className="cursor-help border-b border-dotted border-muted-soft/80" title={hint}>
-    {label}
-  </span>
+  <Tooltip.Root>
+    <Tooltip.Trigger
+      render={<span />}
+      tabIndex={0}
+      className="eh-tooltip__trigger cursor-help"
+    >
+      {label}
+    </Tooltip.Trigger>
+    <Tooltip.Portal>
+      <Tooltip.Positioner side="top" align="start" sideOffset={8}>
+        <Tooltip.Popup className="eh-tooltip__popup">
+          <Tooltip.Arrow className="eh-tooltip__arrow" />
+          {hint}
+        </Tooltip.Popup>
+      </Tooltip.Positioner>
+    </Tooltip.Portal>
+  </Tooltip.Root>
 );
 
 export const Settings: FC<{
@@ -142,7 +157,7 @@ export const Settings: FC<{
       content: (
         <RadioCards
           value={config.filenameConflictAction}
-          onChange={(val: chrome.downloads.FilenameConflictAction) =>
+          onChange={(val) =>
             setConfig({
               ...config,
               filenameConflictAction: val,

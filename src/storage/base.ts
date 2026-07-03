@@ -91,7 +91,7 @@ export function createStorage<D = string>(
   const _getDataFromStorage = async (): Promise<D> => {
     checkStoragePermission(storageType);
     const value = await chrome.storage[storageType].get([key]);
-    return deserialize(value[key]) ?? fallback;
+    return deserialize(value[key] as string) ?? fallback;
   };
 
   const _emitChange = () => {
@@ -125,7 +125,7 @@ export function createStorage<D = string>(
   }) {
     if (changes[key] === undefined) return;
 
-    const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue);
+    const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue as string);
 
     if (cache === valueOrUpdate) return;
 
