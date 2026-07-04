@@ -4,6 +4,10 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
+import { t } from '@/utils/i18n';
+
+import { EhButton } from '../eh-button';
+
 const modalRootMotion = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -55,7 +59,7 @@ export const Modal = ({
           <button
             type="button"
             className="eh-modal__scrim"
-            aria-label="Close"
+            aria-label={t('close')}
             onClick={onClose}
           />
           <motion.section
@@ -67,14 +71,15 @@ export const Modal = ({
             {title ? (
               <header className="eh-modal__header">
                 <div className="min-w-0 flex-1">{title}</div>
-                <button
-                  type="button"
+                <EhButton
+                  isIconOnly
+                  ehSize="sm"
                   className="eh-modal__close"
-                  aria-label="Close"
-                  onClick={onClose}
+                  aria-label={t('close')}
+                  onPress={onClose}
                 >
-                  <X size={16} strokeWidth={1.75} />
-                </button>
+                  <X size={16} strokeWidth={1.9} />
+                </EhButton>
               </header>
             ) : null}
             <div className={`eh-modal__body scrollbar-glass ${bodyClassName}`.trim()}>

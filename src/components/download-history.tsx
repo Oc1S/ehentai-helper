@@ -7,8 +7,10 @@ import {
   downloadHistoryStorage,
   type GalleryRecord,
   galleryRecordsStorage,
+  getDownloadHistoryRanges,
   MAX_DOWNLOAD_HISTORY,
   MAX_GALLERY_RECORDS,
+  mergeDownloadHistoryItems,
 } from '@/storage';
 import { t } from '@/utils/i18n';
 
@@ -27,21 +29,33 @@ const columns = () => [
 
 const formatTime = (ts: number) => new Date(ts).toLocaleString();
 
-const formatStatus = (record: GalleryRecord | undefined, range: [number, number]) => {
+const countRangeTotal = (ranges: [number, number][]) =>
+  ranges.reduce((total, [start, end]) => total + end - start + 1, 0);
+
+const formatRange = (item: DownloadHistoryItem) => {
+  const ranges = getDownloadHistoryRanges(item);
+  if (ranges.length <= 2) return ranges.map(([start, end]) => `${start}-${end}`).join(', ');
+  const [firstStart, firstEnd] = ranges[0];
+  return `${firstStart}-${firstEnd}, +${ranges.length - 1}`;
+};
+
+const formatStatus = (record: GalleryRecord | undefined, item: DownloadHistoryItem) => {
   if (!record) return t('statusUnknown');
+  const ranges = getDownloadHistoryRanges(item);
   let complete = 0;
-  for (let i = range[0]; i <= range[1]; i++) {
-    if (record.images[String(i)]?.state === 'complete') complete++;
+  for (const [start, end] of ranges) {
+    for (let i = start; i <= end; i++) {
+      if (record.images[String(i)]?.state === 'complete') complete++;
+    }
   }
-  const total = range[1] - range[0] + 1;
-  return t('statusCompleteRatio', [String(complete), String(total)]);
+  return t('statusCompleteRatio', [String(complete), String(countRangeTotal(ranges))]);
 };
 
 export const History: FC = () => {
   const list = useStorageSuspense(downloadHistoryStorage) || [];
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
   const data = useMemo<DownloadHistoryItem[]>(() => {
-    return [...list].sort((a, b) => b.timestamp - a.timestamp);
+    return mergeDownloadHistoryItems(list);
   }, [list]);
   const [keyword, setKeyword] = useState('');
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
@@ -131,10 +145,10 @@ export const History: FC = () => {
                     </a>
                   </td>
                   <td className="whitespace-nowrap text-xs text-muted">
-                    {formatStatus(galleryRecords[item.url], item.range)}
+                    {formatStatus(galleryRecords[item.url], item)}
                   </td>
-                  <td className="whitespace-nowrap text-muted-soft">
-                    {item.range[0]}-{item.range[1]}
+                  <td className="whitespace-nowrap text-muted-soft" title={formatRange(item)}>
+                    {formatRange(item)}
                   </td>
                   <td className="whitespace-nowrap text-muted-soft">{formatTime(item.timestamp)}</td>
                   <td className="py-1.5">
@@ -204,7 +218,7 @@ export const History: FC = () => {
               ehSize="sm"
               onPress={() => {
                 if (deleteTarget) {
-                  downloadHistoryStorage.remove(deleteTarget.timestamp);
+                  downloadHistoryStorage.remove(deleteTarget.url);
                   galleryRecordsStorage.removeGallery(deleteTarget.url);
                 }
                 setDeleteTarget(null);

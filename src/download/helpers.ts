@@ -19,11 +19,18 @@ export const computeMissingIndices = (
 export const computeFailedIndices = (
   record: GalleryRecord | undefined,
   rangeStart: number,
-  rangeEnd: number
+  rangeEnd: number,
+  options: { taskId?: string; indices?: number[] } = {}
 ) => {
   if (!record) return [];
+  const indexSet = options.indices?.length ? new Set(options.indices) : null;
   return Object.values(record.images)
-    .filter((img) => img.state === 'interrupted' && img.index >= rangeStart && img.index <= rangeEnd)
+    .filter((img) => {
+      if (img.state !== 'interrupted') return false;
+      if (options.taskId && img.taskId !== options.taskId) return false;
+      if (indexSet) return indexSet.has(img.index);
+      return img.index >= rangeStart && img.index <= rangeEnd;
+    })
     .map((img) => img.index)
     .sort((a, b) => a - b);
 };

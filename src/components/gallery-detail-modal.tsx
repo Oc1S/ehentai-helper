@@ -55,16 +55,26 @@ export const GalleryDetailModal: FC<{
   isOpen: boolean;
   onClose: () => void;
   record?: GalleryRecord | null;
+  taskId?: string;
+  indices?: number[];
+  totalCount?: number;
   onRetryIndex?: (index: number) => void;
   onRetryAllFailed?: () => void;
-}> = ({ isOpen, onClose, record, onRetryIndex, onRetryAllFailed }) => {
+}> = ({ isOpen, onClose, record, taskId, indices, totalCount, onRetryIndex, onRetryAllFailed }) => {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [keyword, setKeyword] = useState('');
 
   const rows = useMemo(() => {
     if (!record?.images) return [];
-    return Object.values(record.images).sort((a, b) => a.index - b.index);
-  }, [record]);
+    const indexSet = indices?.length ? new Set(indices) : null;
+    return Object.values(record.images)
+      .filter((image) => {
+        if (taskId && image.taskId !== taskId) return false;
+        if (indexSet && !indexSet.has(image.index)) return false;
+        return true;
+      })
+      .sort((a, b) => a.index - b.index);
+  }, [indices, record, taskId]);
 
   const counts = useMemo(() => {
     const c = { complete: 0, in_progress: 0, interrupted: 0 };
@@ -73,6 +83,8 @@ export const GalleryDetailModal: FC<{
     }
     return c;
   }, [rows]);
+
+  const displayTotal = totalCount ?? record?.total ?? 0;
 
   const filteredRows = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
@@ -102,7 +114,7 @@ export const GalleryDetailModal: FC<{
           </span>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
             <span>
-              {t('total')}: {record?.total ?? 0}
+              {t('total')}: {displayTotal}
             </span>
             <StatusPill tone="success">{t('countDone', String(counts.complete))}</StatusPill>
             <StatusPill tone="warning">

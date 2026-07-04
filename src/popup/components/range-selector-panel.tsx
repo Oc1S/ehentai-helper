@@ -24,21 +24,3 @@ export const RangeSelectorContent = ({
     </>
   );
 };
-
-export const RangeSelectorPanel = ({
-  range,
-  setRange,
-  maxValue,
-}: {
-  range: [number, number];
-  setRange: (range: [number, number]) => void;
-  maxValue: number;
-}) => {
-  if (range[1] <= 0) return null;
-
-  return (
-    <div className="glass-panel rounded-eh-xl flex flex-col gap-2.5 px-4 py-3.5">
-      <RangeSelectorContent range={range} setRange={setRange} maxValue={maxValue} />
-    </div>
-  );
-};

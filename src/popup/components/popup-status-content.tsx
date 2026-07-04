@@ -5,11 +5,7 @@ import { StatusEnum } from '../status';
 import type { PopupController } from '../use-popup-controller';
 import { PostDownloadActionRow, PostDownloadShell } from './post-download-shell';
 import { BeforeDownloadView } from './status/before-download-view';
-import {
-  DownloadFailedView,
-  DownloadingView,
-  StartDownloadButton,
-} from './status/downloading-view';
+import { DownloadFailedView, DownloadingView } from './status/downloading-view';
 import {
   EHentaiOtherStatusView,
   FailStatusView,
@@ -25,9 +21,6 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
     galleryRecords,
     range,
     setRange,
-    downloadCount,
-    terminalRangeExpanded,
-    setTerminalRangeExpanded,
     completeCount,
     failedCount,
     inProgressCount,
@@ -90,12 +83,6 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           failedCount={failedCount}
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
-          range={range}
-          setRange={setRange}
-          totalImages={galleryPageInfo.totalImages}
-          terminalRangeExpanded={terminalRangeExpanded}
-          onToggleRange={() => setTerminalRangeExpanded((prev) => !prev)}
-          hideRangeControls
           footerActions={
             <div className="flex items-stretch gap-2">
               <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
@@ -126,14 +113,6 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           failedCount={failedCount}
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
-          range={range}
-          setRange={setRange}
-          totalImages={galleryPageInfo.totalImages}
-          terminalRangeExpanded={terminalRangeExpanded}
-          onToggleRange={() => setTerminalRangeExpanded((prev) => !prev)}
-          primaryAction={
-            <StartDownloadButton downloadCount={downloadCount} onPress={handleStartDownload} />
-          }
           footerActions={
             <PostDownloadActionRow
               leading={
@@ -147,6 +126,9 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
                   </EhButton>
                   <EhButton variant="secondary" ehSize="md" onPress={openDownloadFolder}>
                     {t('openFolder')}
+                  </EhButton>
+                  <EhButton variant="secondary" ehSize="md" onPress={resetToBeforeDownload}>
+                    {t('backToInitial')}
                   </EhButton>
                 </>
               }

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const segmentedIndicatorMotion = {
   type: 'spring',
-  visualDuration: 0.25,
+  visualDuration: 0.2,
   bounce: 0.2,
 } as const;
 
@@ -44,7 +44,6 @@ export const SegmentedTabs = <T extends string>({
                 layoutId={indicatorLayoutId}
                 aria-hidden
                 className="eh-segmented__indicator"
-                initial={false}
                 transition={segmentedIndicatorMotion}
               />
             ) : null}

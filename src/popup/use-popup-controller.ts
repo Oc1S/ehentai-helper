@@ -12,6 +12,7 @@ import { computeFailedIndices, computeMissingIndices } from '@/download/helpers'
 import type { DownloadJobPayload } from '@/download/types';
 import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
 import {
+  type ActiveDownloadTask,
   configStorage,
   downloadHistoryStorage,
   downloadTaskStorage,
@@ -57,7 +58,9 @@ export const usePopupController = () => {
   });
   const [galleryInfo, setGalleryInfo] = useState<GalleryInfo | null>(null);
   const [range, setRange] = useState<[number, number]>([1, galleryPageInfo.totalImages]);
-  const [terminalRangeExpanded, setTerminalRangeExpanded] = useState(false);
+  const currentGalleryUrl = galleryFrontPageUrl.current;
+  const currentTask: ActiveDownloadTask | null =
+    activeTask?.galleryUrl === currentGalleryUrl ? activeTask : null;
 
   useEffect(() => {
     setRange([1, galleryPageInfo.totalImages]);
@@ -70,17 +73,16 @@ export const usePopupController = () => {
         pageStatus,
         optimisticTaskStatus,
         activeTask,
-        galleryUrl: galleryFrontPageUrl.current,
+        galleryUrl: currentGalleryUrl,
         range,
         downloadCount,
       }),
-    [activeTask, downloadCount, optimisticTaskStatus, pageStatus, range]
+    [activeTask, currentGalleryUrl, downloadCount, optimisticTaskStatus, pageStatus, range]
   );
   const {
     status,
     isTaskForCurrentGallery,
     isCenteredStatus,
-    isTerminalDownload,
     isSelfScrollingLayout,
     isDownloading,
     progressRange,
@@ -95,19 +97,12 @@ export const usePopupController = () => {
     }
   }, [isTaskForCurrentGallery, optimisticTaskStatus]);
 
-  useEffect(() => {
-    if (!isTerminalDownload) {
-      setTerminalRangeExpanded(false);
-    }
-  }, [isTerminalDownload]);
-
   const { completeCount, failedCount, inProgressCount } = useMemo(() => {
-    const record = galleryRecords[galleryFrontPageUrl.current];
+    const record = galleryRecords[currentGalleryUrl];
     if (
-      activeTask?.galleryUrl === galleryFrontPageUrl.current &&
-      activeTask.targetIndices?.length
+      currentTask?.targetIndices?.length
     ) {
-      return countIndicesProgress(record, activeTask.targetIndices, activeTask.taskId);
+      return countIndicesProgress(record, currentTask.targetIndices, currentTask.taskId);
     }
     if (optimisticTaskStatus === StatusEnum.Downloading) {
       return { completeCount: 0, failedCount: 0, inProgressCount: 0 };
@@ -115,7 +110,8 @@ export const usePopupController = () => {
     return countRangeProgress(record, progressRange.start, progressRange.end);
   }, [
     galleryRecords,
-    activeTask,
+    currentGalleryUrl,
+    currentTask,
     optimisticTaskStatus,
     progressRange.start,
     progressRange.end,
@@ -189,7 +185,7 @@ export const usePopupController = () => {
   };
 
   const handleResumeMissing = async () => {
-    const record = galleryRecords[galleryFrontPageUrl.current];
+    const record = galleryRecords[currentGalleryUrl];
     const missing = computeMissingIndices(record, range[0], range[1]);
     if (missing.length === 0) {
       toast.info(t('nothingToResume'));
@@ -199,8 +195,13 @@ export const usePopupController = () => {
   };
 
   const handleRetryFailed = async (indices?: number[]) => {
-    const record = galleryRecords[galleryFrontPageUrl.current];
-    const failed = indices ?? computeFailedIndices(record, progressRange.start, progressRange.end);
+    const record = galleryRecords[currentGalleryUrl];
+    const failed =
+      indices ??
+      computeFailedIndices(record, progressRange.start, progressRange.end, {
+        taskId: currentTask?.taskId,
+        indices: currentTask?.targetIndices,
+      });
     if (failed.length === 0) {
       toast.info(t('noFailedItems'));
       return;
@@ -285,11 +286,10 @@ export const usePopupController = () => {
     galleryInfo,
     galleryPageInfo,
     galleryRecords,
+    currentTask,
     range,
     setRange,
     downloadCount,
-    terminalRangeExpanded,
-    setTerminalRangeExpanded,
     completeCount,
     failedCount,
     inProgressCount,

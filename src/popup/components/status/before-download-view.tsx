@@ -119,6 +119,7 @@ export const BeforeDownloadView = ({
                 {counts && trackedTotal > 0 ? (
                   <PreviouslyTrackedSection
                     counts={counts}
+                    trackedTotal={trackedTotal}
                     missingCount={missingCount}
                     onResumeMissing={onResumeMissing}
                     onViewDetails={onViewDetails}
@@ -135,27 +136,57 @@ export const BeforeDownloadView = ({
 
 const PreviouslyTrackedSection = ({
   counts,
+  trackedTotal,
   missingCount,
   onResumeMissing,
   onViewDetails,
 }: {
   counts: Record<'complete' | 'in_progress' | 'interrupted', number>;
+  trackedTotal: number;
   missingCount: number;
   onResumeMissing: () => void;
   onViewDetails: () => void;
-}) => (
-  <div className="mt-3 border-t border-[var(--eh-hairline-soft)] pt-3">
-    <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
-      {t('previouslyTracked')}
-    </p>
-    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-soft">
-      <span className="text-success">{t('badgeComplete', String(counts.complete))}</span>
-      <span aria-hidden>·</span>
-      <span className="text-warning">{t('badgeInProgress', String(counts.in_progress))}</span>
-      <span aria-hidden>·</span>
-      <span className="text-error">{t('badgeFailed', String(counts.interrupted))}</span>
-    </div>
-    <div className="mt-2.5 flex flex-wrap items-center gap-2">
+}) => {
+  const stats = [
+    { key: 'complete', label: t('stateComplete'), value: counts.complete, className: 'text-success' },
+    {
+      key: 'in_progress',
+      label: t('stateInProgress'),
+      value: counts.in_progress,
+      className: 'text-warning',
+    },
+    { key: 'interrupted', label: t('stateFailed'), value: counts.interrupted, className: 'text-error' },
+    { key: 'missing', label: t('stateMissing'), value: missingCount, className: 'text-muted' },
+  ];
+
+  return (
+    <section className="mt-3 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium leading-none text-ink">{t('previouslyTracked')}</p>
+          <p className="mt-1 text-[11px] leading-none text-muted-soft">
+            {trackedTotal} {t('imagesLabel')}
+          </p>
+        </div>
+        {missingCount > 0 ? (
+          <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-[11px] font-normal text-ink">
+            {t('continueMissing', String(missingCount))}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-1.5">
+        {stats.map((item) => (
+          <div key={item.key} className="min-w-0 rounded-eh-sm bg-[var(--eh-hover-bg)] px-2 py-2">
+            <p className={`text-base font-semibold leading-none tabular-nums ${item.className}`}>
+              {item.value}
+            </p>
+            <p className="mt-1 truncate text-[10px] leading-none text-muted-soft">{item.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
       <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
         {t('viewDetails')}
       </EhButton>
@@ -164,6 +195,7 @@ const PreviouslyTrackedSection = ({
           {t('continueMissing', String(missingCount))}
         </EhButton>
       ) : null}
-    </div>
-  </div>
-);
+      </div>
+    </section>
+  );
+};

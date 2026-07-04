@@ -37,6 +37,9 @@ const Popup = () => {
           isOpen={ctrl.galleryDetailOpen}
           onClose={() => ctrl.setGalleryDetailOpen(false)}
           record={ctrl.galleryRecords[ctrl.getGalleryUrl()] ?? null}
+          taskId={ctrl.currentTask?.taskId}
+          indices={ctrl.currentTask?.targetIndices}
+          totalCount={ctrl.currentTask?.expectedCount}
           onRetryIndex={(index) => ctrl.handleRetryFailed([index])}
           onRetryAllFailed={() => ctrl.handleRetryFailed()}
         />

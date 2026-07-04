@@ -313,6 +313,65 @@
     margin: 0;
   }
 
+  .eh-range-slider {
+    @apply h-7 w-full cursor-grab appearance-none bg-transparent;
+  }
+
+  .eh-range-slider:active {
+    @apply cursor-grabbing;
+  }
+
+  .eh-range-slider:disabled {
+    @apply cursor-default opacity-45;
+  }
+
+  .eh-range-slider:focus-visible {
+    outline: none;
+  }
+
+  .eh-range-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border: 1px solid var(--eh-hairline);
+    border-radius: 9999px;
+    background: var(--eh-hover-bg);
+  }
+
+  .eh-range-slider::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    border: 1px solid rgb(var(--eh-brand-primary));
+    border-radius: 9999px;
+    background: rgb(var(--eh-brand-primary));
+    box-shadow: 0 0 0 3px rgb(var(--eh-ink) / 0.08);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .eh-range-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.12);
+  }
+
+  .eh-range-slider::-moz-range-track {
+    height: 6px;
+    border: 1px solid var(--eh-hairline);
+    border-radius: 9999px;
+    background: var(--eh-hover-bg);
+  }
+
+  .eh-range-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgb(var(--eh-brand-primary));
+    border-radius: 9999px;
+    background: rgb(var(--eh-brand-primary));
+    box-shadow: 0 0 0 3px rgb(var(--eh-ink) / 0.08);
+  }
+
+  .eh-range-slider:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.12);
+  }
+
   /* URL：禁止在 e-hentai 等连字符处软换行，单行省略 */
   .eh-url-link {
     @apply block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap;
@@ -589,14 +648,7 @@
   }
 
   .eh-modal__close {
-    @apply absolute right-3 top-3 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors;
-    border: 1px solid var(--eh-hairline);
-    background: transparent;
-  }
-
-  .eh-modal__close:hover {
-    background: var(--eh-hover-bg);
-    color: rgb(var(--eh-ink));
+    @apply absolute right-3 top-3 z-10;
   }
 
   .eh-segmented {
@@ -607,7 +659,7 @@
   }
 
   .eh-segmented__item {
-    @apply relative flex h-8 items-center overflow-hidden rounded-full px-3 text-xs text-muted transition-colors;
+    @apply relative flex h-8 items-center rounded-full px-3 text-xs text-muted transition-colors;
     isolation: isolate;
     z-index: 1;
   }
