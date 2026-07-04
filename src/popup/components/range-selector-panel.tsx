@@ -12,6 +12,8 @@ export const RangeSelectorContent = ({
 }) => {
   if (range[1] <= 0) return null;
 
+  const selectedCount = range[1] - range[0] + 1;
+
   return (
     <>
       <div className="flex items-center justify-between gap-2">
@@ -20,7 +22,23 @@ export const RangeSelectorContent = ({
           {range[0]} - {range[1]}
         </span>
       </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <RangeMetric label={t('selected')} value={selectedCount} />
+        <RangeMetric label={t('total')} value={maxValue} />
+      </div>
       <PageSelector range={range} setRange={setRange} maxValue={maxValue} />
     </>
   );
 };
+
+const RangeMetric = ({ label, value }: { label: string; value: number }) => (
+  <div className="min-w-0 rounded-eh-sm border border-[var(--eh-hairline-soft)] bg-[var(--eh-hover-bg)] px-2.5 py-2">
+    <div className="flex min-w-0 items-baseline gap-1.5">
+      <p className="truncate text-base font-semibold leading-none tabular-nums text-ink">{value}</p>
+      <span className="shrink-0 text-[10px] font-normal leading-none text-muted-soft">
+        {t('imagesLabel')}
+      </span>
+    </div>
+    <p className="mt-1 truncate text-[10px] font-normal leading-none text-muted-soft">{label}</p>
+  </div>
+);

@@ -90,7 +90,7 @@
   },
   "downloadCompleted": { "message": "下载完成！" },
   "enjoyingExtension": { "message": "如果这个插件对你有帮助，" },
-  "starGithubLink": { "message": "欢迎在Github右上角，给这个项目留一个小星星✨" },
+  "starGithubLink": { "message": "欢迎给这个项目留一个小星星✨" },
   "partialSuccessSummary": {
     "message": "成功 $1 张，失败 $2 张",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
@@ -139,9 +139,7 @@
   "presetFirst20": { "message": "前 20 张" },
   "imageRange": { "message": "图片范围" },
   "startPosition": { "message": "起始位置" },
-  "decreaseStart": { "message": "起始位置前移" },
-  "increaseStart": { "message": "起始位置后移" },
-  "dragStartPosition": { "message": "拖拽选择起始位置" },
+  "endPosition": { "message": "结束位置" },
   "rangeFrom": { "message": "起始" },
   "rangeTo": { "message": "结束" },
   "colIndex": { "message": "#" },

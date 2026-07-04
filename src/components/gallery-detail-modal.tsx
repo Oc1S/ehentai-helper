@@ -139,7 +139,6 @@ export const GalleryDetailModal: FC<{
         </>
       }
       size="xl"
-      panelClassName="h-[520px] max-h-[calc(100vh-40px)]"
       bodyClassName="flex min-h-0 flex-col"
     >
       <div className="flex h-full min-h-0 flex-col gap-3">

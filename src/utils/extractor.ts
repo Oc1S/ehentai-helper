@@ -118,20 +118,48 @@ const extractGalleryTags = (htmlOrDoc: string | Document): GalleryTag[] => {
   return tags;
 };
 
+const GPC_PAGE_INFO_PATTERN = /Showing (\d+) - (\d+) of ([\d,]+) images/;
+
+/** EH 账户缩略图设置通常为每页 20 或 40 张 */
+const inferImagesPerPage = (start: number, end: number, totalImages: number): number => {
+  const rangeCount = end - start + 1;
+  if (start === 1) return rangeCount;
+  if (end < totalImages) return rangeCount;
+  for (const size of [40, 20]) {
+    if ((start - 1) % size === 0) return size;
+  }
+  return rangeCount;
+};
+
+const extractTotalImagesFromGdt2 = (doc: Document): number => {
+  const gdt2Texts = Array.from(doc.getElementsByClassName('gdt2')).map(getTextContent);
+  const lengthText = gdt2Texts[5];
+  if (!lengthText) return 0;
+  const match = /(\d+) pages/.exec(lengthText);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
 export const extractGalleryPageInfo = (
   htmlOrDoc: string | Document
 ): Record<'imagesPerPage' | 'totalImages' | 'numPages', number> => {
   const doc = getDocument(htmlOrDoc);
   const pageInfoStr = doc.querySelector('.gpc')?.innerHTML || '';
-  const res = /Showing 1 - (\d+) of (\d*,*\d+) images/.exec(pageInfoStr);
+  const res = GPC_PAGE_INFO_PATTERN.exec(pageInfoStr);
   const pageInfo = {
     imagesPerPage: 0,
     totalImages: 0,
     numPages: 0,
   };
-  if (!res) return pageInfo;
-  pageInfo.imagesPerPage = +res[1];
-  pageInfo.totalImages = +res[2].replace(',', '');
+
+  if (res) {
+    const start = +res[1];
+    const end = +res[2];
+    pageInfo.totalImages = +res[3].replace(/,/g, '');
+    pageInfo.imagesPerPage = inferImagesPerPage(start, end, pageInfo.totalImages);
+  } else {
+    pageInfo.totalImages = extractTotalImagesFromGdt2(doc);
+  }
+
   if (pageInfo.imagesPerPage && pageInfo.totalImages) {
     pageInfo.numPages = Math.ceil(pageInfo.totalImages / pageInfo.imagesPerPage);
   }

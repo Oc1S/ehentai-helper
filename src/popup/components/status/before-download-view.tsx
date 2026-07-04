@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
@@ -45,25 +46,44 @@ export const BeforeDownloadView = ({
     <RangeSelectorContent range={range} setRange={setRange} maxValue={totalImages} />
   );
   const galleryMeta = [galleryInfo.category, galleryInfo.uploader].filter(Boolean);
+  const galleryFacts =
+    counts && trackedTotal > 0
+      ? [
+          {
+            key: 'complete',
+            label: t('stateComplete'),
+            value: counts.complete,
+            className: 'text-success',
+          },
+          {
+            key: 'in_progress',
+            label: t('stateInProgress'),
+            value: counts.in_progress,
+            className: 'text-warning',
+          },
+          {
+            key: 'interrupted',
+            label: t('stateFailed'),
+            value: counts.interrupted,
+            className: 'text-error',
+          },
+          {
+            key: 'missing',
+            label: t('stateMissing'),
+            value: missingCount,
+            className: 'text-muted',
+          },
+        ]
+      : [];
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col px-4 py-3">
       <div className="scrollbar-glass flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto">
         <div className="glass-panel overflow-hidden rounded-eh-2xl">
           <div className="grid min-h-[250px] grid-cols-[minmax(0,350px)_minmax(0,1fr)]">
-            <section className="flex min-w-0 flex-col justify-between gap-3 p-4 pr-3">
+            <section className="flex min-w-0 flex-col gap-3 p-4 pr-3">
               <div className="flex min-w-0 gap-3.5">
-                {galleryInfo.coverUrl ? (
-                  <img
-                    src={galleryInfo.coverUrl}
-                    alt=""
-                    className="h-[172px] w-[120px] shrink-0 rounded-eh-sm border border-[var(--eh-glass-border)] bg-surface-soft object-cover"
-                  />
-                ) : (
-                  <div className="flex h-[172px] w-[120px] shrink-0 items-center justify-center rounded-eh-sm border border-[var(--eh-glass-border)] text-3xl font-normal text-muted-soft">
-                    {(galleryInfo.name || 'E').slice(0, 1)}
-                  </div>
-                )}
+                <GalleryCover src={galleryInfo.coverUrl} name={galleryInfo.name} />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <h2 className="line-clamp-5 text-[16px] font-semibold leading-snug tracking-tight text-ink">
                     {galleryInfo.name || ''}
@@ -76,18 +96,18 @@ export const BeforeDownloadView = ({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 pt-1 text-xs text-muted-soft">
-                {galleryMeta.slice(0, 2).map((item) => (
-                  <span
-                    key={item}
-                    className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] px-2 py-0.5 text-[11px] font-normal text-muted"
-                  >
-                    {item}
-                  </span>
-                ))}
-                <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-0.5 text-[11px] font-normal text-ink">
-                  {totalImages} {t('imagesLabel')}
-                </span>
+              <div className="mt-auto flex flex-col gap-2.5">
+                <div className="flex flex-wrap gap-1.5 text-xs text-muted-soft">
+                  {galleryMeta.slice(0, 2).map((item) => (
+                    <span
+                      key={item}
+                      className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] px-2 py-0.5 text-[11px] font-normal text-muted"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                {galleryFacts.length > 0 ? <GalleryFactsGrid items={galleryFacts} /> : null}
               </div>
             </section>
 
@@ -118,7 +138,6 @@ export const BeforeDownloadView = ({
 
                 {counts && trackedTotal > 0 ? (
                   <PreviouslyTrackedSection
-                    counts={counts}
                     trackedTotal={trackedTotal}
                     missingCount={missingCount}
                     onResumeMissing={onResumeMissing}
@@ -134,31 +153,93 @@ export const BeforeDownloadView = ({
   );
 };
 
+const coverFrameClass =
+  'relative h-[184px] w-[128px] shrink-0 overflow-hidden rounded-eh-sm border border-[var(--eh-glass-border)] bg-surface-soft';
+
+const GalleryCover = ({ src, name }: { src?: string; name: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+  }, [src]);
+
+  if (!src || hasError) {
+    return (
+      <div
+        className={`${coverFrameClass} flex items-center justify-center text-3xl font-normal text-muted-soft`}
+      >
+        {(name || 'E').slice(0, 1)}
+      </div>
+    );
+  }
+
+  return (
+    <div className={coverFrameClass}>
+      {!isLoaded ? <div className="eh-cover-skeleton" aria-hidden /> : null}
+      <img
+        src={src}
+        alt={name ? `${name} cover` : ''}
+        className={`h-full w-full object-cover transition-opacity duration-300 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        draggable={false}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+};
+
+const GalleryFactsGrid = ({
+  items,
+}: {
+  items: Array<{
+    key: string;
+    label: string;
+    value: number | string;
+    helper?: string;
+    className?: string;
+  }>;
+}) => (
+  <div className="grid grid-cols-4 gap-1.5">
+    {items.map((item) => (
+      <div
+        key={item.key}
+        className="min-w-0 rounded-eh-sm border border-[var(--eh-hairline-soft)] bg-[var(--eh-hover-bg)] px-2 py-1.5"
+      >
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <p
+            className={`truncate text-[15px] font-semibold tabular-nums leading-none ${item.className ?? 'text-ink'}`}
+          >
+            {item.value}
+          </p>
+          {item.helper ? (
+            <span className="shrink-0 text-[10px] font-normal leading-none text-muted-soft">
+              {item.helper}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 truncate text-[10px] font-normal leading-none text-muted-soft">
+          {item.label}
+        </p>
+      </div>
+    ))}
+  </div>
+);
+
 const PreviouslyTrackedSection = ({
-  counts,
   trackedTotal,
   missingCount,
   onResumeMissing,
   onViewDetails,
 }: {
-  counts: Record<'complete' | 'in_progress' | 'interrupted', number>;
   trackedTotal: number;
   missingCount: number;
   onResumeMissing: () => void;
   onViewDetails: () => void;
 }) => {
-  const stats = [
-    { key: 'complete', label: t('stateComplete'), value: counts.complete, className: 'text-success' },
-    {
-      key: 'in_progress',
-      label: t('stateInProgress'),
-      value: counts.in_progress,
-      className: 'text-warning',
-    },
-    { key: 'interrupted', label: t('stateFailed'), value: counts.interrupted, className: 'text-error' },
-    { key: 'missing', label: t('stateMissing'), value: missingCount, className: 'text-muted' },
-  ];
-
   return (
     <section className="mt-3 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent p-3">
       <div className="flex items-start justify-between gap-3">
@@ -166,35 +247,20 @@ const PreviouslyTrackedSection = ({
           <p className="text-[13px] font-medium leading-none text-ink">{t('previouslyTracked')}</p>
           <p className="mt-1 text-[11px] leading-none text-muted-soft">
             {trackedTotal} {t('imagesLabel')}
+            {missingCount > 0 ? ` · ${missingCount} ${t('stateMissing')}` : ''}
           </p>
         </div>
-        {missingCount > 0 ? (
-          <span className="rounded-full bg-[var(--eh-hover-bg)] px-2 py-1 text-[11px] font-normal text-ink">
-            {t('continueMissing', String(missingCount))}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-3 grid grid-cols-4 gap-1.5">
-        {stats.map((item) => (
-          <div key={item.key} className="min-w-0 rounded-eh-sm bg-[var(--eh-hover-bg)] px-2 py-2">
-            <p className={`text-base font-semibold leading-none tabular-nums ${item.className}`}>
-              {item.value}
-            </p>
-            <p className="mt-1 truncate text-[10px] leading-none text-muted-soft">{item.label}</p>
-          </div>
-        ))}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-      <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
-        {t('viewDetails')}
-      </EhButton>
-      {missingCount > 0 ? (
-        <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
-          {t('continueMissing', String(missingCount))}
+        <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
+          {t('viewDetails')}
         </EhButton>
-      ) : null}
+        {missingCount > 0 ? (
+          <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
+            {t('continueMissing', String(missingCount))}
+          </EhButton>
+        ) : null}
       </div>
     </section>
   );

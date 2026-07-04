@@ -12,14 +12,14 @@ const modalRootMotion = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
-  transition: { type: 'spring', visualDuration: 0.18, bounce: 0 },
+  transition: { type: 'spring', visualDuration: 0.18, bounce: 0.1 },
 } as const;
 
 const modalPanelMotion = {
-  initial: { opacity: 0, y: 12, scale: 0.985, filter: 'blur(4px)' },
-  animate: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: 8, scale: 0.992, filter: 'blur(2px)' },
-  transition: { type: 'spring', visualDuration: 0.28, bounce: 0.12 },
+  initial: { opacity: 0, y: 14, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: 10, filter: 'blur(2px)' },
+  transition: { type: 'spring', visualDuration: 0.28, bounce: 0.2 },
 } as const;
 
 export const Modal = ({

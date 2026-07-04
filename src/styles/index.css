@@ -313,63 +313,66 @@
     margin: 0;
   }
 
-  .eh-range-slider {
-    @apply h-7 w-full cursor-grab appearance-none bg-transparent;
+  .eh-dual-range {
+    @apply relative h-8 touch-none select-none;
   }
 
-  .eh-range-slider:active {
+  .eh-dual-range__track,
+  .eh-dual-range__fill {
+    @apply absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full;
+  }
+
+  .eh-dual-range__track {
+    @apply inset-x-0;
+    border: 1px solid var(--eh-hairline);
+    background: var(--eh-hover-bg);
+  }
+
+  .eh-dual-range__fill {
+    background: rgb(var(--eh-ink) / 0.18);
+    border: 1px solid rgb(var(--eh-ink) / 0.1);
+  }
+
+  .eh-dual-range__thumb {
+    @apply absolute top-1/2 h-4 w-4 cursor-grab rounded-full p-0;
+    border: 1px solid rgb(var(--eh-brand-primary));
+    background: rgb(var(--eh-brand-primary));
+    box-shadow: 0 0 0 2px rgb(var(--eh-ink) / 0.08);
+    appearance: none;
+    transform: translate(-50%, -50%);
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+    z-index: 2;
+  }
+
+  .eh-dual-range__thumb:hover,
+  .eh-dual-range__thumb.is-active {
+    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.1);
+    transform: translate(-50%, -50%) scale(1.04);
+    z-index: 3;
+  }
+
+  .eh-dual-range__thumb:active {
     @apply cursor-grabbing;
   }
 
-  .eh-range-slider:disabled {
-    @apply cursor-default opacity-45;
-  }
-
-  .eh-range-slider:focus-visible {
+  .eh-dual-range__thumb:focus-visible {
     outline: none;
+    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.14);
   }
 
-  .eh-range-slider::-webkit-slider-runnable-track {
-    height: 6px;
-    border: 1px solid var(--eh-hairline);
-    border-radius: 9999px;
-    background: var(--eh-hover-bg);
-  }
-
-  .eh-range-slider::-webkit-slider-thumb {
-    width: 16px;
-    height: 16px;
-    margin-top: -6px;
-    border: 1px solid rgb(var(--eh-brand-primary));
-    border-radius: 9999px;
-    background: rgb(var(--eh-brand-primary));
-    box-shadow: 0 0 0 3px rgb(var(--eh-ink) / 0.08);
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .eh-range-slider:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.12);
-  }
-
-  .eh-range-slider::-moz-range-track {
-    height: 6px;
-    border: 1px solid var(--eh-hairline);
-    border-radius: 9999px;
-    background: var(--eh-hover-bg);
-  }
-
-  .eh-range-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border: 1px solid rgb(var(--eh-brand-primary));
-    border-radius: 9999px;
-    background: rgb(var(--eh-brand-primary));
-    box-shadow: 0 0 0 3px rgb(var(--eh-ink) / 0.08);
-  }
-
-  .eh-range-slider:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.12);
+  .eh-cover-skeleton {
+    @apply absolute inset-0;
+    background:
+      linear-gradient(90deg,
+        rgb(var(--eh-ink) / 0.035) 0%,
+        rgb(var(--eh-ink) / 0.075) 44%,
+        rgb(var(--eh-ink) / 0.035) 88%);
+    background-size: 220% 100%;
+    animation: eh-skeleton-shimmer 1.15s ease-in-out infinite;
   }
 
   /* URL：禁止在 e-hentai 等连字符处软换行，单行省略 */
@@ -587,62 +590,79 @@
     }
   }
 
+  @keyframes eh-skeleton-shimmer {
+    from {
+      background-position: 180% 0;
+    }
+
+    to {
+      background-position: -80% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eh-cover-skeleton {
+      animation: none;
+    }
+  }
+
   .eh-modal {
-    @apply fixed inset-0 z-50 flex items-center justify-center p-5;
+    @apply fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden p-0;
     isolation: isolate;
   }
 
   .eh-modal__scrim {
     @apply absolute inset-0 h-full w-full;
-    background: rgb(var(--eh-canvas) / 0.82);
-    backdrop-filter: blur(10px);
+    background:
+      radial-gradient(ellipse 86% 34% at 50% -10%, rgb(var(--eh-ambient-plum) / 0.1), transparent 70%),
+      radial-gradient(ellipse 54% 28% at 18% 0%, rgb(var(--eh-action-blue) / 0.035), transparent 72%),
+      rgb(var(--eh-canvas));
   }
 
   .eh-modal__panel {
-    @apply relative z-10 flex max-h-[88vh] w-full flex-col overflow-hidden rounded-eh-md border;
-    border-color: var(--eh-hairline);
-    background: rgb(var(--eh-canvas));
-    box-shadow: var(--eh-shadow-card-elevated);
+    @apply relative z-10 flex h-full max-h-none w-full max-w-none flex-col overflow-hidden border-0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .eh-modal__panel::before {
     content: '';
     position: absolute;
-    inset: 0 0 auto;
-    height: 1px;
-    background: var(--eh-hairline-soft);
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, rgb(var(--eh-ambient-plum) / 0.03), transparent 30%);
     pointer-events: none;
   }
 
   .eh-modal__panel--sm {
-    max-width: 380px;
+    max-width: none;
   }
 
   .eh-modal__panel--md {
-    max-width: 560px;
+    max-width: none;
   }
 
   .eh-modal__panel--lg {
-    max-width: 760px;
+    max-width: none;
   }
 
   .eh-modal__panel--xl {
-    max-width: 920px;
+    max-width: none;
   }
 
   .eh-modal__header {
-    @apply flex shrink-0 items-start gap-4 border-b px-5 py-4 pr-14;
+    @apply relative z-10 flex h-popup-header shrink-0 items-center gap-4 border-b px-5 pr-14;
     border-color: var(--eh-hairline);
     background: transparent;
   }
 
   .eh-modal__body {
-    @apply min-h-0 flex-1 overflow-y-auto p-5;
+    @apply relative z-10 min-h-0 flex-1 overflow-y-auto px-5 py-4;
     background: transparent;
   }
 
   .eh-modal__footer {
-    @apply flex shrink-0 justify-end gap-2 border-t px-5 py-3;
+    @apply relative z-10 flex h-popup-footer shrink-0 items-center justify-end gap-2 border-t px-5 py-2.5;
     border-color: var(--eh-hairline);
     background: transparent;
   }
