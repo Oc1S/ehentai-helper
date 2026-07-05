@@ -328,6 +328,7 @@ const registerListeners = () => {
         numPages: number;
         totalImages: number;
         indices?: number[];
+        taskId?: string;
       },
       mode: 'full' | 'resume' | 'retry'
     ) => {

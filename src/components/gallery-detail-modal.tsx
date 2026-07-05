@@ -198,7 +198,9 @@ export const GalleryDetailModal: FC<{
                             {row.sourceUrl}
                           </a>
                         ) : null}
-                        {row.error ? <span className="text-xs text-error">{row.error}</span> : null}
+                        {row.state === 'interrupted' && row.error ? (
+                          <span className="text-xs text-error">{row.error}</span>
+                        ) : null}
                       </div>
                     </td>
                     {showAction ? (

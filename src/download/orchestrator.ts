@@ -434,43 +434,73 @@ const groupIndicesByPage = (indices: number[], imagesPerPage: number) => {
 export const runDownloadJob = async (params: JobParams) => {
   cancelRequested = false;
   const config = await configStorage.get();
-  const taskId = `${Date.now()}`;
-  activeTaskId = taskId;
   const mode: DownloadJobMode = params.mode ?? 'full';
-  const indices =
+  const downloadIndices =
     params.indices && params.indices.length > 0
-      ? [...params.indices].sort((a, b) => a - b)
+      ? [...new Set(params.indices)].sort((a, b) => a - b)
       : rangeIndices(params.rangeStart, params.rangeEnd);
-  const expectedCount = indices.length;
+  const existingTask = await downloadTaskStorage.get();
+  const reusableTask =
+    mode === 'retry' &&
+    params.taskId &&
+    existingTask?.taskId === params.taskId &&
+    existingTask.galleryUrl === params.galleryFrontPageUrl
+      ? existingTask
+      : null;
+  const taskId = reusableTask?.taskId ?? `${Date.now()}`;
+  const taskTargetIndices = reusableTask
+    ? (reusableTask.targetIndices ?? rangeIndices(reusableTask.rangeStart, reusableTask.rangeEnd))
+    : downloadIndices;
+  const expectedCount = reusableTask?.expectedCount ?? downloadIndices.length;
+  const now = Date.now();
+  const jobParams: JobParams = reusableTask
+    ? {
+        ...params,
+        galleryFrontPageUrl: reusableTask.galleryUrl,
+        galleryName: reusableTask.galleryName,
+        galleryId: reusableTask.galleryId,
+        downloadPath: reusableTask.downloadPath,
+        rangeStart: reusableTask.rangeStart,
+        rangeEnd: reusableTask.rangeEnd,
+        imagesPerPage: reusableTask.imagesPerPage,
+        numPages: reusableTask.numPages,
+        totalImages: reusableTask.totalImages,
+      }
+    : params;
+  activeTaskId = taskId;
 
   await downloadTaskStorage.set({
     taskId,
     mode,
     status: 'running',
-    galleryUrl: params.galleryFrontPageUrl,
-    galleryName: params.galleryName,
-    galleryId: params.galleryId,
-    downloadPath: params.downloadPath,
-    rangeStart: params.rangeStart,
-    rangeEnd: params.rangeEnd,
-    imagesPerPage: params.imagesPerPage,
-    numPages: params.numPages,
-    totalImages: params.totalImages,
+    galleryUrl: jobParams.galleryFrontPageUrl,
+    galleryName: jobParams.galleryName,
+    galleryId: jobParams.galleryId,
+    downloadPath: jobParams.downloadPath,
+    rangeStart: jobParams.rangeStart,
+    rangeEnd: jobParams.rangeEnd,
+    imagesPerPage: jobParams.imagesPerPage,
+    numPages: jobParams.numPages,
+    totalImages: jobParams.totalImages,
     expectedCount,
-    targetIndices: indices,
+    targetIndices: taskTargetIndices,
     queueFailedCount: 0,
-    startedAt: Date.now(),
-    updatedAt: Date.now(),
+    cbzPacked: false,
+    startedAt: reusableTask?.startedAt ?? now,
+    updatedAt: now,
   });
 
-  for (const [pageIndex, pageIndices] of groupIndicesByPage(indices, params.imagesPerPage)) {
+  for (const [pageIndex, pageIndices] of groupIndicesByPage(
+    downloadIndices,
+    jobParams.imagesPerPage
+  )) {
     if (cancelRequested) {
       await patchTask({ status: 'cancelled' });
       if (activeTaskId) await clearCbzTask(activeTaskId);
       activeTaskId = null;
       return;
     }
-    await processGalleryPage(config, params, pageIndex, pageIndices);
+    await processGalleryPage(config, jobParams, pageIndex, pageIndices);
   }
 
   if (cancelRequested) {
@@ -481,6 +511,6 @@ export const runDownloadJob = async (params: JobParams) => {
   }
 
   await patchTask({ status: 'dispatch_complete' });
-  await finalizeTask(params.galleryFrontPageUrl);
+  await finalizeTask(jobParams.galleryFrontPageUrl);
   activeTaskId = null;
 };

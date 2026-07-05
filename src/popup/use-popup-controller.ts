@@ -119,7 +119,8 @@ export const usePopupController = () => {
 
   const buildJobPayload = (
     indices?: number[],
-    rangeOverride?: [number, number]
+    rangeOverride?: [number, number],
+    taskId?: string
   ): DownloadJobPayload => {
     const r = rangeOverride ?? range;
     return {
@@ -136,6 +137,7 @@ export const usePopupController = () => {
       numPages: galleryPageInfoRef.current.numPages,
       totalImages: galleryPageInfoRef.current.totalImages,
       indices,
+      taskId,
     };
   };
 
@@ -147,7 +149,11 @@ export const usePopupController = () => {
     if (!galleryInfo) return false;
     setOptimisticTaskStatus(StatusEnum.Downloading);
 
-    const payload = buildJobPayload(indices, rangeOverride);
+    const payload = buildJobPayload(
+      indices,
+      rangeOverride,
+      mode === 'retry' ? currentTask?.taskId : undefined
+    );
     const fn =
       mode === 'resume' ? resumeDownload : mode === 'retry' ? retryFailedDownload : startDownload;
     const response = await fn(payload);

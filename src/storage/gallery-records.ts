@@ -60,6 +60,13 @@ const trimToMax = (map: GalleryRecordsMap): GalleryRecordsMap => {
   return Object.fromEntries(kept);
 };
 
+const clearSettledError = (image: GalleryImageRecord) => {
+  if (image.state === 'interrupted') return image;
+  const next = { ...image };
+  delete next.error;
+  return next;
+};
+
 export const galleryRecordsStorage: GalleryRecordsStorage = {
   ...baseStorage,
   upsertGallery: async ({ galleryUrl, galleryName, galleryId, downloadPath, total }) => {
@@ -87,11 +94,11 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
         ...current,
         images: {
           ...current.images,
-          [String(image.index)]: {
+          [String(image.index)]: clearSettledError({
             ...(current.images[String(image.index)] || {}),
             ...image,
             updatedAt: Date.now(),
-          },
+          }),
         },
         updatedAt: Date.now(),
       };
@@ -111,6 +118,7 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
         chromeDownloadId,
         updatedAt: Date.now(),
       };
+      if (patch.state && patch.state !== 'interrupted') delete merged.error;
       const next: GalleryRecord = {
         ...current,
         images: { ...current.images, [key]: merged },

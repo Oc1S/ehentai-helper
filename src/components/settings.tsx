@@ -1,5 +1,6 @@
 import { type FC, type ReactNode } from 'react';
 import { Tooltip } from '@base-ui/react/tooltip';
+import { cva } from 'class-variance-authority';
 
 import {
   type Config,
@@ -11,6 +12,8 @@ import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
 import { CheckControl, RadioCards } from './ui-primitives';
+
+type SettingsVariant = 'modal' | 'overlay' | 'page';
 
 export const validateFilePath = (path: string) => {
   if (PATTERN_INVALID_FILE_PATH_CHAR.test(path)) {
@@ -24,36 +27,94 @@ export const validateFilePath = (path: string) => {
   return path;
 };
 
+const settingsRowClass = cva(
+  'grid grid-cols-[168px_minmax(0,1fr)] items-start gap-4 rounded-eh-sm transition-colors',
+  {
+    variants: {
+      variant: {
+        modal: 'px-2.5 py-2.5 hover:bg-[var(--eh-hover-bg)]',
+        overlay: 'px-3 py-3 hover:bg-[var(--eh-hover-bg)]',
+        page: 'px-3 py-3 hover:bg-[var(--eh-hover-bg)]',
+      },
+    },
+  }
+);
+
+const settingsLabelClass = cva('min-w-0 select-none pt-1 text-[13px] font-normal leading-5 text-ink', {
+  variants: {
+    variant: {
+      modal: '',
+      overlay: '',
+      page: 'text-sm',
+    },
+  },
+});
+
+const settingsFieldClass = cva('min-w-0 text-body', {
+  variants: {
+    variant: {
+      modal: 'text-xs leading-5',
+      overlay: 'text-[13px] leading-5',
+      page: 'text-sm',
+    },
+  },
+});
+
+const settingsTextInputClass = cva(
+  'flex-1 rounded-eh-sm border border-hairline bg-transparent px-2.5 py-1.5 text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-brand-primary-active',
+  {
+    variants: {
+      variant: {
+        modal: 'text-xs',
+        overlay: 'w-full max-w-[420px] text-[13px]',
+        page: 'w-full max-w-[420px] py-2 text-sm',
+      },
+    },
+  }
+);
+
+const settingsPanelClass = cva('flex flex-col', {
+  variants: {
+    variant: {
+      modal: 'gap-5 rounded-eh-lg border border-hairline p-3.5',
+      overlay: 'mx-auto w-full max-w-[680px] gap-2.5',
+      page: 'gap-4 rounded-eh-lg border border-hairline p-6',
+    },
+  },
+});
+
+const settingsGroupClass = cva(
+  'flex flex-col rounded-eh-sm border border-hairline bg-transparent',
+  {
+    variants: {
+      variant: {
+        overlay: 'gap-2.5 px-4 py-3.5',
+        page: 'gap-3 px-4 py-4',
+      },
+    },
+  }
+);
+
+const settingsGroupRowsClass = cva(
+  'flex flex-col border-t border-[var(--eh-hairline-soft)] pt-2.5',
+  {
+    variants: {
+      variant: {
+        overlay: 'gap-1',
+        page: 'gap-1.5',
+      },
+    },
+  }
+);
+
 const Row = ({
   label,
   content,
   variant,
-}: Record<'label' | 'content', ReactNode> & { variant: 'modal' | 'overlay' | 'page' }) => (
-  <div
-    className={
-      variant === 'modal'
-        ? 'eh-settings-row eh-settings-row--modal'
-        : `eh-settings-row eh-settings-row--${variant}`
-    }
-  >
-    <div
-      className={
-        variant === 'modal'
-          ? 'eh-settings-label--modal'
-          : `eh-settings-label eh-settings-label--${variant}`
-      }
-    >
-      {label}
-    </div>
-    <div
-      className={
-        variant === 'modal'
-          ? 'eh-settings-field--modal'
-          : `eh-settings-field eh-settings-field--${variant}`
-      }
-    >
-      {content}
-    </div>
+}: Record<'label' | 'content', ReactNode> & { variant: SettingsVariant }) => (
+  <div className={settingsRowClass({ variant })}>
+    <div className={settingsLabelClass({ variant })}>{label}</div>
+    <div className={settingsFieldClass({ variant })}>{content}</div>
   </div>
 );
 
@@ -62,38 +123,24 @@ const TextInput = ({
   variant,
   id,
   ...rest
-}: React.InputHTMLAttributes<HTMLInputElement> & { variant: 'modal' | 'overlay' | 'page' }) => (
-  <input
-    type="text"
-    id={id}
-    className={[
-      'eh-text-input',
-      variant === 'page'
-        ? 'eh-text-input--page text-sm'
-        : variant === 'overlay'
-          ? 'eh-text-input--overlay text-[13px]'
-          : 'eh-text-input--modal text-xs',
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ')}
-    {...rest}
-  />
+}: React.InputHTMLAttributes<HTMLInputElement> & { variant: SettingsVariant }) => (
+  <input type="text" id={id} className={settingsTextInputClass({ variant, className })} {...rest} />
 );
 
 const HintLabel = ({ label, hint }: { label: string; hint: string }) => (
   <Tooltip.Root>
     <Tooltip.Trigger
-      render={<span />}
-      tabIndex={0}
-      className="eh-tooltip__trigger cursor-help"
+      type="button"
+      delay={180}
+      closeDelay={80}
+      className="inline-flex max-w-full cursor-help items-center border-0 border-b border-dotted border-muted-soft/80 bg-transparent p-0 text-left text-[inherit] outline-none transition-colors hover:border-ink hover:text-ink focus-visible:border-brand-primary-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--eh-action-blue))]"
     >
       {label}
     </Tooltip.Trigger>
     <Tooltip.Portal>
-      <Tooltip.Positioner side="top" align="start" sideOffset={8}>
-        <Tooltip.Popup className="eh-tooltip__popup">
-          <Tooltip.Arrow className="eh-tooltip__arrow" />
+      <Tooltip.Positioner side="top" align="start" sideOffset={8} className="z-[70]">
+        <Tooltip.Popup className="eh-tooltip__popup relative z-50 max-w-[260px] rounded-eh-sm border border-hairline bg-brand-primary px-2.5 py-2 text-xs leading-relaxed text-primary-foreground shadow-card-elevated">
+          <Tooltip.Arrow className="eh-tooltip__arrow relative block h-1.5 w-3 overflow-hidden" />
           {hint}
         </Tooltip.Popup>
       </Tooltip.Positioner>
@@ -104,7 +151,7 @@ const HintLabel = ({ label, hint }: { label: string; hint: string }) => (
 export const Settings: FC<{
   config: Config;
   setConfig: (config: Config) => void;
-  variant?: 'modal' | 'overlay' | 'page';
+  variant?: SettingsVariant;
   pathPreview?: string;
 }> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
   type ConfigKey = keyof Config;
@@ -115,9 +162,11 @@ export const Settings: FC<{
       content: (
         <div className="flex flex-wrap items-center gap-2">
           <EhButton
-            variant="link"
+            variant="secondary"
             ehSize="sm"
-            className={`eh-default-folder-button ${variant === 'page' ? 'text-[13px]' : 'text-xs'}`}
+            className={`rounded-full px-2.5 font-normal text-primary-400 [height:28px] [min-height:28px] [min-width:0] hover:text-ink ${
+              variant === 'page' ? 'text-[13px]' : 'text-xs'
+            }`}
             onPress={() => {
               chrome.downloads.showDefaultFolder();
             }}
@@ -178,13 +227,10 @@ export const Settings: FC<{
             type="number"
             placeholder="300"
             value={String(config.downloadInterval)}
-            className={`eh-text-input ${
-              variant === 'page'
-                ? 'eh-text-input--page'
-                : variant === 'overlay'
-                  ? 'eh-text-input--overlay text-[13px]'
-                  : 'eh-text-input--modal text-xs'
-            } pr-8`}
+            className={settingsTextInputClass({
+              variant,
+              className: 'eh-number-input w-full pr-8 font-mono tabular-nums',
+            })}
             onChange={(e) => {
               const val = +e.target.value;
               if (Number.isNaN(val) || val < 0) return;
@@ -257,13 +303,6 @@ export const Settings: FC<{
     },
   };
 
-  const panelClass =
-    variant === 'page'
-      ? 'flex flex-col gap-4 rounded-eh-lg border border-hairline p-6 eh-settings-panel--page'
-      : variant === 'overlay'
-        ? 'flex flex-col gap-4 eh-settings-panel--overlay'
-        : 'flex flex-col gap-5 rounded-eh-lg border border-hairline p-3.5 eh-settings-panel--modal';
-
   const pageGroups: { title: string; keys: ConfigKey[] }[] = [
     { title: t('settingsGroupLocation'), keys: ['intermediateDownloadPath'] },
     {
@@ -284,7 +323,7 @@ export const Settings: FC<{
   );
 
   return (
-    <div className={panelClass}>
+    <div className={settingsPanelClass({ variant })}>
       {pathPreview && variant === 'page' ? (
         <p className="text-xs leading-relaxed text-muted">
           {t('pathPreview')}{' '}
@@ -296,9 +335,11 @@ export const Settings: FC<{
       ) : null}
       {variant !== 'modal'
         ? pageGroups.map((group) => (
-            <section key={group.title} className="eh-settings-group">
-              <h2 className="eh-settings-section-title">{group.title}</h2>
-              <div className="eh-settings-group__rows">{group.keys.map(renderRow)}</div>
+            <section key={group.title} className={settingsGroupClass({ variant })}>
+              <h2 className="select-none text-xs font-medium tracking-normal text-ink">
+                {group.title}
+              </h2>
+              <div className={settingsGroupRowsClass({ variant })}>{group.keys.map(renderRow)}</div>
             </section>
           ))
         : (Object.keys(formItemMap) as ConfigKey[]).map(renderRow)}
