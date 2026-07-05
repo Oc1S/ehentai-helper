@@ -141,15 +141,18 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
       <div className="px-1 py-1">
         <div
           ref={trackRef}
-          className="eh-dual-range"
+          className="eh-dual-range relative h-8 touch-none select-none"
           onPointerDown={handleRangePointerDown}
           onPointerMove={handleRangePointerMove}
           onPointerUp={handleRangePointerEnd}
           onPointerCancel={handleRangePointerEnd}
           onLostPointerCapture={() => setActiveThumb(null)}
         >
-          <div className="eh-dual-range__track" />
-          <div className="eh-dual-range__fill" style={fillStyle} />
+          <div className="eh-dual-range__track absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full" />
+          <div
+            className="eh-dual-range__fill absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full"
+            style={fillStyle}
+          />
           <button
             ref={startThumbRef}
             type="button"
@@ -159,7 +162,12 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             aria-valuemax={safeEnd}
             aria-valuenow={safeStart}
             data-range-thumb="start"
-            className={`eh-dual-range__thumb ${activeThumb === 'start' ? 'is-active' : ''}`}
+            className={[
+              'eh-dual-range__thumb absolute top-1/2 h-4 w-4 cursor-grab rounded-full p-0 active:cursor-grabbing',
+              activeThumb === 'start' ? 'is-active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             style={startThumbStyle}
             onKeyDown={handleThumbKeyDown('start')}
           />
@@ -172,7 +180,12 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             aria-valuemax={safeMaxValue}
             aria-valuenow={safeEnd}
             data-range-thumb="end"
-            className={`eh-dual-range__thumb ${activeThumb === 'end' ? 'is-active' : ''}`}
+            className={[
+              'eh-dual-range__thumb absolute top-1/2 h-4 w-4 cursor-grab rounded-full p-0 active:cursor-grabbing',
+              activeThumb === 'end' ? 'is-active' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             style={endThumbStyle}
             onKeyDown={handleThumbKeyDown('end')}
           />
@@ -191,7 +204,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             max={range[1]}
             value={range[0]}
             aria-label={t('rangeFrom')}
-            className="eh-number-input"
+            className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
             onChange={(e) => commitFrom(e.target.value)}
             onBlur={(e) => commitFrom(e.target.value)}
           />
@@ -207,7 +220,7 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             max={maxValue}
             value={range[1]}
             aria-label={t('rangeTo')}
-            className="eh-number-input"
+            className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
             onChange={(e) => commitTo(e.target.value)}
             onBlur={(e) => commitTo(e.target.value)}
           />

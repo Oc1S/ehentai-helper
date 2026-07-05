@@ -133,12 +133,12 @@ export const History: FC = () => {
             ) : (
               filteredData.map((item) => (
                 <tr key={item.timestamp}>
-                  <td className="eh-table-cell--clip">
+                  <td className="min-w-0 max-w-0 overflow-hidden">
                     <a
                       href={item.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="eh-url-link text-xs text-[rgb(var(--eh-action-blue))] underline underline-offset-2"
+                      className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[rgb(var(--eh-action-blue))] underline underline-offset-2 [overflow-wrap:normal] [word-break:normal]"
                       title={item.name}
                     >
                       {item.name}
@@ -150,7 +150,9 @@ export const History: FC = () => {
                   <td className="whitespace-nowrap text-muted-soft" title={formatRange(item)}>
                     {formatRange(item)}
                   </td>
-                  <td className="whitespace-nowrap text-muted-soft">{formatTime(item.timestamp)}</td>
+                  <td className="whitespace-nowrap text-muted-soft">
+                    {formatTime(item.timestamp)}
+                  </td>
                   <td className="py-1.5">
                     <div className="flex flex-nowrap items-center gap-1">
                       <EhButton
@@ -181,6 +183,7 @@ export const History: FC = () => {
         isOpen={confirmClear}
         onClose={() => setConfirmClear(false)}
         size="sm"
+        presentation="dialog"
         title={<h2 className="text-base font-medium text-ink">{t('clearAll')}</h2>}
         footer={
           <>
@@ -207,6 +210,7 @@ export const History: FC = () => {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         size="sm"
+        presentation="dialog"
         title={<h2 className="text-base font-medium text-ink">{t('delete')}</h2>}
         footer={
           <>

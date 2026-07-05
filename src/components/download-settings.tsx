@@ -25,9 +25,9 @@ const formatDownloadDir = (path: string) => {
 };
 
 const settingsOverlayMotion = {
-  initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: 8, filter: 'blur(2px)' },
+  initial: { opacity: 0, y: 12, filter: 'blur(4px)', pointerEvents: 'auto' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)', pointerEvents: 'auto' },
+  exit: { opacity: 0, y: 8, filter: 'blur(2px)', pointerEvents: 'none' },
   transition: { type: 'spring', visualDuration: 0.3, bounce: 0.12 },
 } as const;
 
@@ -85,7 +85,7 @@ export const DownloadSettings = ({
           aria-modal="true"
           {...settingsOverlayMotion}
         >
-          <header className="eh-settings-overlay__header">
+          <header className="flex h-popup-header shrink-0 items-center justify-between gap-3 px-4">
             <div className="min-w-0">
               <h1
                 id="eh-popup-settings-title"
@@ -99,7 +99,7 @@ export const DownloadSettings = ({
               ehSize="sm"
               onPress={() => setIsOpen(false)}
               aria-label={t('close')}
-              className="eh-settings-overlay__close"
+              className="ml-3"
             >
               <X size={16} strokeWidth={1.9} />
             </EhButton>
@@ -109,7 +109,7 @@ export const DownloadSettings = ({
             <Settings config={config} setConfig={setConfig} variant="overlay" />
           </div>
 
-          <footer className="eh-settings-overlay__footer">
+          <footer className="flex h-popup-footer shrink-0 items-center justify-end gap-2 border-t border-[var(--eh-hairline)] bg-transparent px-5 py-2.5">
             <EhButton variant="secondary" ehSize="sm" onPress={() => setIsOpen(false)}>
               {t('cancel')}
             </EhButton>

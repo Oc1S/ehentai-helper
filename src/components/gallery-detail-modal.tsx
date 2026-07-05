@@ -41,8 +41,8 @@ const trimFilename = (filename?: string) => {
 
 const detailColumns = (showAction: boolean) => {
   const cols = [
-    { key: 'index', label: t('colIndex'), width: 56 },
-    { key: 'state', label: t('colState'), width: 92 },
+    { key: 'index', label: t('colIndex'), width: 48 },
+    { key: 'state', label: t('colState'), width: 68 },
     { key: 'file', label: t('colFileUrl') },
   ];
   if (showAction) {
@@ -60,7 +60,7 @@ export const GalleryDetailModal: FC<{
   totalCount?: number;
   onRetryIndex?: (index: number) => void;
   onRetryAllFailed?: () => void;
-}> = ({ isOpen, onClose, record, taskId, indices, totalCount, onRetryIndex, onRetryAllFailed }) => {
+}> = ({ isOpen, onClose, record, taskId, indices, onRetryIndex, onRetryAllFailed }) => {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [keyword, setKeyword] = useState('');
 
@@ -84,8 +84,6 @@ export const GalleryDetailModal: FC<{
     return c;
   }, [rows]);
 
-  const displayTotal = totalCount ?? record?.total ?? 0;
-
   const filteredRows = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return rows.filter((r) => {
@@ -108,22 +106,14 @@ export const GalleryDetailModal: FC<{
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex flex-col gap-1.5">
-          <span className="line-clamp-1 text-base font-semibold text-ink">
-            {record?.galleryName || t('galleryDetails')}
-          </span>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span>
-              {t('total')}: {displayTotal}
-            </span>
-            <StatusPill tone="success">{t('countDone', String(counts.complete))}</StatusPill>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone="success">{t('countDone', String(counts.complete))}</StatusPill>
+          {counts.in_progress > 0 ? (
             <StatusPill tone="warning">
               {t('countInProgressShort', String(counts.in_progress))}
             </StatusPill>
-            <StatusPill tone="danger">
-              {t('countFailedShort', String(counts.interrupted))}
-            </StatusPill>
-          </div>
+          ) : null}
+          <StatusPill tone="danger">{t('countFailedShort', String(counts.interrupted))}</StatusPill>
         </div>
       }
       footer={
@@ -142,10 +132,10 @@ export const GalleryDetailModal: FC<{
       bodyClassName="flex min-h-0 flex-col"
     >
       <div className="flex h-full min-h-0 flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <TextField
             placeholder={t('searchDetail')}
-            className="max-w-[320px] flex-1"
+            className="min-w-[12rem] max-w-[260px] flex-1"
             value={keyword}
             onValueChange={setKeyword}
             isClearable
@@ -155,8 +145,12 @@ export const GalleryDetailModal: FC<{
             selectedKey={filter}
             onSelectionChange={setFilter}
             ariaLabel="state filter"
+            className="shrink-0"
+            compact
           />
-          <span className="text-xs text-muted">{t('itemsCount', String(filteredRows.length))}</span>
+          <span className="shrink-0 text-xs text-muted">
+            {t('itemsCount', String(filteredRows.length))}
+          </span>
         </div>
         <EhTableFrame className="min-h-0 flex-1">
           <table className="eh-data-table" aria-label="gallery image records">
@@ -181,11 +175,16 @@ export const GalleryDetailModal: FC<{
                   <tr key={row.index}>
                     <td>{row.index}</td>
                     <td>
-                      <StatusPill tone={STATE_COLOR[row.state]}>{stateLabel(row.state)}</StatusPill>
+                      <StatusPill tone={STATE_COLOR[row.state]} compact>
+                        {stateLabel(row.state)}
+                      </StatusPill>
                     </td>
-                    <td className="eh-table-cell--clip">
+                    <td className="min-w-0 max-w-0 overflow-hidden">
                       <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="eh-url-link text-ink" title={row.filename || ''}>
+                        <span
+                          className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-ink [overflow-wrap:normal] [word-break:normal]"
+                          title={row.filename || ''}
+                        >
                           {trimFilename(row.filename) || '-'}
                         </span>
                         {row.sourceUrl ? (
@@ -193,7 +192,7 @@ export const GalleryDetailModal: FC<{
                             href={row.sourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="eh-url-link text-xs text-muted underline-offset-2 hover:underline"
+                            className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted underline-offset-2 [overflow-wrap:normal] [word-break:normal] hover:underline"
                             title={row.sourceUrl}
                           >
                             {row.sourceUrl}

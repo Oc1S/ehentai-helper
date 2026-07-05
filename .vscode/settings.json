@@ -1,0 +1,7 @@
+{
+  "tailwindCSS.classFunctions": ["cva", "cx", "cn"],
+  "tailwindCSS.lint.cssConflict": "ignore",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
+}

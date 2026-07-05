@@ -111,7 +111,7 @@ export const StartDownloadButton = ({
     fullWidth
     onPress={onPress}
     startContent={
-      <span className="eh-btn__icon">
+      <span className="flex shrink-0 items-center justify-center">
         <Download size={17} strokeWidth={1.75} />
       </span>
     }

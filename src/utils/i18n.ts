@@ -131,6 +131,8 @@ const fallbackMessages: Record<string, string> = {
   statusCompleteRatio: '$1/$2 complete',
   statusUnknown: 'Unknown',
   galleryDetails: 'Gallery details',
+  galleryTotalShort: '$1 images total',
+  rangeMissingSummary: '$1 missing of $2 in range',
   total: 'Total',
   countDone: '$1 done',
   countInProgressShort: '$1 in-progress',

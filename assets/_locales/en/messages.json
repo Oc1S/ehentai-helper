@@ -196,7 +196,14 @@
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "statusUnknown": { "message": "Unknown" },
-  "galleryDetails": { "message": "Gallery details" },
+  "galleryTotalShort": {
+    "message": "$1 images total",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "rangeMissingSummary": {
+    "message": "$1 missing of $2 in range",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
   "total": { "message": "Total" },
   "countDone": {
     "message": "$1 done",

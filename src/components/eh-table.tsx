@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-const mergeSlot = (base?: string, extra?: string) => [base, extra].filter(Boolean).join(' ');
-
 export const EhTableFrame = ({
   children,
   className,
@@ -10,10 +8,12 @@ export const EhTableFrame = ({
   className?: string;
 }) => (
   <div
-    className={mergeSlot(
-      'eh-table-frame scrollbar-glass',
-      className
-    )}
+    className={[
+      'scrollbar-glass min-h-0 flex-1 overflow-auto rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ')}
   >
     {children}
   </div>

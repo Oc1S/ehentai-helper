@@ -182,7 +182,14 @@
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "statusUnknown": { "message": "未知" },
-  "galleryDetails": { "message": "画廊详情" },
+  "galleryTotalShort": {
+    "message": "共 $1 张",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "rangeMissingSummary": {
+    "message": "范围内 $1 张待下载，共 $2 张",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
   "total": { "message": "合计" },
   "countDone": {
     "message": "完成 $1",

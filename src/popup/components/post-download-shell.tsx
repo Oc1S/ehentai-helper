@@ -41,13 +41,16 @@ export const PostDownloadShell = ({
             href="https://github.com/Oc1S/ehentai-helper"
             target="_blank"
             rel="noreferrer"
-            className="eh-github-star-link group"
+            className="group relative flex w-full items-center gap-3 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-3.5 py-3 text-body no-underline transition-[background-color,border-color,box-shadow,transform] duration-200 hover:border-[var(--eh-hairline)] hover:bg-[var(--eh-hover-bg)] active:scale-[0.99]"
           >
-            <span className="eh-github-star-link__text">
+            <span className="flex-1 text-xs leading-relaxed text-body">
               {t('enjoyingExtension')}
               {t('starGithubLink')}
             </span>
-            <ExternalLink className="eh-github-star-link__icon size-4 shrink-0" aria-hidden />
+            <ExternalLink
+              className="size-4 shrink-0 text-[rgb(var(--eh-action-blue))] transition-transform group-hover:translate-x-px group-hover:-translate-y-px"
+              aria-hidden
+            />
           </a>
         ) : null}
       </DownloadResultSummary>
