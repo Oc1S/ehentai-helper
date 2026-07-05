@@ -190,6 +190,11 @@
     "message": "范围内 $1 张待下载，共 $2 张",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
+  "rangeOneMoreSegment": { "message": "还有 1 段" },
+  "rangeMoreSegments": {
+    "message": "还有 $1 段",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "total": { "message": "合计" },
   "countDone": {
     "message": "完成 $1",
@@ -211,7 +216,7 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "thisDownloadRange": { "message": "本次下载范围" },
-  "backToInitial": { "message": "返回下载设置" },
+  "backToInitial": { "message": "返回下载范围" },
   "close": { "message": "关闭" },
   "optionsSubtitle": { "message": "下载偏好设置" },
   "saveChanges": { "message": "保存更改" },

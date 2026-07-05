@@ -14,6 +14,7 @@ export const PostDownloadShell = ({
   failedCount,
   rangeStart,
   rangeEnd,
+  rangeLabel,
   footerActions,
 }: {
   variant: ResultVariant;
@@ -23,6 +24,7 @@ export const PostDownloadShell = ({
   failedCount: number;
   rangeStart: number;
   rangeEnd: number;
+  rangeLabel?: string;
   footerActions?: ReactNode;
 }) => (
   <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
@@ -35,6 +37,7 @@ export const PostDownloadShell = ({
         failedCount={failedCount}
         rangeStart={rangeStart}
         rangeEnd={rangeEnd}
+        rangeLabel={rangeLabel}
       >
         {variant === 'success' ? (
           <a
@@ -48,7 +51,7 @@ export const PostDownloadShell = ({
               {t('starGithubLink')}
             </span>
             <ExternalLink
-              className="size-4 shrink-0 text-[rgb(var(--eh-action-blue))] transition-transform group-hover:translate-x-px group-hover:-translate-y-px"
+              className="size-4 shrink-0 text-muted transition-[color,transform] group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-ink"
               aria-hidden
             />
           </a>

@@ -20,6 +20,23 @@ const taskStatusToUi = (taskStatus: string): StatusEnum | null => {
   }
 };
 
+const formatTargetIndicesLabel = (task: ActiveDownloadTask | null) => {
+  const indices = task?.targetIndices?.length
+    ? [...new Set(task.targetIndices)].sort((a, b) => a - b)
+    : null;
+  if (!indices || indices.length === 0) return undefined;
+
+  const first = indices[0];
+  const last = indices[indices.length - 1];
+  const coversTaskRange =
+    first === task?.rangeStart && last === task.rangeEnd && indices.length === last - first + 1;
+  if (coversTaskRange) return undefined;
+  if (indices.length === 1) return String(first);
+  if (indices.length === last - first + 1) return `${first} - ${last}`;
+  if (indices.length <= 3) return indices.join(', ');
+  return `${first}, ... ${last}`;
+};
+
 export type PopupViewModelInput = {
   pageStatus: StatusEnum;
   optimisticTaskStatus: StatusEnum.Downloading | null;
@@ -49,6 +66,7 @@ export const derivePopupViewModel = ({
     status === StatusEnum.DownloadFailed;
   const isAnyTaskActive =
     activeTask?.status === 'running' || activeTask?.status === 'dispatch_complete';
+  const taskDisplayRangeLabel = formatTargetIndicesLabel(currentTask);
 
   return {
     status,
@@ -67,6 +85,7 @@ export const derivePopupViewModel = ({
     taskDisplayRange: currentTask
       ? ([currentTask.rangeStart, currentTask.rangeEnd] as [number, number])
       : range,
+    taskDisplayRangeLabel,
     taskDisplayTotal: currentTask ? currentTask.expectedCount : downloadCount,
   };
 };

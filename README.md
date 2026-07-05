@@ -1,5 +1,6 @@
 <h4 align="right"><strong>English</strong> | <a href="./README_CN.md">简体中文</a></h4>
 <div align="center">
+<img src="./assets/pic-logo.png" alt="E-Hentai Helper logo" width="96" height="96" />
 <h1> Ehentai Download Helper</h1>
 </div>
 
@@ -39,4 +40,3 @@ Take Google Chrome as an example:
 
 > This extension is inspired by [EHentaiChromeExtension
 ](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)
-

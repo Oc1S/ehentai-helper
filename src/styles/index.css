@@ -26,11 +26,11 @@
     background: rgb(var(--eh-canvas));
     color: rgb(var(--eh-body));
     font-family:
+      'Roboto Mono',
       'Inter',
       -apple-system,
       BlinkMacSystemFont,
       'Segoe UI',
-      'Roboto Mono',
       Roboto,
       sans-serif;
   }

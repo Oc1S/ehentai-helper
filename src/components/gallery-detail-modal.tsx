@@ -1,6 +1,6 @@
 import { type FC, useMemo, useState } from 'react';
 
-import type { GalleryImageState, GalleryRecord } from '@/storage';
+import type { GalleryImageRecord, GalleryImageState, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
@@ -65,12 +65,24 @@ export const GalleryDetailModal: FC<{
   const [keyword, setKeyword] = useState('');
 
   const rows = useMemo(() => {
+    const sortedIndices = indices?.length ? [...new Set(indices)].sort((a, b) => a - b) : null;
+    if (sortedIndices) {
+      return sortedIndices.map<GalleryImageRecord>((index) => {
+        const image = record?.images?.[String(index)];
+        if (image && (!taskId || image.taskId === taskId)) return image;
+        return {
+          index,
+          sourceUrl: '',
+          taskId,
+          state: 'in_progress',
+          updatedAt: 0,
+        };
+      });
+    }
     if (!record?.images) return [];
-    const indexSet = indices?.length ? new Set(indices) : null;
     return Object.values(record.images)
       .filter((image) => {
         if (taskId && image.taskId !== taskId) return false;
-        if (indexSet && !indexSet.has(image.index)) return false;
         return true;
       })
       .sort((a, b) => a.index - b.index);
@@ -131,7 +143,7 @@ export const GalleryDetailModal: FC<{
       size="xl"
       bodyClassName="flex min-h-0 flex-col"
     >
-      <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <TextField
             placeholder={t('searchDetail')}

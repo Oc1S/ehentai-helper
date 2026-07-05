@@ -4,6 +4,7 @@ import '../styles/popup.css';
 import { AppShell } from '@/app';
 import { History } from '@/components/download-history';
 import { GalleryDetailModal } from '@/components/gallery-detail-modal';
+import { withErrorBoundary } from '@/components/hoc';
 
 import { PopupHeader } from './components/popup-header';
 import { PopupStatusContent } from './components/popup-status-content';
@@ -48,4 +49,15 @@ const Popup = () => {
   );
 };
 
-export default Popup;
+const PopupErrorFallback = (
+  <div className="popup-bg flex h-popup w-popup items-center justify-center p-6 text-center text-body">
+    <div className="max-w-[320px] rounded-eh-sm border border-hairline p-4">
+      <p className="text-sm font-medium text-ink">E-Hentai Helper</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted">
+        Something went wrong. Please close and reopen the popup.
+      </p>
+    </div>
+  </div>
+);
+
+export default withErrorBoundary(Popup, PopupErrorFallback);

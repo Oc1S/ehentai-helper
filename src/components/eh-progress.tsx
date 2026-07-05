@@ -6,6 +6,7 @@ type EhProgressBarProps = {
   value: number;
   max: number;
   successPercent?: number;
+  inProgressPercent?: number;
   failedPercent?: number;
   ariaLabel: string;
   className?: string;
@@ -16,12 +17,15 @@ export const EhProgressBar = ({
   value,
   max,
   successPercent,
+  inProgressPercent,
   failedPercent,
   ariaLabel,
   className = '',
 }: EhProgressBarProps) => {
-  const isSegmented = successPercent !== undefined || failedPercent !== undefined;
+  const isSegmented =
+    successPercent !== undefined || inProgressPercent !== undefined || failedPercent !== undefined;
   const successWidth = successPercent ?? 0;
+  const inProgressWidth = inProgressPercent ?? 0;
   const failedWidth = failedPercent ?? 0;
 
   const percent = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
@@ -41,6 +45,12 @@ export const EhProgressBar = ({
             <div
               className="h-full bg-success transition-[width] duration-300"
               style={{ width: `${successWidth}%` }}
+            />
+          ) : null}
+          {inProgressWidth > 0 ? (
+            <div
+              className="h-full bg-warning transition-[width] duration-300"
+              style={{ width: `${inProgressWidth}%` }}
             />
           ) : null}
           {failedWidth > 0 ? (
@@ -109,14 +119,17 @@ export const EhDownloadResultProgress = ({
   downloadCount,
   completeCount,
   failedCount,
+  inProgressCount = 0,
   children,
 }: {
   downloadCount: number;
   completeCount: number;
   failedCount: number;
+  inProgressCount?: number;
   children?: ReactNode;
 }) => {
   const successWidth = downloadCount > 0 ? (completeCount / downloadCount) * 100 : 0;
+  const inProgressWidth = downloadCount > 0 ? (inProgressCount / downloadCount) * 100 : 0;
   const failedWidth = downloadCount > 0 ? (failedCount / downloadCount) * 100 : 0;
 
   return (
@@ -125,6 +138,7 @@ export const EhDownloadResultProgress = ({
         value={completeCount}
         max={downloadCount}
         successPercent={successWidth}
+        inProgressPercent={inProgressWidth}
         failedPercent={failedWidth}
         ariaLabel={t('downloadProgress')}
       />

@@ -90,7 +90,7 @@ const modalHeaderClass = cva(
 );
 
 const modalBodyClass = cva(
-  'eh-modal__body scrollbar-glass relative z-10 min-h-0 flex-1 overflow-y-auto bg-transparent',
+  'eh-modal__body scrollbar-glass relative z-10 min-h-0 flex-1 overflow-hidden bg-transparent',
   {
     variants: {
       presentation: {

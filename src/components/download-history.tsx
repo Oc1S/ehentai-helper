@@ -32,12 +32,23 @@ const formatTime = (ts: number) => new Date(ts).toLocaleString();
 const countRangeTotal = (ranges: [number, number][]) =>
   ranges.reduce((total, [start, end]) => total + end - start + 1, 0);
 
+const formatRangePart = ([start, end]: [number, number]) =>
+  start === end ? String(start) : `${start}-${end}`;
+
 const formatRange = (item: DownloadHistoryItem) => {
   const ranges = getDownloadHistoryRanges(item);
-  if (ranges.length <= 2) return ranges.map(([start, end]) => `${start}-${end}`).join(', ');
-  const [firstStart, firstEnd] = ranges[0];
-  return `${firstStart}-${firstEnd}, +${ranges.length - 1}`;
+  if (ranges.length <= 2) return ranges.map(formatRangePart).join(', ');
+  const visibleRanges = ranges.slice(0, 2).map(formatRangePart).join(', ');
+  const hiddenCount = ranges.length - 2;
+  const suffix =
+    hiddenCount === 1
+      ? t('rangeOneMoreSegment')
+      : t('rangeMoreSegments', String(hiddenCount));
+  return `${visibleRanges}, ${suffix}`;
 };
+
+const formatFullRange = (item: DownloadHistoryItem) =>
+  getDownloadHistoryRanges(item).map(formatRangePart).join(', ');
 
 const formatStatus = (record: GalleryRecord | undefined, item: DownloadHistoryItem) => {
   if (!record) return t('statusUnknown');
@@ -147,7 +158,7 @@ export const History: FC = () => {
                   <td className="whitespace-nowrap text-xs text-muted">
                     {formatStatus(galleryRecords[item.url], item)}
                   </td>
-                  <td className="whitespace-nowrap text-muted-soft" title={formatRange(item)}>
+                  <td className="whitespace-nowrap text-muted-soft" title={formatFullRange(item)}>
                     {formatRange(item)}
                   </td>
                   <td className="whitespace-nowrap text-muted-soft">

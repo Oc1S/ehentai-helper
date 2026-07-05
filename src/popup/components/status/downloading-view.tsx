@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 import { Download } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
-import { EhDownloadProgressPanel } from '@/components/eh-progress';
-import { Spinner } from '@/components/ui-primitives';
 import { t } from '@/utils/i18n';
 
 import { DownloadResultSummary } from '../download-result-summary';
@@ -14,6 +12,9 @@ export const DownloadingView = ({
   completeCount,
   failedCount,
   inProgressCount,
+  rangeStart,
+  rangeEnd,
+  rangeLabel,
   onViewDetails,
   onCancel,
 }: {
@@ -22,33 +23,25 @@ export const DownloadingView = ({
   completeCount: number;
   failedCount: number;
   inProgressCount: number;
+  rangeStart: number;
+  rangeEnd: number;
+  rangeLabel?: string;
   onViewDetails: () => void;
   onCancel: () => void;
 }) => (
   <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
     <div className="scrollbar-glass flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-3">
-      <div className="glass-panel glass-panel-live rounded-eh-2xl relative flex shrink-0 flex-col justify-end p-5">
-        <div>
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-tight tracking-tight text-ink">
-            {galleryName}
-          </h3>
-          <div className="mt-2.5 flex items-center gap-2">
-            <Spinner size="sm" />
-            <span className="text-[13px] font-normal text-warning">
-              {t('downloadingImages')}
-            </span>
-          </div>
-          <p className="mt-2 text-xs text-muted-soft">{t('backgroundHint')}</p>
-        </div>
-      </div>
-      <div className="glass-panel rounded-eh-2xl flex flex-col gap-3 p-5">
-        <EhDownloadProgressPanel
-          downloadCount={downloadCount}
-          completeCount={completeCount}
-          failedCount={failedCount}
-          inProgressCount={inProgressCount}
-        />
-      </div>
+      <DownloadResultSummary
+        variant="running"
+        galleryName={galleryName}
+        downloadCount={downloadCount}
+        completeCount={completeCount}
+        failedCount={failedCount}
+        inProgressCount={inProgressCount}
+        rangeStart={rangeStart}
+        rangeEnd={rangeEnd}
+        rangeLabel={rangeLabel}
+      />
     </div>
     <div className="min-h-popup-footer flex shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">
       <div className="flex items-stretch gap-2">
@@ -70,6 +63,7 @@ export const DownloadFailedView = ({
   failedCount,
   rangeStart,
   rangeEnd,
+  rangeLabel,
   footer,
 }: {
   galleryName: string;
@@ -78,6 +72,7 @@ export const DownloadFailedView = ({
   failedCount: number;
   rangeStart: number;
   rangeEnd: number;
+  rangeLabel?: string;
   footer: ReactNode;
 }) => (
   <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
@@ -90,6 +85,7 @@ export const DownloadFailedView = ({
         failedCount={failedCount}
         rangeStart={rangeStart}
         rangeEnd={rangeEnd}
+        rangeLabel={rangeLabel}
       />
     </div>
     <div className="min-h-popup-footer flex shrink-0 flex-col justify-center border-t border-[var(--eh-hairline-soft)] pt-3">

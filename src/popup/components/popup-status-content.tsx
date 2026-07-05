@@ -27,6 +27,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
     progressTotal,
     taskDisplayRange,
     taskDisplayTotal,
+    taskDisplayRangeLabel,
     getGalleryUrl,
     reloadGallery,
     handleStartDownload,
@@ -69,6 +70,9 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           completeCount={completeCount}
           failedCount={failedCount}
           inProgressCount={inProgressCount}
+          rangeStart={taskDisplayRange[0]}
+          rangeEnd={taskDisplayRange[1]}
+          rangeLabel={taskDisplayRangeLabel}
           onViewDetails={() => setGalleryDetailOpen(true)}
           onCancel={handleCancelDownload}
         />
@@ -83,20 +87,25 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           failedCount={failedCount}
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
+          rangeLabel={taskDisplayRangeLabel}
           footerActions={
             <div className="flex items-stretch gap-2">
               <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
                 {t('viewDetails')}
               </EhButton>
               <EhButton
-                variant="primary"
+                variant="secondary"
                 ehSize="md"
-                className="min-w-0 flex-1"
                 onPress={openDownloadFolder}
               >
                 {t('openFolder')}
               </EhButton>
-              <EhButton variant="secondary" ehSize="md" onPress={resetToBeforeDownload}>
+              <EhButton
+                variant="primary"
+                ehSize="md"
+                className="min-w-0 flex-1"
+                onPress={resetToBeforeDownload}
+              >
                 {t('backToInitial')}
               </EhButton>
             </div>
@@ -113,6 +122,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           failedCount={failedCount}
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
+          rangeLabel={taskDisplayRangeLabel}
           footerActions={
             <PostDownloadActionRow
               leading={
@@ -147,6 +157,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           failedCount={failedCount}
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
+          rangeLabel={taskDisplayRangeLabel}
           footer={
             <PostDownloadActionRow
               leading={

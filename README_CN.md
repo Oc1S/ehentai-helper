@@ -1,5 +1,6 @@
 <h4 align="right"><strong>简体中文</strong> | <a href="./README.md">English</a></h4>
 <div align="center">
+<img src="./assets/pic-logo.png" alt="E-Hentai Helper logo" width="96" height="96" />
 <h1>Ehentai 下载助手</h1>
 </div>
 

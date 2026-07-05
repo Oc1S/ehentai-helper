@@ -88,6 +88,7 @@ export const usePopupController = () => {
     progressRange,
     progressTotal,
     taskDisplayRange,
+    taskDisplayRangeLabel,
     taskDisplayTotal,
   } = viewModel;
 
@@ -301,6 +302,7 @@ export const usePopupController = () => {
     inProgressCount,
     progressTotal,
     taskDisplayRange,
+    taskDisplayRangeLabel,
     taskDisplayTotal,
     isDownloading,
     tabContentClassName,
