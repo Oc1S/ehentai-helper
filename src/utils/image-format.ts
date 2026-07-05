@@ -1,3 +1,4 @@
+import { authFetch } from './auth-fetch';
 import type { ImageFormat } from './constant';
 import { assertBlobNotHtml, assertResponseNotHtml } from './image-response-guard';
 
@@ -15,7 +16,7 @@ export const convertImageToFormat = async (
   sourceUrl: string,
   format: Exclude<ImageFormat, 'original'>
 ): Promise<string> => {
-  const response = await fetch(sourceUrl, { credentials: 'omit' });
+  const response = await authFetch(sourceUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch image (${response.status})`);
   }

@@ -165,11 +165,15 @@ export const GalleryDetailModal: FC<{
           </span>
         </div>
         <EhTableFrame className="min-h-0 flex-1">
-          <table className="eh-data-table" aria-label="gallery image records">
+          <table className="eh-data-table eh-detail-table" aria-label="gallery image records">
             <thead>
               <tr>
                 {columns.map((col) => (
-                  <th key={col.key} style={{ width: col.width }}>
+                  <th
+                    key={col.key}
+                    style={{ width: col.width }}
+                    className={col.key === 'state' ? 'eh-detail-state-cell' : undefined}
+                  >
                     {col.label}
                   </th>
                 ))}
@@ -186,7 +190,7 @@ export const GalleryDetailModal: FC<{
                 filteredRows.map((row) => (
                   <tr key={row.index}>
                     <td>{row.index}</td>
-                    <td>
+                    <td className="eh-detail-state-cell">
                       <StatusPill tone={STATE_COLOR[row.state]} compact>
                         {stateLabel(row.state)}
                       </StatusPill>

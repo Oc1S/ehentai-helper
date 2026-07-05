@@ -201,6 +201,27 @@ export const usePopupController = () => {
     await launchDownload('resume', missing);
   };
 
+  const markRetryInProgress = async (indices: number[]) => {
+    const galleryUrl = currentGalleryUrl;
+    const record = galleryRecords[galleryUrl];
+    const taskId = currentTask?.taskId;
+
+    await Promise.all(
+      indices.map((index) => {
+        const prev = record?.images[String(index)];
+        return galleryRecordsStorage.upsertImage(galleryUrl, {
+          index,
+          sourceUrl: prev?.sourceUrl ?? '',
+          filename: prev?.filename,
+          chromeDownloadId: prev?.chromeDownloadId,
+          taskId,
+          state: 'in_progress',
+          updatedAt: Date.now(),
+        });
+      })
+    );
+  };
+
   const handleRetryFailed = async (indices?: number[]) => {
     const record = galleryRecords[currentGalleryUrl];
     const failed =
@@ -213,7 +234,11 @@ export const usePopupController = () => {
       toast.info(t('noFailedItems'));
       return;
     }
-    await launchDownload('retry', failed);
+    const launched = await launchDownload('retry', failed);
+    if (!launched) return;
+
+    await markRetryInProgress(failed);
+    setGalleryDetailOpen(false);
   };
 
   const initFromCurrentTab = async () => {

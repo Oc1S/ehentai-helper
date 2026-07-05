@@ -1,3 +1,5 @@
+import { authFetch } from './auth-fetch';
+
 const HTML_RESPONSE_ERROR = 'Server returned HTML instead of image';
 
 export const assertResponseNotHtml = (response: Response): void => {
@@ -21,7 +23,7 @@ export const assertBlobNotHtml = async (blob: Blob): Promise<void> => {
 
 /** 请求图片 URL 并校验响应体不是 HTML（用于直链下载前探测） */
 export const probeImageUrl = async (sourceUrl: string): Promise<void> => {
-  const res = await fetch(sourceUrl, { credentials: 'omit' });
+  const res = await authFetch(sourceUrl);
   if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
   assertResponseNotHtml(res);
   const blob = await res.blob();

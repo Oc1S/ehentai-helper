@@ -13,7 +13,7 @@ import {
   downloadTaskStorage,
   galleryRecordsStorage,
 } from '@/storage';
-import type { Config } from '@/utils';
+import { authFetch, type Config } from '@/utils';
 import { createDownloadUrl, releaseDownloadUrlOnDownloadDone } from '@/utils/blob-download-url';
 import {
   extractImagePageUrlsFromHtml,
@@ -45,7 +45,9 @@ const patchTask = async (patch: Partial<ActiveDownloadTask>) => {
 const needsCbzCache = (config: Config) => (config.outputMode ?? 'files') !== 'files';
 const needsFileDownload = (config: Config) => (config.outputMode ?? 'files') !== 'cbz';
 const needsImageBlob = (config: Config) =>
-  needsCbzCache(config) || Boolean(config.imageFormat && config.imageFormat !== 'original');
+  needsCbzCache(config) ||
+  config.saveOriginalImages ||
+  Boolean(config.imageFormat && config.imageFormat !== 'original');
 
 const startChromeFileDownload = async (
   config: Config,
@@ -270,7 +272,7 @@ const downloadImage = async (
 
   let responseText: string;
   try {
-    const res = await fetch(imagePageUrl);
+    const res = await authFetch(imagePageUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     responseText = await res.text();
   } catch (e) {
@@ -377,15 +379,16 @@ const processGalleryPage = async (
   params: JobParams,
   pageIndex: number,
   indicesOnPage: number[]
-) => {
-  if (cancelRequested || indicesOnPage.length === 0) return;
+): Promise<Promise<void>[]> => {
+  const launchedDownloads: Promise<void>[] = [];
+  if (cancelRequested || indicesOnPage.length === 0) return launchedDownloads;
 
   const pageUrl =
     pageIndex === 0 ? params.galleryFrontPageUrl : `${params.galleryFrontPageUrl}?p=${pageIndex}`;
 
   let pageHtml: string;
   try {
-    const res = await fetch(pageUrl);
+    const res = await authFetch(pageUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     pageHtml = await res.text();
   } catch (e) {
@@ -393,7 +396,7 @@ const processGalleryPage = async (
     for (const i of indicesOnPage) {
       await markImageFailed(params.galleryFrontPageUrl, i, msg);
     }
-    return;
+    return launchedDownloads;
   }
 
   const imagePageUrls = extractImagePageUrlsFromHtml(pageHtml);
@@ -401,11 +404,12 @@ const processGalleryPage = async (
     for (const i of indicesOnPage) {
       await markImageFailed(params.galleryFrontPageUrl, i, 'No image links on page');
     }
-    return;
+    return launchedDownloads;
   }
 
+  const interval = Math.max(0, config.downloadInterval);
   for (const currentIndex of indicesOnPage) {
-    if (cancelRequested) return;
+    if (cancelRequested) return launchedDownloads;
     const imageIndex = (currentIndex - 1) % params.imagesPerPage;
     const imagePageUrl = imagePageUrls[imageIndex];
     if (!imagePageUrl) {
@@ -413,11 +417,18 @@ const processGalleryPage = async (
       continue;
     }
 
-    await downloadImage(config, params, imagePageUrl, currentIndex);
+    launchedDownloads.push(
+      downloadImage(config, params, imagePageUrl, currentIndex).catch(async (error) => {
+        console.error('download image failed@', error);
+        const msg = error instanceof Error ? error.message : 'Unexpected download error';
+        await markImageFailed(params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
+      })
+    );
 
-    const interval = Math.max(0, config.downloadInterval);
     if (interval > 0) await sleep(interval);
   }
+
+  return launchedDownloads;
 };
 
 const groupIndicesByPage = (indices: number[], imagesPerPage: number) => {
@@ -490,18 +501,24 @@ export const runDownloadJob = async (params: JobParams) => {
     updatedAt: now,
   });
 
+  const launchedDownloads: Promise<void>[] = [];
+
   for (const [pageIndex, pageIndices] of groupIndicesByPage(
     downloadIndices,
     jobParams.imagesPerPage
   )) {
     if (cancelRequested) {
+      await Promise.allSettled(launchedDownloads);
       await patchTask({ status: 'cancelled' });
       if (activeTaskId) await clearCbzTask(activeTaskId);
       activeTaskId = null;
       return;
     }
-    await processGalleryPage(config, jobParams, pageIndex, pageIndices);
+    const pageDownloads = await processGalleryPage(config, jobParams, pageIndex, pageIndices);
+    launchedDownloads.push(...pageDownloads);
   }
+
+  await Promise.allSettled(launchedDownloads);
 
   if (cancelRequested) {
     await patchTask({ status: 'cancelled' });

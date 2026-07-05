@@ -1,3 +1,5 @@
+import logoSrc from 'data-base64:~assets/pic-logo.png';
+
 import { DownloadSettings } from '@/components/download-settings';
 import { SegmentedTabs } from '@/components/ui-primitives';
 import { t } from '@/utils/i18n';
@@ -19,9 +21,17 @@ export const PopupHeader = ({
   pathPreview?: string;
 }) => (
   <header className="grid h-popup-header shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 text-ink">
-    <span className="min-w-0 truncate text-[15px] font-medium tracking-tight text-ink">
-      E-Hentai <span className="text-[rgb(var(--eh-brand-helper))]">Helper</span>
-    </span>
+    <div className="flex min-w-0 items-center gap-2">
+      <img
+        src={logoSrc}
+        alt=""
+        className="h-7 w-7 shrink-0 rounded-eh-xs object-contain"
+        aria-hidden
+      />
+      <span className="min-w-0 truncate text-[15px] font-medium tracking-tight text-ink">
+        E-Hentai <span className="text-[rgb(var(--eh-brand-helper))]">Helper</span>
+      </span>
+    </div>
     <nav className="z-10 justify-self-center" aria-label="popup sections">
       <SegmentedTabs
         items={POPUP_TABS}

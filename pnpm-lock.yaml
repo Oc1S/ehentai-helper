@@ -14,6 +14,9 @@ importers:
       '@fontsource/inter':
         specifier: ^5.2.8
         version: 5.2.8
+      '@fontsource/noto-sans-sc':
+        specifier: ^5.2.9
+        version: 5.2.9
       '@fontsource/roboto-mono':
         specifier: ^5.2.9
         version: 5.2.9
@@ -399,6 +402,9 @@ packages:
 
   '@fontsource/inter@5.2.8':
     resolution: {integrity: sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg==}
+
+  '@fontsource/noto-sans-sc@5.2.9':
+    resolution: {integrity: sha512-bTUIWGBgJDpwi5qAr+x0/lcgv80IHTB9vl6s2f6EymZEa7qYV99yNRBZuKFT+SYDKVunZrjCEhWtpxqmbXWl5Q==}
 
   '@fontsource/roboto-mono@5.2.9':
     resolution: {integrity: sha512-iIeSyrRGoM15uIWqXslW1K9UFnUYfnCFNrNoWjXE0huO1L+hM0Jst0KNLuRc7P21xPpGL0bZouzYSX0Em9eyWg==}
@@ -4783,6 +4789,8 @@ snapshots:
   '@floating-ui/utils@0.2.11': {}
 
   '@fontsource/inter@5.2.8': {}
+
+  '@fontsource/noto-sans-sc@5.2.9': {}
 
   '@fontsource/roboto-mono@5.2.9': {}
 
