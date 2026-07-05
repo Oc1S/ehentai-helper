@@ -41,8 +41,8 @@ const Popup = () => {
           taskId={ctrl.currentTask?.taskId}
           indices={ctrl.currentTask?.targetIndices}
           totalCount={ctrl.currentTask?.expectedCount}
-          onRetryIndex={(index) => ctrl.handleRetryFailed([index])}
-          onRetryAllFailed={() => ctrl.handleRetryFailed()}
+          onRetryIndex={(index) => ctrl.handleRetryFailed([index], { closeDetail: false })}
+          onRetryAllFailed={() => ctrl.handleRetryFailed(undefined, { closeDetail: true })}
         />
       </div>
     </AppShell>

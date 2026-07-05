@@ -179,8 +179,13 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "retry": { "message": "Retry" },
+  "retryUnfinished": {
+    "message": "Retry unfinished ($1)",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "retryStarted": { "message": "Retry started" },
   "retryFailedToast": { "message": "Retry failed" },
+  "noUnfinishedItems": { "message": "No unfinished items" },
   "missingGalleryContext": { "message": "Missing gallery context for retry" },
   "downloadStarted": { "message": "Download started" },
   "searchByName": { "message": "Search by name..." },

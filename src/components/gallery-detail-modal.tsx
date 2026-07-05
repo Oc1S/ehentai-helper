@@ -221,7 +221,7 @@ export const GalleryDetailModal: FC<{
                     </td>
                     {showAction ? (
                       <td>
-                        {onRetryIndex && row.state === 'interrupted' ? (
+                        {onRetryIndex && row.state !== 'complete' ? (
                           <EhButton
                             variant="primary"
                             ehSize="sm"

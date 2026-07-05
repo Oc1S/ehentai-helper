@@ -112,6 +112,7 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
       const key = String(index);
       const prevImg = current.images[key];
       if (!prevImg) return map || {};
+      if (prevImg.chromeDownloadId !== chromeDownloadId) return map || {};
       const merged: GalleryImageRecord = {
         ...prevImg,
         ...patch,

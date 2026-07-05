@@ -165,8 +165,13 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "retry": { "message": "重试" },
+  "retryUnfinished": {
+    "message": "重试未完成项（$1）",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "retryStarted": { "message": "已开始重试" },
   "retryFailedToast": { "message": "重试失败" },
+  "noUnfinishedItems": { "message": "没有未完成项" },
   "missingGalleryContext": { "message": "缺少画廊上下文，无法重试" },
   "downloadStarted": { "message": "已开始下载" },
   "searchByName": { "message": "按名称搜索..." },

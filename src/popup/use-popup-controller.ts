@@ -8,7 +8,11 @@ import {
   startDownload,
 } from '@/download/client';
 import { resolveGalleryDownloadPath } from '@/download/download-filename';
-import { computeFailedIndices, computeMissingIndices } from '@/download/helpers';
+import {
+  computeFailedIndices,
+  computeMissingIndices,
+  computeUnfinishedIndices,
+} from '@/download/helpers';
 import type { DownloadJobPayload } from '@/download/types';
 import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
 import {
@@ -213,7 +217,7 @@ export const usePopupController = () => {
           index,
           sourceUrl: prev?.sourceUrl ?? '',
           filename: prev?.filename,
-          chromeDownloadId: prev?.chromeDownloadId,
+          chromeDownloadId: undefined,
           taskId,
           state: 'in_progress',
           updatedAt: Date.now(),
@@ -222,7 +226,10 @@ export const usePopupController = () => {
     );
   };
 
-  const handleRetryFailed = async (indices?: number[]) => {
+  const handleRetryFailed = async (
+    indices?: number[],
+    options: { closeDetail?: boolean } = {}
+  ) => {
     const record = galleryRecords[currentGalleryUrl];
     const failed =
       indices ??
@@ -238,7 +245,30 @@ export const usePopupController = () => {
     if (!launched) return;
 
     await markRetryInProgress(failed);
-    setGalleryDetailOpen(false);
+    if (options.closeDetail) setGalleryDetailOpen(false);
+  };
+
+  const handleRetryUnfinished = async () => {
+    if (!currentTask) {
+      toast.info(t('noUnfinishedItems'));
+      return;
+    }
+
+    const record = galleryRecords[currentGalleryUrl];
+    const unfinished = computeUnfinishedIndices(record, progressRange.start, progressRange.end, {
+      taskId: currentTask.taskId,
+      indices: currentTask.targetIndices,
+    });
+
+    if (unfinished.length === 0) {
+      toast.info(t('noUnfinishedItems'));
+      return;
+    }
+
+    const launched = await launchDownload('retry', unfinished);
+    if (!launched) return;
+
+    await markRetryInProgress(unfinished);
   };
 
   const initFromCurrentTab = async () => {
@@ -337,7 +367,9 @@ export const usePopupController = () => {
     reloadGallery: () => void initFromCurrentTab(),
     handleStartDownload: () => void handleStartDownload(),
     handleResumeMissing: () => void handleResumeMissing(),
-    handleRetryFailed: (indices?: number[]) => void handleRetryFailed(indices),
+    handleRetryFailed: (indices?: number[], options?: { closeDetail?: boolean }) =>
+      void handleRetryFailed(indices, options),
+    handleRetryUnfinished: () => void handleRetryUnfinished(),
     handleCancelDownload: () => void handleCancelDownload(),
     resetToBeforeDownload: () => void resetToBeforeDownload(),
     openDownloadFolder,

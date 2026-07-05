@@ -35,5 +35,23 @@ export const computeFailedIndices = (
     .sort((a, b) => a - b);
 };
 
+export const computeUnfinishedIndices = (
+  record: GalleryRecord | undefined,
+  rangeStart: number,
+  rangeEnd: number,
+  options: { taskId?: string; indices?: number[] } = {}
+) => {
+  const indices = options.indices?.length
+    ? [...new Set(options.indices)].sort((a, b) => a - b)
+    : rangeIndices(rangeStart, rangeEnd);
+
+  return indices.filter((index) => {
+    const img = record?.images[String(index)];
+    if (!img) return true;
+    if (options.taskId && img.taskId && img.taskId !== options.taskId) return true;
+    return img.state !== 'complete';
+  });
+};
+
 export const estimateDownloadSeconds = (count: number, intervalMs: number) =>
   Math.max(1, Math.ceil((count * Math.max(0, intervalMs)) / 1000));

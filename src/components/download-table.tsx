@@ -127,6 +127,7 @@ export const DownloadTable: FC<{ taskId?: string | null }> = ({ taskId }) => {
       numPages,
       totalImages: record.total,
       indices: [entry.index],
+      taskId: entry.taskId,
     });
     if (res?.ok) toast.success(t('retryStarted'));
     else toast.error(t('retryFailedToast'));

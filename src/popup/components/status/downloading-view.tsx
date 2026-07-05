@@ -15,7 +15,9 @@ export const DownloadingView = ({
   rangeStart,
   rangeEnd,
   rangeLabel,
+  retryUnfinishedCount,
   onViewDetails,
+  onRetryUnfinished,
   onCancel,
 }: {
   galleryName: string;
@@ -26,7 +28,9 @@ export const DownloadingView = ({
   rangeStart: number;
   rangeEnd: number;
   rangeLabel?: string;
+  retryUnfinishedCount: number;
   onViewDetails: () => void;
+  onRetryUnfinished: () => void;
   onCancel: () => void;
 }) => (
   <div className="flex h-full min-h-0 w-full flex-col px-4 py-4">
@@ -48,6 +52,11 @@ export const DownloadingView = ({
         <EhButton variant="secondary" ehSize="md" onPress={onViewDetails}>
           {t('viewDetails')}
         </EhButton>
+        {retryUnfinishedCount > 0 ? (
+          <EhButton variant="secondary" ehSize="md" onPress={onRetryUnfinished}>
+            {t('retryUnfinished', String(retryUnfinishedCount))}
+          </EhButton>
+        ) : null}
         <EhButton variant="danger" ehSize="md" className="min-w-0 flex-1" onPress={onCancel}>
           {t('cancel')}
         </EhButton>

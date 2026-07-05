@@ -33,6 +33,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
     handleStartDownload,
     handleResumeMissing,
     handleRetryFailed,
+    handleRetryUnfinished,
     handleCancelDownload,
     resetToBeforeDownload,
     openDownloadFolder,
@@ -73,7 +74,9 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
           rangeLabel={taskDisplayRangeLabel}
+          retryUnfinishedCount={Math.max(0, progressTotal - completeCount)}
           onViewDetails={() => setGalleryDetailOpen(true)}
+          onRetryUnfinished={handleRetryUnfinished}
           onCancel={handleCancelDownload}
         />
       );
@@ -143,7 +146,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
                 </>
               }
               retryCount={failedCount}
-              onRetry={() => handleRetryFailed()}
+              onRetry={() => handleRetryFailed(undefined, { closeDetail: false })}
             />
           }
         />
@@ -171,7 +174,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
                 </>
               }
               retryCount={failedCount}
-              onRetry={() => handleRetryFailed()}
+              onRetry={() => handleRetryFailed(undefined, { closeDetail: false })}
             />
           }
         />
