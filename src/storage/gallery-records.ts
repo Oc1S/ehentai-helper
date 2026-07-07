@@ -1,7 +1,7 @@
 import type { BaseStorage } from './base';
 import { createStorage, StorageType } from './base';
 
-export type GalleryImageState = 'in_progress' | 'complete' | 'interrupted';
+export type GalleryImageState = 'queued' | 'in_progress' | 'complete' | 'interrupted';
 
 export type GalleryImageRecord = {
   index: number;
@@ -32,11 +32,11 @@ export type GalleryRecordsMap = Record<string, GalleryRecord>;
 import { MAX_GALLERY_RECORDS } from './limits';
 
 type GalleryRecordsStorage = BaseStorage<GalleryRecordsMap> & {
-  upsertGallery: (record: Omit<GalleryRecord, 'createdAt' | 'updatedAt' | 'images'>) => Promise<void>;
-  upsertImage: (
-    galleryUrl: string,
-    image: GalleryImageRecord
+  upsertGallery: (
+    record: Omit<GalleryRecord, 'createdAt' | 'updatedAt' | 'images'>
   ) => Promise<void>;
+  upsertImage: (galleryUrl: string, image: GalleryImageRecord) => Promise<void>;
+  markImagesQueued: (galleryUrl: string, indices: number[], taskId: string) => Promise<void>;
   patchImageByDownloadId: (
     chromeDownloadId: number,
     galleryUrl: string,
@@ -47,10 +47,14 @@ type GalleryRecordsStorage = BaseStorage<GalleryRecordsMap> & {
   clear: () => Promise<void>;
 };
 
-const baseStorage = createStorage<GalleryRecordsMap>('gallery-records', {}, {
-  storageType: StorageType.Local,
-  liveUpdate: true,
-});
+const baseStorage = createStorage<GalleryRecordsMap>(
+  'gallery-records',
+  {},
+  {
+    storageType: StorageType.Local,
+    liveUpdate: true,
+  }
+);
 
 const trimToMax = (map: GalleryRecordsMap): GalleryRecordsMap => {
   const entries = Object.entries(map);
@@ -122,6 +126,31 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
         updatedAt: Date.now(),
       };
       return { ...(map || {}), [galleryUrl]: next };
+    });
+  },
+  markImagesQueued: async (galleryUrl, indices, taskId) => {
+    if (indices.length === 0) return;
+    await baseStorage.set((map) => {
+      const current = (map || {})[galleryUrl];
+      if (!current) return map || {};
+      const nextImages = { ...current.images };
+      const now = Date.now();
+      for (const index of indices) {
+        const key = String(index);
+        const prev = current.images[key];
+        if (prev?.state === 'complete' && prev?.taskId === taskId) continue;
+        nextImages[key] = mergeImageRecord(prev, {
+          index,
+          sourceUrl: prev?.sourceUrl ?? '',
+          taskId,
+          state: 'queued',
+          updatedAt: now,
+        });
+      }
+      return {
+        ...(map || {}),
+        [galleryUrl]: { ...current, images: nextImages, updatedAt: now },
+      };
     });
   },
   patchImageByDownloadId: async (chromeDownloadId, galleryUrl, index, patch) => {

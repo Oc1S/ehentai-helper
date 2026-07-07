@@ -1,11 +1,13 @@
 import type { FC } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { useStorageSuspense } from '@/hooks';
 import {
   type DownloadHistoryItem,
   downloadHistoryStorage,
   type GalleryRecord,
+  type GalleryRecordsMap,
   galleryRecordsStorage,
   getDownloadHistoryRanges,
   MAX_DOWNLOAD_HISTORY,
@@ -15,7 +17,6 @@ import {
 import { t } from '@/utils/i18n';
 
 import { EhButton } from './eh-button';
-import { EhTableFrame } from './eh-table';
 import { GalleryDetailModal } from './gallery-detail-modal';
 import { Modal, TextField } from './ui-primitives';
 
@@ -41,9 +42,7 @@ const formatRange = (item: DownloadHistoryItem) => {
   const visibleRanges = ranges.slice(0, 2).map(formatRangePart).join(', ');
   const hiddenCount = ranges.length - 2;
   const suffix =
-    hiddenCount === 1
-      ? t('rangeOneMoreSegment')
-      : t('rangeMoreSegments', String(hiddenCount));
+    hiddenCount === 1 ? t('rangeOneMoreSegment') : t('rangeMoreSegments', String(hiddenCount));
   return `${visibleRanges}, ${suffix}`;
 };
 
@@ -62,6 +61,85 @@ const formatStatus = (record: GalleryRecord | undefined, item: DownloadHistoryIt
   return t('statusCompleteRatio', [String(complete), String(countRangeTotal(ranges))]);
 };
 
+type HistoryVirtualizer = ReturnType<typeof useVirtualizer>;
+
+const VirtualRows = ({
+  virtualizer,
+  items,
+  galleryRecords,
+  onView,
+  onDelete,
+}: {
+  virtualizer: HistoryVirtualizer;
+  items: DownloadHistoryItem[];
+  galleryRecords: GalleryRecordsMap;
+  onView: (url: string) => void;
+  onDelete: (item: DownloadHistoryItem) => void;
+}) => {
+  const virtualItems = virtualizer.getVirtualItems();
+  if (virtualItems.length === 0) return null;
+
+  const colCount = columns().length;
+  const paddingTop = virtualItems[0].start;
+  const paddingBottom = virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end;
+
+  return (
+    <>
+      {paddingTop > 0 ? (
+        <tr style={{ height: paddingTop, background: 'transparent' }} aria-hidden>
+          <td colSpan={colCount} style={{ padding: 0, border: 0 }} />
+        </tr>
+      ) : null}
+      {virtualItems.map((virtualRow) => {
+        const item = items[virtualRow.index];
+        if (!item) return null;
+        return (
+          <tr key={item.url} ref={virtualizer.measureElement} data-index={virtualRow.index}>
+            <td className="min-w-0 max-w-0 overflow-hidden">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[rgb(var(--eh-action-blue))] underline underline-offset-2 [overflow-wrap:normal] [word-break:normal]"
+                title={item.name}
+              >
+                {item.name}
+              </a>
+            </td>
+            <td className="whitespace-nowrap text-xs text-muted">
+              {formatStatus(galleryRecords[item.url], item)}
+            </td>
+            <td className="whitespace-nowrap text-muted-soft" title={formatFullRange(item)}>
+              {formatRange(item)}
+            </td>
+            <td className="whitespace-nowrap text-muted-soft">{formatTime(item.timestamp)}</td>
+            <td className="py-1.5">
+              <div className="flex flex-nowrap items-center gap-1">
+                <EhButton
+                  variant="secondary"
+                  ehSize="sm"
+                  disabled={!galleryRecords[item.url]}
+                  onPress={() => onView(item.url)}
+                >
+                  {t('detail')}
+                </EhButton>
+                <EhButton variant="danger" ehSize="sm" onPress={() => onDelete(item)}>
+                  {t('delete')}
+                </EhButton>
+              </div>
+            </td>
+          </tr>
+        );
+      })}
+      {paddingBottom > 0 ? (
+        <tr style={{ height: paddingBottom, background: 'transparent' }} aria-hidden>
+          <td colSpan={colCount} style={{ padding: 0, border: 0 }} />
+        </tr>
+      ) : null}
+    </>
+  );
+};
+
 export const History: FC = () => {
   const list = useStorageSuspense(downloadHistoryStorage) || [];
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
@@ -78,6 +156,19 @@ export const History: FC = () => {
     if (!kw) return data;
     return data.filter((item) => item.name.toLowerCase().includes(kw));
   }, [data, keyword]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredData.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 48,
+    overscan: 8,
+  });
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [keyword]);
 
   const activeRecord = activeUrl ? galleryRecords[activeUrl] ?? null : null;
 
@@ -109,7 +200,10 @@ export const History: FC = () => {
           {t('clearAll')}
         </EhButton>
       </div>
-      <EhTableFrame>
+      <div
+        ref={scrollRef}
+        className="scrollbar-glass min-h-0 flex-1 overflow-auto rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent"
+      >
         <table className="eh-data-table" aria-label="download history">
           <thead>
             <tr>
@@ -142,49 +236,17 @@ export const History: FC = () => {
                 </td>
               </tr>
             ) : (
-              filteredData.map((item) => (
-                <tr key={item.timestamp}>
-                  <td className="min-w-0 max-w-0 overflow-hidden">
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[rgb(var(--eh-action-blue))] underline underline-offset-2 [overflow-wrap:normal] [word-break:normal]"
-                      title={item.name}
-                    >
-                      {item.name}
-                    </a>
-                  </td>
-                  <td className="whitespace-nowrap text-xs text-muted">
-                    {formatStatus(galleryRecords[item.url], item)}
-                  </td>
-                  <td className="whitespace-nowrap text-muted-soft" title={formatFullRange(item)}>
-                    {formatRange(item)}
-                  </td>
-                  <td className="whitespace-nowrap text-muted-soft">
-                    {formatTime(item.timestamp)}
-                  </td>
-                  <td className="py-1.5">
-                    <div className="flex flex-nowrap items-center gap-1">
-                      <EhButton
-                        variant="secondary"
-                        ehSize="sm"
-                        disabled={!galleryRecords[item.url]}
-                        onPress={() => setActiveUrl(item.url)}
-                      >
-                        {t('detail')}
-                      </EhButton>
-                      <EhButton variant="danger" ehSize="sm" onPress={() => setDeleteTarget(item)}>
-                        {t('delete')}
-                      </EhButton>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              <VirtualRows
+                virtualizer={rowVirtualizer}
+                items={filteredData}
+                galleryRecords={galleryRecords}
+                onView={setActiveUrl}
+                onDelete={setDeleteTarget}
+              />
             )}
           </tbody>
         </table>
-      </EhTableFrame>
+      </div>
       <GalleryDetailModal
         isOpen={activeUrl !== null}
         onClose={() => setActiveUrl(null)}

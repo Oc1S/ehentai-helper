@@ -168,6 +168,7 @@
   "colFileUrl": { "message": "FILE / URL" },
   "stateComplete": { "message": "Complete" },
   "stateInProgress": { "message": "In progress" },
+  "stateQueued": { "message": "Queued" },
   "stateFailed": { "message": "Failed" },
   "stateUnfinished": { "message": "Unfinished" },
   "stateMissing": { "message": "Missing" },
@@ -222,6 +223,10 @@
   },
   "countInProgressShort": {
     "message": "$1 in-progress",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countQueuedShort": {
+    "message": "Queued $1",
     "placeholders": { "1": { "content": "$1" } }
   },
   "countFailedShort": {

@@ -11,7 +11,7 @@ import { resolveGalleryDownloadPath } from '@/download/download-filename';
 import {
   computeFailedIndices,
   computeMissingIndices,
-  computeUnfinishedIndices,
+  computeRetryableIndices,
 } from '@/download/helpers';
 import type { DownloadJobPayload } from '@/download/types';
 import { useLatest, useMounted, useStateRef, useStorage, useStorageSuspense } from '@/hooks';
@@ -104,9 +104,7 @@ export const usePopupController = () => {
 
   const { completeCount, failedCount, inProgressCount } = useMemo(() => {
     const record = galleryRecords[currentGalleryUrl];
-    if (
-      currentTask?.targetIndices?.length
-    ) {
+    if (currentTask?.targetIndices?.length) {
       return countIndicesProgress(record, currentTask.targetIndices, currentTask.taskId);
     }
     if (optimisticTaskStatus === StatusEnum.Downloading) {
@@ -205,30 +203,7 @@ export const usePopupController = () => {
     await launchDownload('resume', missing);
   };
 
-  const markRetryInProgress = async (indices: number[]) => {
-    const galleryUrl = currentGalleryUrl;
-    const record = galleryRecords[galleryUrl];
-    const taskId = currentTask?.taskId;
-
-    await Promise.all(
-      indices.map((index) => {
-        const prev = record?.images[String(index)];
-        return galleryRecordsStorage.upsertImage(galleryUrl, {
-          index,
-          sourceUrl: prev?.sourceUrl ?? '',
-          chromeDownloadId: undefined,
-          taskId,
-          state: 'in_progress',
-          updatedAt: Date.now(),
-        });
-      })
-    );
-  };
-
-  const handleRetryFailed = async (
-    indices?: number[],
-    options: { closeDetail?: boolean } = {}
-  ) => {
+  const handleRetryFailed = async (indices?: number[], options: { closeDetail?: boolean } = {}) => {
     const record = galleryRecords[currentGalleryUrl];
     const failed =
       indices ??
@@ -244,7 +219,6 @@ export const usePopupController = () => {
     const launched = await launchDownload('retry', failed);
     if (!launched) return;
 
-    await markRetryInProgress(failed);
     if (options.closeDetail) setGalleryDetailOpen(false);
   };
 
@@ -255,20 +229,17 @@ export const usePopupController = () => {
     }
 
     const record = galleryRecords[currentGalleryUrl];
-    const unfinished = computeUnfinishedIndices(record, progressRange.start, progressRange.end, {
+    const retryable = computeRetryableIndices(record, progressRange.start, progressRange.end, {
       taskId: currentTask.taskId,
       indices: currentTask.targetIndices,
     });
 
-    if (unfinished.length === 0) {
+    if (retryable.length === 0) {
       toast.info(t('noUnfinishedItems'));
       return;
     }
 
-    const launched = await launchDownload('retry', unfinished);
-    if (!launched) return;
-
-    await markRetryInProgress(unfinished);
+    await launchDownload('retry', retryable);
   };
 
   const initFromCurrentTab = async () => {

@@ -74,7 +74,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
           rangeStart={taskDisplayRange[0]}
           rangeEnd={taskDisplayRange[1]}
           rangeLabel={taskDisplayRangeLabel}
-          retryUnfinishedCount={Math.max(0, progressTotal - completeCount)}
+          retryUnfinishedCount={inProgressCount + failedCount}
           onViewDetails={() => setGalleryDetailOpen(true)}
           onRetryUnfinished={handleRetryUnfinished}
           onCancel={handleCancelDownload}

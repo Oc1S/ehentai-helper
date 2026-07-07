@@ -17,6 +17,7 @@
     "@fontsource/noto-sans-sc": "^5.2.9",
     "@fontsource/roboto-mono": "^5.2.9",
     "@number-flow/react": "^0.6.0",
+    "@tanstack/react-virtual": "^3.14.5",
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.29.0",

@@ -40,15 +40,18 @@ const settingsRowClass = cva(
   }
 );
 
-const settingsLabelClass = cva('min-w-0 select-none pt-1 text-[13px] font-normal leading-5 text-ink', {
-  variants: {
-    variant: {
-      modal: '',
-      overlay: '',
-      page: 'text-sm',
+const settingsLabelClass = cva(
+  'min-w-0 select-none pt-1 text-[13px] font-normal leading-5 text-ink',
+  {
+    variants: {
+      variant: {
+        modal: '',
+        overlay: '',
+        page: 'text-sm',
+      },
     },
-  },
-});
+  }
+);
 
 const settingsFieldClass = cva('min-w-0 text-body', {
   variants: {

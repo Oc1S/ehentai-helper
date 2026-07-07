@@ -259,17 +259,9 @@ const registerListeners = () => {
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
-    if (!trackedDownloadIds.has(id)) return;
 
-    const next: DownloadPatch = { id };
-    for (const key in downloadDelta) {
-      if (key === 'id') continue;
-      if (isObject(downloadDelta[key])) {
-        (next as Record<string, unknown>)[key] = downloadDelta[key].current;
-      }
-    }
-    scheduleDownloadPatch(next);
-
+    // gallery record 状态回写不依赖 trackedDownloadIds（service worker 重载后它可能尚未重建），
+    // propagateImagePatchToGallery 内部会通过 downloadOwnerStorage 过滤非本扩展的下载。
     const galleryPatch: GalleryDownloadPatch = {};
     if (downloadDelta.state) {
       galleryPatch.state = downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
@@ -284,6 +276,17 @@ const registerListeners = () => {
         if (owner?.galleryUrl) onGalleryRecordChanged(owner.galleryUrl);
       });
     }
+
+    if (!trackedDownloadIds.has(id)) return;
+
+    const next: DownloadPatch = { id };
+    for (const key in downloadDelta) {
+      if (key === 'id') continue;
+      if (isObject(downloadDelta[key])) {
+        (next as Record<string, unknown>)[key] = downloadDelta[key].current;
+      }
+    }
+    scheduleDownloadPatch(next);
   });
 
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
@@ -477,6 +480,11 @@ const registerListeners = () => {
   });
 };
 
+// 必须在 top-level 同步注册事件监听，确保 service worker 唤醒时能立即接收
+// chrome.downloads.onChanged 等事件；放在 async IIFE 里会因 await 延迟注册而漏掉事件，
+// 导致下载完成状态无法回写 gallery record。
+registerListeners();
+
 (async () => {
   currentConfig = await configStorage.get();
   const indexMap = await downloadIndexMapStorage.get();
@@ -492,5 +500,4 @@ const registerListeners = () => {
       currentConfig = config;
     });
   });
-  registerListeners();
 })();

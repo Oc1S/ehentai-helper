@@ -11,6 +11,7 @@ const STATE_COLOR: Record<GalleryImageState, PillTone> = {
   complete: 'success',
   in_progress: 'warning',
   interrupted: 'danger',
+  queued: 'neutral',
 };
 
 const stateLabel = (state: GalleryImageState) => {
@@ -21,6 +22,8 @@ const stateLabel = (state: GalleryImageState) => {
       return t('stateInProgress');
     case 'interrupted':
       return t('stateFailed');
+    case 'queued':
+      return t('stateQueued');
   }
 };
 
@@ -30,6 +33,7 @@ const summaryTabs = (): { id: FilterKey; label: string }[] => [
   { id: 'all', label: t('filterAll') },
   { id: 'complete', label: t('stateComplete') },
   { id: 'in_progress', label: t('stateInProgress') },
+  { id: 'queued', label: t('stateQueued') },
   { id: 'interrupted', label: t('stateFailed') },
 ];
 
@@ -81,7 +85,7 @@ export const GalleryDetailModal: FC<{
           index,
           sourceUrl: '',
           taskId,
-          state: 'in_progress',
+          state: 'queued',
           updatedAt: 0,
         };
       });
@@ -96,7 +100,7 @@ export const GalleryDetailModal: FC<{
   }, [indices, record, taskId]);
 
   const counts = useMemo(() => {
-    const c = { complete: 0, in_progress: 0, interrupted: 0 };
+    const c = { complete: 0, in_progress: 0, queued: 0, interrupted: 0 };
     for (const r of rows) {
       if (r.state in c) c[r.state] += 1;
     }
@@ -131,6 +135,9 @@ export const GalleryDetailModal: FC<{
             <StatusPill tone="warning">
               {t('countInProgressShort', String(counts.in_progress))}
             </StatusPill>
+          ) : null}
+          {counts.queued > 0 ? (
+            <StatusPill tone="neutral">{t('countQueuedShort', String(counts.queued))}</StatusPill>
           ) : null}
           <StatusPill tone="danger">{t('countFailedShort', String(counts.interrupted))}</StatusPill>
         </div>

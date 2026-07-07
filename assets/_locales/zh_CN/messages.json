@@ -154,6 +154,7 @@
   "colFileUrl": { "message": "文件 / 链接" },
   "stateComplete": { "message": "完成" },
   "stateInProgress": { "message": "进行中" },
+  "stateQueued": { "message": "排队中" },
   "stateFailed": { "message": "失败" },
   "stateUnfinished": { "message": "未完成" },
   "stateMissing": { "message": "未下载" },
@@ -208,6 +209,10 @@
   },
   "countInProgressShort": {
     "message": "进行中 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "countQueuedShort": {
+    "message": "排队 $1",
     "placeholders": { "1": { "content": "$1" } }
   },
   "countFailedShort": {

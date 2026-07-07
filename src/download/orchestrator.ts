@@ -5,7 +5,7 @@ import {
   consumePendingDownloadFilename,
   enqueuePendingDownloadFilename,
 } from '@/download/download-filename';
-import { registerDownloadIndex } from '@/download/download-registry';
+import { mapChromeDownloadState, registerDownloadIndex } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
 import {
@@ -36,9 +36,67 @@ type RuntimeJobParams = JobParams & {
 
 let cancelRequested = false;
 let finalizeTimer: ReturnType<typeof setTimeout> | null = null;
+let currentJobId = 0;
+
+type DownloadSemaphore = {
+  limit: number;
+  active: number;
+  waiters: Array<() => void>;
+};
+
+/** 单 gallery 下载时同时进行中的图片下载数量上限（定死，不暴露给用户配置） */
+const MAX_CONCURRENT_DOWNLOADS = 10;
+
+const downloadSemaphore: DownloadSemaphore = {
+  limit: MAX_CONCURRENT_DOWNLOADS,
+  active: 0,
+  waiters: [],
+};
+
+const setDownloadConcurrency = (limit: number) => {
+  const next = Math.max(1, Math.floor(limit) || 1);
+  downloadSemaphore.limit = next;
+  while (
+    downloadSemaphore.active < downloadSemaphore.limit &&
+    downloadSemaphore.waiters.length > 0
+  ) {
+    const waiter = downloadSemaphore.waiters.shift() as () => void;
+    downloadSemaphore.active++;
+    waiter();
+  }
+};
+
+const acquireDownloadSlot = (): Promise<void> =>
+  new Promise<void>((resolve) => {
+    if (downloadSemaphore.active < downloadSemaphore.limit) {
+      downloadSemaphore.active++;
+      resolve();
+    } else {
+      downloadSemaphore.waiters.push(resolve);
+    }
+  });
+
+const releaseDownloadSlot = () => {
+  if (downloadSemaphore.waiters.length > 0) {
+    const next = downloadSemaphore.waiters.shift() as () => void;
+    next();
+  } else {
+    downloadSemaphore.active = Math.max(0, downloadSemaphore.active - 1);
+  }
+};
+
+const resetDownloadSemaphore = () => {
+  downloadSemaphore.active = 0;
+  const waiters = downloadSemaphore.waiters;
+  downloadSemaphore.waiters = [];
+  for (const waiter of waiters) {
+    waiter();
+  }
+};
 
 export const requestCancelDownload = () => {
   cancelRequested = true;
+  resetDownloadSemaphore();
 };
 
 const patchTask = async (patch: Partial<ActiveDownloadTask>) => {
@@ -54,6 +112,67 @@ const needsImageBlob = (config: Config) =>
   needsCbzCache(config) ||
   config.saveOriginalImages ||
   Boolean(config.imageFormat && config.imageFormat !== 'original');
+
+const waitForChromeDownloadSettled = (chromeDownloadId: number): Promise<void> =>
+  new Promise<void>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      chrome.downloads.onChanged.removeListener(onChanged);
+      resolve();
+    };
+    const onChanged = (delta: chrome.downloads.DownloadDelta) => {
+      if (delta.id !== chromeDownloadId) return;
+      const next = delta.state?.current;
+      if (next === 'complete' || next === 'interrupted') finish();
+    };
+    chrome.downloads.onChanged.addListener(onChanged);
+    void chrome.downloads
+      .search({ id: chromeDownloadId })
+      .then(([item]) => {
+        if (item && (item.state === 'complete' || item.state === 'interrupted')) finish();
+      })
+      .catch(() => undefined);
+  });
+
+const ensureChromeDownloadSettledState = async (
+  chromeDownloadId: number,
+  params: RuntimeJobParams,
+  currentIndex: number,
+  sourceImageUrl: string
+) => {
+  try {
+    const [item] = await chrome.downloads.search({ id: chromeDownloadId });
+    if (!item) return;
+    const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
+    if (mapped !== 'complete' && mapped !== 'interrupted') return;
+
+    // 已是目标 state 则跳过，避免与 onChanged 重复回写导致 queueFailedCount 翻倍
+    const records = await galleryRecordsStorage.get();
+    const image = records?.[params.galleryFrontPageUrl]?.images[String(currentIndex)];
+    if (image?.state === mapped) return;
+
+    if (mapped === 'complete') {
+      await markImageComplete(
+        params.taskId,
+        params.galleryFrontPageUrl,
+        currentIndex,
+        sourceImageUrl
+      );
+    } else {
+      await markImageFailed(
+        params.taskId,
+        params.galleryFrontPageUrl,
+        currentIndex,
+        item.error ?? 'Download interrupted',
+        sourceImageUrl
+      );
+    }
+  } catch (e) {
+    console.warn('ensure settled state failed@', e);
+  }
+};
 
 const startChromeFileDownload = async (
   config: Config,
@@ -109,6 +228,8 @@ const startChromeFileDownload = async (
             });
             releaseDownloadUrlOnDownloadDone(id, revoke);
             onGalleryRecordChanged(params.galleryFrontPageUrl);
+            await waitForChromeDownloadSettled(id);
+            await ensureChromeDownloadSettledState(id, params, currentIndex, sourceImageUrl);
           } catch (error) {
             console.error('register download failed@', error);
             revoke?.();
@@ -406,7 +527,13 @@ const downloadImage = async (
     candidate = await resolveImagePageCandidate(config, imagePageUrl);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to fetch image page';
-    await markImageFailed(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
+    await markImageFailed(
+      params.taskId,
+      params.galleryFrontPageUrl,
+      currentIndex,
+      msg,
+      imagePageUrl
+    );
     return;
   }
 
@@ -428,7 +555,13 @@ const downloadImage = async (
     const reloaded = await resolveReloadedImagePageCandidate(config, candidate);
     if (reloaded?.parsed) {
       try {
-        await downloadResolvedImage(config, params, reloaded.parsed, reloaded.pageUrl, currentIndex);
+        await downloadResolvedImage(
+          config,
+          params,
+          reloaded.parsed,
+          reloaded.pageUrl,
+          currentIndex
+        );
         return;
       } catch (retryError) {
         const msg = retryError instanceof Error ? retryError.message : 'Failed to fetch image';
@@ -470,10 +603,7 @@ const cancelChromeDownloadIfActive = async (chromeDownloadId: number) => {
   }
 };
 
-const cancelInProgressDownloadsForRetry = async (
-  params: RuntimeJobParams,
-  indices: number[]
-) => {
+const cancelInProgressDownloadsForRetry = async (params: RuntimeJobParams, indices: number[]) => {
   const records = await galleryRecordsStorage.get();
   const gallery = records?.[params.galleryFrontPageUrl];
   if (!gallery) return;
@@ -510,7 +640,24 @@ const downloadImageIfNeeded = async (
   await downloadImage(config, params, imagePageUrl, currentIndex);
 };
 
+const runSingleDownload = async (
+  jobId: number,
+  config: Config,
+  params: RuntimeJobParams,
+  imagePageUrl: string,
+  currentIndex: number
+) => {
+  await acquireDownloadSlot();
+  try {
+    if (cancelRequested || currentJobId !== jobId) return;
+    await downloadImageIfNeeded(config, params, imagePageUrl, currentIndex);
+  } finally {
+    releaseDownloadSlot();
+  }
+};
+
 const processGalleryPage = async (
+  jobId: number,
   config: Config,
   params: RuntimeJobParams,
   pageIndex: number,
@@ -559,10 +706,16 @@ const processGalleryPage = async (
     }
 
     launchedDownloads.push(
-      downloadImageIfNeeded(config, params, imagePageUrl, currentIndex).catch(async (error) => {
+      runSingleDownload(jobId, config, params, imagePageUrl, currentIndex).catch(async (error) => {
         console.error('download image failed@', error);
         const msg = error instanceof Error ? error.message : 'Unexpected download error';
-        await markImageFailed(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
+        await markImageFailed(
+          params.taskId,
+          params.galleryFrontPageUrl,
+          currentIndex,
+          msg,
+          imagePageUrl
+        );
       })
     );
 
@@ -607,7 +760,10 @@ const buildRuntimeJobParams = (
 
 export const runDownloadJob = async (params: JobParams) => {
   cancelRequested = false;
+  const jobId = ++currentJobId;
+  resetDownloadSemaphore();
   const config = await configStorage.get();
+  setDownloadConcurrency(MAX_CONCURRENT_DOWNLOADS);
   const mode: DownloadJobMode = params.mode ?? 'full';
   const downloadIndices =
     params.indices && params.indices.length > 0
@@ -623,7 +779,7 @@ export const runDownloadJob = async (params: JobParams) => {
       : null;
   const taskId = reusableTask?.taskId ?? `${Date.now()}`;
   const taskTargetIndices = reusableTask
-    ? (reusableTask.targetIndices ?? rangeIndices(reusableTask.rangeStart, reusableTask.rangeEnd))
+    ? reusableTask.targetIndices ?? rangeIndices(reusableTask.rangeStart, reusableTask.rangeEnd)
     : downloadIndices;
   const expectedCount = reusableTask?.expectedCount ?? downloadIndices.length;
   const now = Date.now();
@@ -654,6 +810,12 @@ export const runDownloadJob = async (params: JobParams) => {
     updatedAt: now,
   });
 
+  await galleryRecordsStorage.markImagesQueued(
+    jobParams.galleryFrontPageUrl,
+    downloadIndices,
+    taskId
+  );
+
   const launchedDownloads: Promise<void>[] = [];
 
   for (const [pageIndex, pageIndices] of groupIndicesByPage(
@@ -662,21 +824,34 @@ export const runDownloadJob = async (params: JobParams) => {
   )) {
     if (cancelRequested) {
       await Promise.allSettled(launchedDownloads);
-      await patchTask({ status: 'cancelled' });
-      await clearCbzTask(taskId);
+      if (currentJobId === jobId) {
+        await patchTask({ status: 'cancelled' });
+        await clearCbzTask(taskId);
+      }
       return;
     }
-    const pageDownloads = await processGalleryPage(config, jobParams, pageIndex, pageIndices);
+    const pageDownloads = await processGalleryPage(
+      jobId,
+      config,
+      jobParams,
+      pageIndex,
+      pageIndices
+    );
     launchedDownloads.push(...pageDownloads);
   }
 
   await Promise.allSettled(launchedDownloads);
 
   if (cancelRequested) {
-    await patchTask({ status: 'cancelled' });
-    await clearCbzTask(taskId);
+    if (currentJobId === jobId) {
+      await patchTask({ status: 'cancelled' });
+      await clearCbzTask(taskId);
+    }
     return;
   }
+
+  // 被更新的 job 取代（如 retry），不再回写 task，避免覆盖新任务状态
+  if (currentJobId !== jobId) return;
 
   await patchTask({ status: 'dispatch_complete' });
   await finalizeTask(jobParams.galleryFrontPageUrl);
