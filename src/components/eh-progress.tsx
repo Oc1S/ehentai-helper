@@ -120,12 +120,16 @@ export const EhDownloadResultProgress = ({
   completeCount,
   failedCount,
   inProgressCount = 0,
+  segmented = true,
+  valueCount,
   children,
 }: {
   downloadCount: number;
   completeCount: number;
   failedCount: number;
   inProgressCount?: number;
+  segmented?: boolean;
+  valueCount?: number;
   children?: ReactNode;
 }) => {
   const successWidth = downloadCount > 0 ? (completeCount / downloadCount) * 100 : 0;
@@ -134,14 +138,22 @@ export const EhDownloadResultProgress = ({
 
   return (
     <>
-      <EhProgressBar
-        value={completeCount}
-        max={downloadCount}
-        successPercent={successWidth}
-        inProgressPercent={inProgressWidth}
-        failedPercent={failedWidth}
-        ariaLabel={t('downloadProgress')}
-      />
+      {segmented ? (
+        <EhProgressBar
+          value={completeCount}
+          max={downloadCount}
+          successPercent={successWidth}
+          inProgressPercent={inProgressWidth}
+          failedPercent={failedWidth}
+          ariaLabel={t('downloadProgress')}
+        />
+      ) : (
+        <EhProgressBar
+          value={valueCount ?? completeCount}
+          max={downloadCount}
+          ariaLabel={t('downloadProgress')}
+        />
+      )}
       {children}
     </>
   );

@@ -10,13 +10,54 @@ export type PendingDownloadFilename = {
   sourceUrl: string;
 };
 
-const pendingQueue: PendingDownloadFilename[] = [];
+const MAX_PENDING_FILENAME_HINTS = 2000;
+const pendingByDownloadUrl = new Map<string, PendingDownloadFilename[]>();
+let pendingHintCount = 0;
 
-export const enqueuePendingDownloadFilename = (item: PendingDownloadFilename) => {
-  pendingQueue.push(item);
+const trimPendingFilenameHints = () => {
+  while (pendingHintCount > MAX_PENDING_FILENAME_HINTS) {
+    const oldestKey = pendingByDownloadUrl.keys().next().value as string | undefined;
+    if (!oldestKey) return;
+
+    const list = pendingByDownloadUrl.get(oldestKey);
+    if (!list || list.length === 0) {
+      pendingByDownloadUrl.delete(oldestKey);
+      continue;
+    }
+
+    list.shift();
+    pendingHintCount -= 1;
+    if (list.length === 0) pendingByDownloadUrl.delete(oldestKey);
+  }
 };
 
-export const consumePendingDownloadFilename = () => pendingQueue.shift();
+export const enqueuePendingDownloadFilename = (
+  downloadUrl: string,
+  item: PendingDownloadFilename
+) => {
+  if (!downloadUrl) return;
+  const list = pendingByDownloadUrl.get(downloadUrl) ?? [];
+  list.push(item);
+  pendingByDownloadUrl.set(downloadUrl, list);
+  pendingHintCount += 1;
+  trimPendingFilenameHints();
+};
+
+export const consumePendingDownloadFilename = (...downloadUrls: Array<string | undefined>) => {
+  for (const downloadUrl of downloadUrls) {
+    if (!downloadUrl) continue;
+
+    const list = pendingByDownloadUrl.get(downloadUrl);
+    if (!list || list.length === 0) continue;
+
+    const item = list.shift();
+    pendingHintCount -= 1;
+    if (list.length === 0) pendingByDownloadUrl.delete(downloadUrl);
+    if (item) return item;
+  }
+
+  return undefined;
+};
 
 export const normalizeDownloadDir = (path: string) => {
   const trimmed = path.trim().replace(/\\/g, '/');

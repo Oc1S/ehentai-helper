@@ -1,8 +1,10 @@
 /** Service Worker 可用的 HTML 解析（不依赖 document） */
+const decodeHtmlUrl = (href: string) => href.replace(/&amp;/gi, '&').replace(/&#38;/gi, '&').trim();
 
 const normalizeUrl = (href: string) => {
-  if (href.startsWith('//')) return `https:${href}`;
-  return href;
+  const decoded = decodeHtmlUrl(href);
+  if (decoded.startsWith('//')) return `https:${decoded}`;
+  return decoded;
 };
 
 export type ImageUrlSource = 'preview' | 'i6' | 'fullimg';
@@ -44,14 +46,36 @@ const extractFullimgUrl = (html: string): string | null => {
   return null;
 };
 
-/** `#i6` 区块内第一个链接 — 旧版/部分页面仍走此结构 */
+const IMAGE_FILE_RE = /\.(?:avif|bmp|gif|jpe?g|jfif|png|webp)(?:[?#]|$)/i;
+
+const isLikelyImageResourceUrl = (url: string) => {
+  if (/[?&](?:f_shash|fs_from)=/i.test(url)) return false;
+  if (/\/fullimg(?:\/|\?)|fullimg\.php/i.test(url)) return true;
+  if (!IMAGE_FILE_RE.test(url)) return false;
+
+  try {
+    const parsed = new URL(url);
+    if (/e[-x]hentai\.org$/i.test(parsed.hostname)) return false;
+    return true;
+  } catch {
+    return true;
+  }
+};
+
+/** `#i6` 区块内可能有图片直链，也可能是相似图片搜索链接；只接受明确图片资源 */
 const extractI6Url = (html: string): string | null => {
   const i6Idx = html.indexOf('id="i6"');
   if (i6Idx === -1) return null;
 
   const i6Section = html.slice(i6Idx, i6Idx + 8000);
-  const linkMatch = i6Section.match(/href="([^"]+)"/i);
-  return linkMatch ? normalizeUrl(linkMatch[1]) : null;
+  const linkRe = /href=(?:"([^"]+)"|'([^']+)')/gi;
+  let match = linkRe.exec(i6Section);
+  while (match) {
+    const url = normalizeUrl(match[1] || match[2]);
+    if (isLikelyImageResourceUrl(url)) return url;
+    match = linkRe.exec(i6Section);
+  }
+  return null;
 };
 
 /** 原图 URL 追加 nl，尽量从常规图床拉取（EH 社区下载器通用做法） */
@@ -59,6 +83,47 @@ export const appendNlIfNeeded = (url: string): string => {
   if (!/\/fullimg(?:\/|\?)/i.test(url)) return url;
   if (/[?&]nl(?:=|&|$)/.test(url)) return url;
   return url.includes('?') ? `${url}&nl` : `${url}?nl`;
+};
+
+const appendQueryParam = (url: string, key: string, value: string): string => {
+  const hashIndex = url.indexOf('#');
+  const base = hashIndex === -1 ? url : url.slice(0, hashIndex);
+  const hash = hashIndex === -1 ? '' : url.slice(hashIndex);
+  const separator = base.includes('?') ? '&' : '?';
+  return `${base}${separator}${key}=${encodeURIComponent(value)}${hash}`;
+};
+
+export const appendImagePageNlIfNeeded = (url: string, nl: string): string => {
+  const normalizedUrl = normalizeUrl(url);
+  const token = nl.trim();
+  if (!token || /[?&]nl=/.test(normalizedUrl)) return normalizedUrl;
+  return appendQueryParam(normalizedUrl, 'nl', token);
+};
+
+const extractNlToken = (html: string): string | null => {
+  const queryMatch = html.match(/[?&]nl=([A-Za-z0-9_-]+)/i);
+  if (queryMatch?.[1]) return queryMatch[1];
+
+  const callMatch = html.match(/\bnl\s*\(\s*['"]([^'"]+)['"]\s*\)/i);
+  if (callMatch?.[1]) return callMatch[1];
+
+  const valueMatch = html.match(/\bnl['"]?\s*[:=]\s*['"]([^'"]+)['"]/i);
+  return valueMatch?.[1] ?? null;
+};
+
+export const extractImagePageNlReloadUrl = (html: string, currentUrl: string): string | null => {
+  const imagePageUrlRe =
+    /https?:\/\/[^"'<>\s]+\/s\/[^"'<>\s?/#]+\/[^"'<>\s?/#]+(?:\?[^"'<>\s#]*)?/gi;
+
+  let match = imagePageUrlRe.exec(html);
+  while (match) {
+    const url = normalizeUrl(match[0]);
+    if (/[?&]nl=/.test(url)) return url;
+    match = imagePageUrlRe.exec(html);
+  }
+
+  const token = extractNlToken(html);
+  return token ? appendImagePageNlIfNeeded(currentUrl, token) : null;
 };
 
 const resolveOriginalUrl = (html: string): { url: string; source: ImageUrlSource } | null => {
@@ -71,7 +136,6 @@ const resolveOriginalUrl = (html: string): { url: string; source: ImageUrlSource
   if (i6) {
     return { url: appendNlIfNeeded(i6), source: 'i6' };
   }
-
   return null;
 };
 

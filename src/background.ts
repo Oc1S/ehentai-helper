@@ -37,6 +37,13 @@ const extensionId = chrome.runtime.id;
 let listenersRegistered = false;
 let patchFlushTimer: ReturnType<typeof setTimeout> | null = null;
 type DownloadPatch = Partial<chrome.downloads.DownloadItem> & { id: number };
+type GalleryDownloadPatch = {
+  state?: chrome.downloads.DownloadItem['state'];
+  filename?: string;
+  error?: string;
+  bytesReceived?: number;
+  totalBytes?: number;
+};
 
 const pendingDownloadPatches = new Map<number, DownloadPatch>();
 
@@ -51,6 +58,47 @@ const rebuildTrackedIdsFromIndexMap = (map: Record<string, unknown> | null | und
   }
 };
 
+const buildGalleryPatchFromDownloadItem = (item: chrome.downloads.DownloadItem) => {
+  const patch: {
+    state?: GalleryImageState;
+    filename?: string;
+    error?: string;
+    bytesReceived?: number;
+    totalBytes?: number;
+  } = {};
+  const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
+
+  if (mapped) patch.state = mapped;
+  if (item.filename) patch.filename = item.filename;
+  if (item.error) patch.error = item.error;
+  if (typeof item.bytesReceived === 'number') patch.bytesReceived = item.bytesReceived;
+  if (typeof item.totalBytes === 'number') patch.totalBytes = item.totalBytes;
+
+  return patch;
+};
+
+const backfillGalleryRecordsFromDownloads = async (items: chrome.downloads.DownloadItem[]) => {
+  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
+  if (!ownerMap) return;
+
+  await Promise.all(
+    items.map((item) => {
+      const owner = ownerMap[String(item.id)];
+      if (!owner) return Promise.resolve();
+
+      const patch = buildGalleryPatchFromDownloadItem(item);
+      if (Object.keys(patch).length === 0) return Promise.resolve();
+
+      return galleryRecordsStorage.patchImageByDownloadId(
+        item.id,
+        owner.galleryUrl,
+        owner.index,
+        patch
+      );
+    })
+  );
+};
+
 const syncDownloadList = async () => {
   if (trackedDownloadIds.size === 0) {
     await downloadListStorage.set([]);
@@ -59,7 +107,9 @@ const syncDownloadList = async () => {
   const results = await Promise.all(
     [...trackedDownloadIds].map((id) => chrome.downloads.search({ id }))
   );
-  await downloadListStorage.set(results.flat());
+  const items = results.flat();
+  await downloadListStorage.set(items);
+  await backfillGalleryRecordsFromDownloads(items);
 };
 
 const flushPendingDownloadPatches = async () => {
@@ -133,30 +183,48 @@ const getFormatOverrideExtension = (): string | null => {
   return fmt;
 };
 
+const hydrateDownloadPatch = async (
+  chromeDownloadId: number,
+  patch: GalleryDownloadPatch
+): Promise<GalleryDownloadPatch> => {
+  if (!patch.state && patch.filename && patch.totalBytes !== undefined) return patch;
+
+  try {
+    const [item] = await chrome.downloads.search({ id: chromeDownloadId });
+    if (!item) return patch;
+
+    return {
+      ...patch,
+      state: patch.state ?? item.state,
+      filename: patch.filename || item.filename,
+      error: patch.error || item.error,
+      bytesReceived: patch.bytesReceived ?? item.bytesReceived,
+      totalBytes: patch.totalBytes ?? item.totalBytes,
+    };
+  } catch {
+    return patch;
+  }
+};
+
 const propagateImagePatchToGallery = async (
   chromeDownloadId: number,
-  patch: {
-    state?: chrome.downloads.DownloadItem['state'];
-    filename?: string;
-    error?: string;
-    bytesReceived?: number;
-    totalBytes?: number;
-  }
+  patch: GalleryDownloadPatch
 ) => {
   const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
   const owner = ownerMap?.[String(chromeDownloadId)];
   if (!owner) return;
 
+  const hydratedPatch = await hydrateDownloadPatch(chromeDownloadId, patch);
   const galleryPatch: {
     state?: GalleryImageState;
     filename?: string;
     error?: string;
     bytesReceived?: number;
     totalBytes?: number;
-  } = { ...patch };
+  } = { ...hydratedPatch };
 
-  if (patch.state) {
-    const mapped = mapChromeDownloadState(patch.state);
+  if (hydratedPatch.state) {
+    const mapped = mapChromeDownloadState(hydratedPatch.state);
     if (mapped) galleryPatch.state = mapped;
     else delete galleryPatch.state;
   }
@@ -202,12 +270,7 @@ const registerListeners = () => {
     }
     scheduleDownloadPatch(next);
 
-    const galleryPatch: {
-      state?: chrome.downloads.DownloadItem['state'];
-      filename?: string;
-      error?: string;
-      totalBytes?: number;
-    } = {};
+    const galleryPatch: GalleryDownloadPatch = {};
     if (downloadDelta.state) {
       galleryPatch.state = downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
     }
@@ -238,21 +301,20 @@ const registerListeners = () => {
       return;
     }
 
-    const pending = consumePendingDownloadFilename();
+    const indexMap = downloadIndexMapStorage.getSnapshot() ?? {};
+    const { fileNameRule, filenameConflictAction: conflictAction } = currentConfig;
+    const pending = consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
     if (pending) {
       suggest({
-        filename: buildStorageRelativeFilename(
-          { fileNameRule: currentConfig.fileNameRule },
-          pending
-        ),
-        conflictAction: currentConfig.filenameConflictAction,
+        filename: buildStorageRelativeFilename({ fileNameRule }, pending),
+        conflictAction,
       });
       return;
     }
 
-    const indexMap = downloadIndexMapStorage.getSnapshot() ?? {};
-    const { fileNameRule, filenameConflictAction: conflictAction } = currentConfig;
     const entry = indexMap[String(downloadItem.id)];
+    if (!entry && downloadItem.mime !== textMime) return;
+
     const downloadPath =
       entry?.downloadPath ||
       currentDownloadContext?.downloadPath ||

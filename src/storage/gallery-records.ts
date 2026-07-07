@@ -67,6 +67,29 @@ const clearSettledError = (image: GalleryImageRecord) => {
   return next;
 };
 
+const hasOwn = <T extends object>(object: T, key: PropertyKey) =>
+  Object.prototype.hasOwnProperty.call(object, key);
+
+const mergeImageRecord = (
+  previous: GalleryImageRecord | undefined,
+  image: GalleryImageRecord
+): GalleryImageRecord => {
+  const merged = clearSettledError({
+    ...(previous || {}),
+    ...image,
+    updatedAt: Date.now(),
+  });
+
+  if (!hasOwn(image, 'filename') || !image.filename) delete merged.filename;
+  if (!hasOwn(image, 'chromeDownloadId') || image.chromeDownloadId == null) {
+    delete merged.chromeDownloadId;
+  }
+  if (!hasOwn(image, 'bytesReceived')) delete merged.bytesReceived;
+  if (!hasOwn(image, 'totalBytes')) delete merged.totalBytes;
+
+  return merged;
+};
+
 export const galleryRecordsStorage: GalleryRecordsStorage = {
   ...baseStorage,
   upsertGallery: async ({ galleryUrl, galleryName, galleryId, downloadPath, total }) => {
@@ -94,11 +117,7 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
         ...current,
         images: {
           ...current.images,
-          [String(image.index)]: clearSettledError({
-            ...(current.images[String(image.index)] || {}),
-            ...image,
-            updatedAt: Date.now(),
-          }),
+          [String(image.index)]: mergeImageRecord(current.images[String(image.index)], image),
         },
         updatedAt: Date.now(),
       };

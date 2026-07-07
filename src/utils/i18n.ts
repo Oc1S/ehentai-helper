@@ -112,6 +112,7 @@ const fallbackMessages: Record<string, string> = {
   stateComplete: 'Complete',
   stateInProgress: 'In progress',
   stateFailed: 'Failed',
+  stateUnfinished: 'Unfinished',
   stateMissing: 'Missing',
   stateInterrupted: 'Interrupted',
   stateDownloading: 'Downloading',

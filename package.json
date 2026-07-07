@@ -8,6 +8,7 @@
     "dev": "plasmo dev",
     "build": "plasmo build",
     "package": "plasmo package",
+    "check:indexes": "node scripts/check-download-indexes.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

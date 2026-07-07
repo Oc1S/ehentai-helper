@@ -45,6 +45,40 @@ export const mapChromeDownloadState = (
   }
 };
 
+const refreshDownloadMetadata = async (params: RegisterDownloadParams) => {
+  try {
+    const [item] = await chrome.downloads.search({ id: params.id });
+    if (!item) return;
+
+    const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
+    const patch: Parameters<typeof galleryRecordsStorage.patchImageByDownloadId>[3] = {};
+    if (mapped && mapped !== 'in_progress') patch.state = mapped;
+    if (item.filename) patch.filename = item.filename;
+    if (item.error) patch.error = item.error;
+    if (typeof item.bytesReceived === 'number') patch.bytesReceived = item.bytesReceived;
+    if (typeof item.totalBytes === 'number') patch.totalBytes = item.totalBytes;
+
+    if (Object.keys(patch).length > 0) {
+      await galleryRecordsStorage.patchImageByDownloadId(
+        params.id,
+        params.galleryUrl,
+        params.index,
+        patch
+      );
+    }
+  } catch {
+    /* downloads.search may fail for brand-new ids on some builds */
+  }
+};
+
+const scheduleDownloadMetadataRefresh = (params: RegisterDownloadParams) => {
+  for (const delay of [150, 750, 2000]) {
+    setTimeout(() => {
+      void refreshDownloadMetadata(params);
+    }, delay);
+  }
+};
+
 export const registerDownloadIndex = async (params: RegisterDownloadParams) => {
   trackedDownloadIds.add(params.id);
 
@@ -80,21 +114,8 @@ export const registerDownloadIndex = async (params: RegisterDownloadParams) => {
     updatedAt: Date.now(),
   });
 
-  try {
-    const [item] = await chrome.downloads.search({ id: params.id });
-    if (item?.state) {
-      const mapped = mapChromeDownloadState(item.state);
-      if (mapped && mapped !== 'in_progress') {
-        await galleryRecordsStorage.patchImageByDownloadId(params.id, params.galleryUrl, params.index, {
-          state: mapped,
-          filename: item.filename,
-          error: item.error,
-        });
-      }
-    }
-  } catch {
-    /* downloads.search may fail for brand-new ids on some builds */
-  }
+  await refreshDownloadMetadata(params);
+  scheduleDownloadMetadataRefresh(params);
 };
 
 export const clearTrackedDownloads = () => {

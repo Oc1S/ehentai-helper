@@ -169,6 +169,7 @@
   "stateComplete": { "message": "Complete" },
   "stateInProgress": { "message": "In progress" },
   "stateFailed": { "message": "Failed" },
+  "stateUnfinished": { "message": "Unfinished" },
   "stateMissing": { "message": "Missing" },
   "stateInterrupted": { "message": "Interrupted" },
   "stateDownloading": { "message": "Downloading" },

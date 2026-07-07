@@ -39,6 +39,13 @@ const trimFilename = (filename?: string) => {
   return arr[arr.length - 1] || filename;
 };
 
+const visibleFilename = (row: GalleryImageRecord) => {
+  const filename = trimFilename(row.filename);
+  if (!filename) return '';
+  if (row.chromeDownloadId || row.state === 'complete') return filename;
+  return '';
+};
+
 const detailColumns = (showAction: boolean) => {
   const cols = [
     { key: 'index', label: t('colIndex'), width: 48 },
@@ -53,11 +60,11 @@ const detailColumns = (showAction: boolean) => {
 
 export const GalleryDetailModal: FC<{
   isOpen: boolean;
-  onClose: () => void;
   record?: GalleryRecord | null;
   taskId?: string;
   indices?: number[];
   totalCount?: number;
+  onClose: () => void;
   onRetryIndex?: (index: number) => void;
   onRetryAllFailed?: () => void;
 }> = ({ isOpen, onClose, record, taskId, indices, onRetryIndex, onRetryAllFailed }) => {
@@ -101,7 +108,7 @@ export const GalleryDetailModal: FC<{
     return rows.filter((r) => {
       if (filter !== 'all' && r.state !== filter) return false;
       if (!kw) return true;
-      const fn = trimFilename(r.filename).toLowerCase();
+      const fn = visibleFilename(r).toLowerCase();
       return (
         fn.includes(kw) ||
         String(r.index).includes(kw) ||
@@ -187,55 +194,59 @@ export const GalleryDetailModal: FC<{
                   </td>
                 </tr>
               ) : (
-                filteredRows.map((row) => (
-                  <tr key={row.index}>
-                    <td>{row.index}</td>
-                    <td className="eh-detail-state-cell">
-                      <StatusPill tone={STATE_COLOR[row.state]} compact>
-                        {stateLabel(row.state)}
-                      </StatusPill>
-                    </td>
-                    <td className="min-w-0 max-w-0 overflow-hidden">
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span
-                          className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-ink [overflow-wrap:normal] [word-break:normal]"
-                          title={row.filename || ''}
-                        >
-                          {trimFilename(row.filename) || '-'}
-                        </span>
-                        {row.sourceUrl ? (
-                          <a
-                            href={row.sourceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted underline-offset-2 [overflow-wrap:normal] [word-break:normal] hover:underline"
-                            title={row.sourceUrl}
-                          >
-                            {row.sourceUrl}
-                          </a>
-                        ) : null}
-                        {row.state === 'interrupted' && row.error ? (
-                          <span className="text-xs text-error">{row.error}</span>
-                        ) : null}
-                      </div>
-                    </td>
-                    {showAction ? (
-                      <td>
-                        {onRetryIndex && row.state !== 'complete' ? (
-                          <EhButton
-                            variant="primary"
-                            ehSize="sm"
-                            onPress={() => onRetryIndex(row.index)}
-                          >
-                            {t('retry')}
-                          </EhButton>
-                        ) : (
-                          '-'
-                        )}
+                filteredRows.map((row) => {
+                  const filename = visibleFilename(row);
+
+                  return (
+                    <tr key={row.index}>
+                      <td>{row.index}</td>
+                      <td className="eh-detail-state-cell">
+                        <StatusPill tone={STATE_COLOR[row.state]} compact>
+                          {stateLabel(row.state)}
+                        </StatusPill>
                       </td>
-                    ) : null}
-                  </tr>
-                ))
+                      <td className="min-w-0 max-w-0 overflow-hidden">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-ink [overflow-wrap:normal] [word-break:normal]"
+                            title={filename}
+                          >
+                            {filename || '-'}
+                          </span>
+                          {row.sourceUrl ? (
+                            <a
+                              href={row.sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted underline-offset-2 [overflow-wrap:normal] [word-break:normal] hover:underline"
+                              title={row.sourceUrl}
+                            >
+                              {row.sourceUrl}
+                            </a>
+                          ) : null}
+                          {row.state === 'interrupted' && row.error ? (
+                            <span className="text-xs text-error">{row.error}</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      {showAction ? (
+                        <td>
+                          {onRetryIndex && row.state !== 'complete' ? (
+                            <EhButton
+                              variant="primary"
+                              ehSize="sm"
+                              onPress={() => onRetryIndex(row.index)}
+                            >
+                              {t('retry')}
+                            </EhButton>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                      ) : null}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

@@ -155,6 +155,7 @@
   "stateComplete": { "message": "完成" },
   "stateInProgress": { "message": "进行中" },
   "stateFailed": { "message": "失败" },
+  "stateUnfinished": { "message": "未完成" },
   "stateMissing": { "message": "未下载" },
   "stateInterrupted": { "message": "中断" },
   "stateDownloading": { "message": "下载中" },

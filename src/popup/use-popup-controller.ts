@@ -216,7 +216,6 @@ export const usePopupController = () => {
         return galleryRecordsStorage.upsertImage(galleryUrl, {
           index,
           sourceUrl: prev?.sourceUrl ?? '',
-          filename: prev?.filename,
           chromeDownloadId: undefined,
           taskId,
           state: 'in_progress',
@@ -241,6 +240,7 @@ export const usePopupController = () => {
       toast.info(t('noFailedItems'));
       return;
     }
+
     const launched = await launchDownload('retry', failed);
     if (!launched) return;
 

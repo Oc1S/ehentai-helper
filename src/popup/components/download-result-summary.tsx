@@ -53,8 +53,9 @@ export const DownloadResultSummary = ({
         ? t('allImagesSuccess', String(downloadCount))
         : variant === 'partial'
           ? t('partialSuccessSummary', [String(completeCount), String(failedCount)])
-          : t('downloadFailedDesc');
+        : t('downloadFailedDesc');
   const metaRange = rangeLabel ?? `${rangeStart} - ${rangeEnd}`;
+  const unfinishedCount = Math.max(0, downloadCount - completeCount);
 
   return (
     <div className="glass-panel rounded-eh-2xl flex shrink-0 flex-col gap-3 p-5">
@@ -83,13 +84,13 @@ export const DownloadResultSummary = ({
             <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
           </p>
         </div>
-        {variant === 'running' && inProgressCount > 0 ? (
+        {variant === 'running' ? (
           <div className="text-right">
             <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
-              {t('stateInProgress')}
+              {t('stateUnfinished')}
             </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums text-warning">
-              {inProgressCount}
+            <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
+              {unfinishedCount}
             </p>
           </div>
         ) : variant !== 'success' && failedCount > 0 ? (
@@ -106,7 +107,9 @@ export const DownloadResultSummary = ({
         downloadCount={downloadCount}
         completeCount={completeCount}
         failedCount={failedCount}
-        inProgressCount={inProgressCount}
+        inProgressCount={variant === 'running' ? 0 : inProgressCount}
+        segmented={variant !== 'running'}
+        valueCount={completeCount}
       />
 
       <p className="text-xs leading-relaxed text-muted">{desc}</p>
