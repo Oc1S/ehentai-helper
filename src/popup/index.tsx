@@ -19,8 +19,6 @@ const Popup = () => {
         <PopupHeader
           selectedTab={ctrl.selectedTab}
           onSelectTab={ctrl.setSelectedTab}
-          isDownloading={ctrl.isDownloading}
-          pathPreview={ctrl.pathPreview}
         />
 
         <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">

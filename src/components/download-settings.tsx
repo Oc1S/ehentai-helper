@@ -31,12 +31,7 @@ const settingsOverlayMotion = {
   transition: { type: 'spring', visualDuration: 0.3, bounce: 0.12 },
 } as const;
 
-export const DownloadSettings = ({
-  disabled = false,
-}: {
-  disabled?: boolean;
-  pathPreview?: string;
-}) => {
+export const DownloadSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
 
@@ -128,7 +123,6 @@ export const DownloadSettings = ({
         isIconOnly
         ehSize="sm"
         onPress={() => setIsOpen(true)}
-        disabled={disabled}
         aria-label={t('settings')}
       >
         <SettingsIcon size={15} strokeWidth={1.75} />

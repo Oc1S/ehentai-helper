@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   type CSSProperties,
   type FC,
   type KeyboardEvent,
@@ -20,14 +21,12 @@ type PageSelectorProps = {
 type RangeThumb = 'start' | 'end';
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
 const sanitizeRangeText = (raw: string) => raw.replace(/[^0-9]/g, '');
 
 export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue }) => {
   const [activeThumb, setActiveThumb] = useState<RangeThumb | null>(null);
-  // 输入框本地草稿：允许清空/部分输入，仅在 blur 或回车时 commit 校验
-  const [fromDraft, setFromDraft] = useState(String(range[0]));
-  const [toDraft, setToDraft] = useState(String(range[1]));
+  const fromInputRef = useRef<HTMLInputElement>(null);
+  const toInputRef = useRef<HTMLInputElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const startThumbRef = useRef<HTMLButtonElement>(null);
   const endThumbRef = useRef<HTMLButtonElement>(null);
@@ -45,12 +44,15 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
   const startThumbStyle: CSSProperties = { left: `${startPercent}%` };
   const endThumbStyle: CSSProperties = { left: `${endPercent}%` };
 
-  // 外部 range 变化（如拖动滑块）时同步草稿
+  // 输入框非受控：仅在未聚焦时把外部 range 变化（如拖动滑块）同步回输入框，
+  // 避免在用户编辑过程中覆盖其输入。
   useEffect(() => {
-    setFromDraft(String(range[0]));
+    if (document.activeElement === fromInputRef.current) return;
+    if (fromInputRef.current) fromInputRef.current.value = String(range[0]);
   }, [range[0]]);
   useEffect(() => {
-    setToDraft(String(range[1]));
+    if (document.activeElement === toInputRef.current) return;
+    if (toInputRef.current) toInputRef.current.value = String(range[1]);
   }, [range[1]]);
 
   const valueFromPointer = useCallback(
@@ -83,40 +85,44 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
     [safeEnd, safeStart],
   );
 
-  const commitFrom = (raw: string) => {
+  // 非受控：onChange 时若输入合理（合法数字且在范围内）则更新 range，否则不动，
+  // 让用户继续编辑。blur 时若仍不合理，回退到当前 range 值。
+  const tryCommitFrom = (raw: string) => {
     const next = Number.parseInt(raw, 10);
-    // 清空或非法：回退到当前值，不强制改成 1（允许用户中途清空重新输入）
-    if (Number.isNaN(next)) {
-      setFromDraft(String(range[0]));
-      return;
-    }
-    const clamped = clamp(next, 1, range[1]);
-    setRange([clamped, range[1]]);
-    setFromDraft(String(clamped));
+    if (Number.isNaN(next) || next < 1 || next > range[1]) return false;
+    setRange([next, range[1]]);
+    return true;
   };
 
-  const commitTo = (raw: string) => {
+  const tryCommitTo = (raw: string) => {
     const next = Number.parseInt(raw, 10);
-    // 清空或非法：回退到当前值，不强制改成 maxValue（允许用户中途清空重新输入）
-    if (Number.isNaN(next)) {
-      setToDraft(String(range[1]));
-      return;
-    }
-    const clamped = clamp(next, range[0], maxValue);
-    setRange([range[0], clamped]);
-    setToDraft(String(clamped));
+    if (Number.isNaN(next) || next < range[0] || next > maxValue) return false;
+    setRange([range[0], next]);
+    return true;
   };
 
-  const handleFromKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.currentTarget.blur();
-    }
+  const handleFromChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const raw = sanitizeRangeText(e.target.value);
+    e.target.value = raw;
+    tryCommitFrom(raw);
   };
 
-  const handleToKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.currentTarget.blur();
-    }
+  const handleToChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const raw = sanitizeRangeText(e.target.value);
+    e.target.value = raw;
+    tryCommitTo(raw);
+  };
+
+  const handleFromBlur = () => {
+    if (fromInputRef.current) fromInputRef.current.value = String(range[0]);
+  };
+
+  const handleToBlur = () => {
+    if (toInputRef.current) toInputRef.current.value = String(range[1]);
+  };
+
+  const blurOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') event.currentTarget.blur();
   };
 
   const focusThumb = (thumb: RangeThumb) => {
@@ -230,16 +236,17 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             {t('rangeFrom')}
           </span>
           <input
+            ref={fromInputRef}
             type="number"
             inputMode="numeric"
             min={1}
             max={range[1]}
-            value={fromDraft}
+            defaultValue={range[0]}
             aria-label={t('rangeFrom')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
-            onChange={(e) => setFromDraft(sanitizeRangeText(e.target.value))}
-            onBlur={(e) => commitFrom(e.target.value)}
-            onKeyDown={handleFromKeyDown}
+            onChange={handleFromChange}
+            onBlur={handleFromBlur}
+            onKeyDown={blurOnEnter}
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -247,16 +254,17 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             {t('rangeTo')}
           </span>
           <input
+            ref={toInputRef}
             type="number"
             inputMode="numeric"
             min={range[0]}
             max={maxValue}
-            value={toDraft}
+            defaultValue={range[1]}
             aria-label={t('rangeTo')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
-            onChange={(e) => setToDraft(sanitizeRangeText(e.target.value))}
-            onBlur={(e) => commitTo(e.target.value)}
-            onKeyDown={handleToKeyDown}
+            onChange={handleToChange}
+            onBlur={handleToBlur}
+            onKeyDown={blurOnEnter}
           />
         </label>
       </div>

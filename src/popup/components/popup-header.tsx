@@ -12,13 +12,9 @@ const POPUP_TABS = [
 export const PopupHeader = ({
   selectedTab,
   onSelectTab,
-  isDownloading,
-  pathPreview,
 }: {
   selectedTab: string;
   onSelectTab: (key: string) => void;
-  isDownloading: boolean;
-  pathPreview?: string;
 }) => (
   <header className="grid h-popup-header shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 text-ink">
     <div className="flex min-w-0 items-center gap-2">
@@ -42,7 +38,7 @@ export const PopupHeader = ({
       />
     </nav>
     <div className="min-w-0 justify-self-end">
-      <DownloadSettings disabled={isDownloading} pathPreview={pathPreview} />
+      <DownloadSettings />
     </div>
   </header>
 );

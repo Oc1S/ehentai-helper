@@ -309,13 +309,6 @@ export const usePopupController = () => {
         : 'overflow-y-auto'
   }`;
 
-  const pathPreview = galleryInfo
-    ? resolveGalleryDownloadPath(
-        (config || DEFAULT_CONFIG).intermediateDownloadPath,
-        galleryInfo.name
-      )
-    : undefined;
-
   return {
     status,
     selectedTab,
@@ -338,7 +331,6 @@ export const usePopupController = () => {
     taskDisplayTotal,
     isDownloading,
     tabContentClassName,
-    pathPreview,
     config,
     getGalleryUrl,
     reloadGallery: () => void initFromCurrentTab(),

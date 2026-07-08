@@ -1,6 +1,6 @@
 import { authFetch } from './auth-fetch';
 import type { ImageFormat } from './constant';
-import { assertBlobNotHtml, assertResponseNotHtml } from './image-response-guard';
+import { assertBlobNotHtml } from './image-response-guard';
 
 const MIME_MAP: Record<Exclude<ImageFormat, 'original'>, string> = {
   jpg: 'image/jpeg',
@@ -17,7 +17,6 @@ export const convertImageToFormatInWorker = async (
   if (!response.ok) {
     throw new Error(`Failed to fetch image (${response.status})`);
   }
-  assertResponseNotHtml(response);
   const blob = await response.blob();
   await assertBlobNotHtml(blob);
   const bitmap = await createImageBitmap(blob);
