@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 
 import {
   cancelDownload,
+  clearDownloadTask,
+  reconcileGallery,
   resumeDownload,
   retryFailedDownload,
   startDownload,
@@ -268,6 +270,10 @@ export const usePopupController = () => {
     setGalleryInfo(galleryInfoResult);
 
     setPageStatus(StatusEnum.BeforeDownload);
+
+    // 若有进行中的任务，触发 background reconcile，纠正因 service worker 休眠
+    // 导致 callback/事件丢失而卡在 queued/in_progress 的图片状态。
+    void reconcileGallery(galleryFrontPageUrl.current).catch(() => undefined);
   };
 
   useMounted(() => {
@@ -278,7 +284,7 @@ export const usePopupController = () => {
     if (activeTask?.galleryUrl === galleryFrontPageUrl.current) {
       setRange([activeTask.rangeStart, activeTask.rangeEnd]);
     }
-    await downloadTaskStorage.set(null);
+    await clearDownloadTask();
     setOptimisticTaskStatus(null);
     setPageStatus(StatusEnum.BeforeDownload);
   };

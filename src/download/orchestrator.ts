@@ -1,17 +1,23 @@
-import { clearCbzTask, putCbzImage } from '@/download/cbz-cache';
-import { packAndDownloadCbz } from '@/download/cbz-pack';
+import { putCbzImage } from '@/download/cbz-cache';
 import {
   buildStorageRelativeFilename,
   consumePendingDownloadFilename,
   enqueuePendingDownloadFilename,
 } from '@/download/download-filename';
-import { registerDownloadIndex } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
+import {
+  clearActiveTask,
+  completeImage,
+  failImage,
+  markDispatchComplete,
+  registerChromeDownload,
+  settleChromeDownload,
+  startTask,
+} from '@/download/state-store';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
 import {
   type ActiveDownloadTask,
   configStorage,
-  downloadOwnerStorage,
   downloadTaskStorage,
   galleryRecordsStorage,
 } from '@/storage';
@@ -36,7 +42,6 @@ type RuntimeJobParams = JobParams & {
 };
 
 let cancelRequested = false;
-let finalizeTimer: ReturnType<typeof setTimeout> | null = null;
 let currentJobId = 0;
 
 type DownloadSemaphore = {
@@ -54,7 +59,7 @@ const downloadSemaphore: DownloadSemaphore = {
   waiters: [],
 };
 
-/** 已移交给 chrome download 的并发槽（由 handleChromeDownloadSettled 在下载终态时释放） */
+/** 已移交给 chrome download 的并发槽（由 top-level downloads.onChanged 在下载终态时释放） */
 const activeSlotIds = new Set<number>();
 
 const setDownloadConcurrency = (limit: number) => {
@@ -104,13 +109,6 @@ export const requestCancelDownload = () => {
   activeSlotIds.clear();
 };
 
-const patchTask = async (patch: Partial<ActiveDownloadTask>) => {
-  await downloadTaskStorage.set((prev) => {
-    if (!prev) return prev;
-    return { ...prev, ...patch, updatedAt: Date.now() };
-  });
-};
-
 const needsCbzCache = (config: Config) => (config.outputMode ?? 'files') !== 'files';
 const needsFileDownload = (config: Config) => (config.outputMode ?? 'files') !== 'cbz';
 const needsImageBlob = (config: Config) =>
@@ -118,64 +116,23 @@ const needsImageBlob = (config: Config) =>
   config.saveOriginalImages ||
   Boolean(config.imageFormat && config.imageFormat !== 'original');
 
-/**
- * chrome download 进入终态（complete/interrupted）时由 background 的 onChanged 监听调用：
- * 1. 释放该下载占用的并发槽；
- * 2. 把终态回写到 gallery record。
- *
- * 把槽位释放与状态回写都挂在 top-level 注册的全局 onChanged 监听上，避免在 orchestrator
- * 内部 `await` 下载完成——MV3 service worker 在无 pending chrome API 的 await 期间会休眠，
- * 休眠后 Promise 丢失，槽位永远无法释放（表现为一半图片卡在 queued/in_progress）。
- */
-export const handleChromeDownloadSettled = async (
-  chromeDownloadId: number,
-  chromeState: 'complete' | 'interrupted',
-  error?: string
-) => {
+export const releaseChromeDownloadSlot = (chromeDownloadId: number) => {
   if (activeSlotIds.delete(chromeDownloadId)) {
     releaseDownloadSlot();
   }
-
-  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
-  const owner = ownerMap?.[String(chromeDownloadId)];
-  if (!owner) return;
-
-  const records = await galleryRecordsStorage.get();
-  const image = records?.[owner.galleryUrl]?.images[String(owner.index)];
-  if (!image) return;
-
-  if (chromeState === 'complete') {
-    if (image.state === 'complete') return;
-    await markImageComplete(
-      image.taskId ?? '',
-      owner.galleryUrl,
-      owner.index,
-      image.sourceUrl ?? ''
-    );
-    return;
-  }
-
-  if (image.state === 'interrupted') return;
-  await markImageFailed(
-    image.taskId ?? '',
-    owner.galleryUrl,
-    owner.index,
-    error ?? 'Download interrupted',
-    image.sourceUrl ?? ''
-  );
 };
 
 /**
- * 兜底：下载可能在 registerDownloadIndex 之前就已进入终态（onChanged complete 已错过），
- * 此时 handOverSlot 刚把 id 加入 activeSlotIds 但 onChanged 不会再触发，槽位会泄漏。
- * 在 handOverSlot 后主动 search 一次，若已终态则复用 handleChromeDownloadSettled 收尾。
+ * 兜底：下载可能在 registerChromeDownload 之前就已进入终态（onChanged complete 已错过）。
+ * 在 handOverSlot 后主动 search 一次，若已终态则复用同一条 settle 提交流程。
  */
 const ensureSettledIfAlreadyDone = async (chromeDownloadId: number) => {
   try {
     const [item] = await chrome.downloads.search({ id: chromeDownloadId });
     if (!item) return;
     if (item.state === 'complete' || item.state === 'interrupted') {
-      await handleChromeDownloadSettled(chromeDownloadId, item.state, item.error);
+      releaseChromeDownloadSlot(chromeDownloadId);
+      await settleChromeDownload(chromeDownloadId, item.state, item.error);
     }
   } catch {
     /* downloads.search may fail for brand-new ids on some builds */
@@ -200,7 +157,12 @@ const startChromeFileDownload = async (
     sourceUrl: sourceImageUrl,
   };
   const relativeFilename = buildStorageRelativeFilename(config, filenameHint);
-  enqueuePendingDownloadFilename(downloadUrl, filenameHint);
+  enqueuePendingDownloadFilename(downloadUrl, {
+    ...filenameHint,
+    taskId: params.taskId,
+    galleryUrl: params.galleryFrontPageUrl,
+    filename: relativeFilename,
+  });
 
   return new Promise<void>((resolve) => {
     chrome.downloads.download(
@@ -212,9 +174,9 @@ const startChromeFileDownload = async (
       (id) => {
         void (async () => {
           if (chrome.runtime.lastError || typeof id !== 'number') {
-            consumePendingDownloadFilename(downloadUrl);
+            await consumePendingDownloadFilename(downloadUrl);
             revoke?.();
-            await markImageFailed(
+            await failImage(
               params.taskId,
               params.galleryFrontPageUrl,
               currentIndex,
@@ -226,7 +188,7 @@ const startChromeFileDownload = async (
           }
 
           try {
-            await registerDownloadIndex({
+            await registerChromeDownload({
               id,
               index: currentIndex,
               total: params.totalImages,
@@ -236,14 +198,15 @@ const startChromeFileDownload = async (
               taskId: params.taskId,
               filename: relativeFilename,
             });
+            await consumePendingDownloadFilename(downloadUrl);
             releaseDownloadUrlOnDownloadDone(id, revoke);
             handOverSlot(id);
-            onGalleryRecordChanged(params.galleryFrontPageUrl);
             await ensureSettledIfAlreadyDone(id);
           } catch (error) {
             console.error('register download failed@', error);
+            await consumePendingDownloadFilename(downloadUrl);
             revoke?.();
-            await markImageFailed(
+            await failImage(
               params.taskId,
               params.galleryFrontPageUrl,
               currentIndex,
@@ -258,156 +221,6 @@ const startChromeFileDownload = async (
       }
     );
   });
-};
-
-const markImageComplete = async (
-  taskId: string,
-  galleryUrl: string,
-  index: number,
-  sourceUrl: string
-) => {
-  await galleryRecordsStorage.upsertImage(galleryUrl, {
-    index,
-    sourceUrl,
-    taskId,
-    state: 'complete',
-    updatedAt: Date.now(),
-  });
-  onGalleryRecordChanged(galleryUrl);
-};
-
-const getCompleteIndices = (
-  task: ActiveDownloadTask,
-  images: Record<string, { state: string; taskId?: string }> | undefined
-): number[] => {
-  const indices = task.targetIndices ?? rangeIndices(task.rangeStart, task.rangeEnd);
-  return indices.filter((i) => {
-    const img = images?.[String(i)];
-    return img?.taskId === task.taskId && img.state === 'complete';
-  });
-};
-
-const maybePackCbz = async (task: ActiveDownloadTask, config: Config, galleryUrl: string) => {
-  if ((config.outputMode ?? 'files') === 'files') return;
-
-  const records = await galleryRecordsStorage.get();
-  const gallery = records?.[galleryUrl];
-  const completeIndices = getCompleteIndices(task, gallery?.images);
-  if (completeIndices.length === 0) {
-    await clearCbzTask(task.taskId);
-    return;
-  }
-
-  await packAndDownloadCbz(task, config, completeIndices);
-};
-
-const markImageFailed = async (
-  taskId: string,
-  galleryUrl: string,
-  index: number,
-  error: string,
-  sourceUrl = ''
-) => {
-  await galleryRecordsStorage.upsertImage(galleryUrl, {
-    index,
-    sourceUrl,
-    taskId,
-    state: 'interrupted',
-    error,
-    updatedAt: Date.now(),
-  });
-  await downloadTaskStorage.set((prev) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      queueFailedCount: prev.queueFailedCount + 1,
-      updatedAt: Date.now(),
-    };
-  });
-  onGalleryRecordChanged(galleryUrl);
-};
-
-const countTargetTerminal = (
-  task: ActiveDownloadTask,
-  images: Record<string, { state: string; taskId?: string }> | undefined
-) => {
-  let complete = 0;
-  let interrupted = 0;
-  let inProgress = 0;
-  const indices = task.targetIndices ?? rangeIndices(task.rangeStart, task.rangeEnd);
-
-  for (const i of indices) {
-    const img = images?.[String(i)];
-    if (!img || img.taskId !== task.taskId) continue;
-    if (img.state === 'complete') complete++;
-    else if (img.state === 'interrupted') interrupted++;
-    else if (img.state === 'in_progress') inProgress++;
-  }
-  return { complete, interrupted, inProgress };
-};
-
-const resolveFinalStatus = (
-  task: ActiveDownloadTask,
-  counts: { complete: number; interrupted: number; inProgress: number }
-): ActiveDownloadTask['status'] => {
-  const { complete, interrupted, inProgress } = counts;
-  const settled = complete + interrupted;
-  if (inProgress > 0 || settled < task.expectedCount) {
-    return 'dispatch_complete';
-  }
-  if (complete === task.expectedCount) return 'completed';
-  if (complete === 0) return 'failed';
-  return 'partial_success';
-};
-
-const scheduleFinalize = (galleryUrl: string) => {
-  if (finalizeTimer !== null) clearTimeout(finalizeTimer);
-  finalizeTimer = setTimeout(() => {
-    finalizeTimer = null;
-    void finalizeTask(galleryUrl);
-  }, 400);
-};
-
-export const finalizeTask = async (galleryUrl: string) => {
-  const task = await downloadTaskStorage.get();
-  if (!task || task.galleryUrl !== galleryUrl) return;
-  if (task.status === 'cancelled') return;
-
-  const terminal = task.status === 'completed' || task.status === 'partial_success';
-  if (terminal) {
-    if (!task.cbzPacked) {
-      const config = await configStorage.get();
-      await maybePackCbz(task, config, galleryUrl);
-      await patchTask({ cbzPacked: true });
-    }
-    return;
-  }
-
-  const records = await galleryRecordsStorage.get();
-  const gallery = records?.[galleryUrl];
-  const counts = countTargetTerminal(task, gallery?.images);
-  const nextStatus = resolveFinalStatus(task, counts);
-
-  if (nextStatus === 'dispatch_complete') {
-    await patchTask({ status: 'dispatch_complete' });
-    scheduleFinalize(galleryUrl);
-    return;
-  }
-
-  await patchTask({ status: nextStatus });
-
-  if (nextStatus === 'completed' || nextStatus === 'partial_success') {
-    const config = await configStorage.get();
-    const updated = { ...task, status: nextStatus };
-    await maybePackCbz(updated, config, galleryUrl);
-    await patchTask({ cbzPacked: true });
-  } else if (nextStatus === 'failed') {
-    await clearCbzTask(task.taskId);
-  }
-};
-
-export const onGalleryRecordChanged = (galleryUrl: string) => {
-  void finalizeTask(galleryUrl);
 };
 
 type ImagePageCandidate = {
@@ -518,7 +331,7 @@ const downloadResolvedImage = async (
         await putCbzImage(params.taskId, currentIndex, blob, ext, sourceImageUrl);
       } catch (e) {
         console.error('cbz cache failed@', e);
-        await markImageFailed(
+        await failImage(
           params.taskId,
           params.galleryFrontPageUrl,
           currentIndex,
@@ -544,7 +357,7 @@ const downloadResolvedImage = async (
       return;
     }
 
-    await markImageComplete(params.taskId, params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
+    await completeImage(params.taskId, params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
   } finally {
     if (!slotHandedOver) releaseDownloadSlot();
   }
@@ -563,7 +376,7 @@ const downloadImage = async (
     candidate = await resolveImagePageCandidate(config, imagePageUrl);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to fetch image page';
-    await markImageFailed(
+    await failImage(
       params.taskId,
       params.galleryFrontPageUrl,
       currentIndex,
@@ -574,7 +387,7 @@ const downloadImage = async (
   }
 
   if (!candidate.parsed) {
-    await markImageFailed(
+    await failImage(
       params.taskId,
       params.galleryFrontPageUrl,
       currentIndex,
@@ -601,7 +414,7 @@ const downloadImage = async (
         return;
       } catch (retryError) {
         const msg = retryError instanceof Error ? retryError.message : 'Failed to fetch image';
-        await markImageFailed(
+        await failImage(
           params.taskId,
           params.galleryFrontPageUrl,
           currentIndex,
@@ -613,7 +426,7 @@ const downloadImage = async (
     }
 
     const msg = e instanceof Error ? e.message : 'Failed to fetch image';
-    await markImageFailed(
+    await failImage(
       params.taskId,
       params.galleryFrontPageUrl,
       currentIndex,
@@ -651,14 +464,6 @@ const cancelInProgressDownloadsForRetry = async (params: RuntimeJobParams, indic
       if (image.taskId && image.taskId !== params.taskId) return;
 
       const chromeDownloadId = image.chromeDownloadId;
-      await galleryRecordsStorage.upsertImage(params.galleryFrontPageUrl, {
-        index,
-        sourceUrl: image.sourceUrl ?? '',
-        taskId: params.taskId,
-        state: 'in_progress',
-        updatedAt: Date.now(),
-      });
-
       if (typeof chromeDownloadId === 'number') {
         await cancelChromeDownloadIfActive(chromeDownloadId);
       }
@@ -708,7 +513,7 @@ const processGalleryPage = async (
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to fetch gallery page';
     for (const i of indicesOnPage) {
-      await markImageFailed(params.taskId, params.galleryFrontPageUrl, i, msg);
+      await failImage(params.taskId, params.galleryFrontPageUrl, i, msg);
     }
     return launchedDownloads;
   }
@@ -716,7 +521,7 @@ const processGalleryPage = async (
   const imagePageUrls = extractImagePageUrlsFromHtml(pageHtml);
   if (imagePageUrls.length === 0) {
     for (const i of indicesOnPage) {
-      await markImageFailed(params.taskId, params.galleryFrontPageUrl, i, 'No image links on page');
+      await failImage(params.taskId, params.galleryFrontPageUrl, i, 'No image links on page');
     }
     return launchedDownloads;
   }
@@ -727,7 +532,7 @@ const processGalleryPage = async (
     const imageIndex = (currentIndex - 1) % params.imagesPerPage;
     const imagePageUrl = imagePageUrls[imageIndex];
     if (!imagePageUrl) {
-      await markImageFailed(
+      await failImage(
         params.taskId,
         params.galleryFrontPageUrl,
         currentIndex,
@@ -740,7 +545,7 @@ const processGalleryPage = async (
       runSingleDownload(jobId, config, params, imagePageUrl, currentIndex).catch(async (error) => {
         console.error('download image failed@', error);
         const msg = error instanceof Error ? error.message : 'Unexpected download error';
-        await markImageFailed(
+        await failImage(
           params.taskId,
           params.galleryFrontPageUrl,
           currentIndex,
@@ -820,13 +625,12 @@ export const runDownloadJob = async (params: JobParams) => {
     await cancelInProgressDownloadsForRetry(jobParams, downloadIndices);
   }
 
-  await downloadTaskStorage.set({
+  await startTask({
     taskId,
     mode,
-    status: 'running',
-    galleryUrl: jobParams.galleryFrontPageUrl,
     galleryName: jobParams.galleryName,
     galleryId: jobParams.galleryId,
+    galleryFrontPageUrl: jobParams.galleryFrontPageUrl,
     downloadPath: jobParams.downloadPath,
     rangeStart: jobParams.rangeStart,
     rangeEnd: jobParams.rangeEnd,
@@ -835,17 +639,9 @@ export const runDownloadJob = async (params: JobParams) => {
     totalImages: jobParams.totalImages,
     expectedCount,
     targetIndices: taskTargetIndices,
-    queueFailedCount: 0,
-    cbzPacked: false,
+    queuedIndices: downloadIndices,
     startedAt: reusableTask?.startedAt ?? now,
-    updatedAt: now,
   });
-
-  await galleryRecordsStorage.markImagesQueued(
-    jobParams.galleryFrontPageUrl,
-    downloadIndices,
-    taskId
-  );
 
   const launchedDownloads: Promise<void>[] = [];
 
@@ -856,8 +652,7 @@ export const runDownloadJob = async (params: JobParams) => {
     if (cancelRequested) {
       await Promise.allSettled(launchedDownloads);
       if (currentJobId === jobId) {
-        await patchTask({ status: 'cancelled' });
-        await clearCbzTask(taskId);
+        await clearActiveTask(taskId);
       }
       return;
     }
@@ -875,8 +670,7 @@ export const runDownloadJob = async (params: JobParams) => {
 
   if (cancelRequested) {
     if (currentJobId === jobId) {
-      await patchTask({ status: 'cancelled' });
-      await clearCbzTask(taskId);
+      await clearActiveTask(taskId);
     }
     return;
   }
@@ -884,6 +678,5 @@ export const runDownloadJob = async (params: JobParams) => {
   // 被更新的 job 取代（如 retry），不再回写 task，避免覆盖新任务状态
   if (currentJobId !== jobId) return;
 
-  await patchTask({ status: 'dispatch_complete' });
-  await finalizeTask(jobParams.galleryFrontPageUrl);
+  await markDispatchComplete(taskId, jobParams.galleryFrontPageUrl);
 };

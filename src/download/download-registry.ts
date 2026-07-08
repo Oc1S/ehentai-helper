@@ -1,37 +1,7 @@
-import {
-  downloadIndexMapStorage,
-  downloadOwnerStorage,
-  type GalleryImageState,
-  galleryRecordsStorage,
-} from '@/storage';
-
-export type RegisterDownloadParams = {
-  id: number;
-  index: number;
-  total: number;
-  downloadPath: string;
-  galleryUrl: string;
-  sourceUrl: string;
-  taskId: string | null;
-  /** 调用 chrome.downloads.download 时指定的相对文件名，用于直接回写 gallery record，
-   *  避免 onCreated/onChanged(filename) 在 register 之前触发导致 filename 丢失 */
-  filename?: string;
-};
+import type { GalleryImageState } from '@/storage';
 
 /** 本扩展发起的 chrome.downloads id，供 onChanged 过滤 */
 export const trackedDownloadIds = new Set<number>();
-
-const MAX_OWNER_ENTRIES = 5000;
-
-const trimOwnerMap = (map: Record<string, unknown>): Record<string, unknown> => {
-  const keys = Object.keys(map);
-  if (keys.length <= MAX_OWNER_ENTRIES) return map;
-  const sorted = keys.map(Number).sort((a, b) => a - b);
-  const toDrop = sorted.slice(0, keys.length - MAX_OWNER_ENTRIES);
-  const next = { ...map };
-  for (const id of toDrop) delete next[String(id)];
-  return next;
-};
 
 export const mapChromeDownloadState = (
   state: chrome.downloads.DownloadItem['state']
@@ -46,43 +16,6 @@ export const mapChromeDownloadState = (
     default:
       return undefined;
   }
-};
-
-export const registerDownloadIndex = async (params: RegisterDownloadParams) => {
-  trackedDownloadIds.add(params.id);
-
-  await downloadIndexMapStorage.set((map) => ({
-    ...(map || {}),
-    [String(params.id)]: {
-      index: params.index,
-      total: params.total,
-      downloadPath: params.downloadPath,
-      galleryUrl: params.galleryUrl,
-      sourceUrl: params.sourceUrl,
-      taskId: params.taskId ?? undefined,
-    },
-  }));
-
-  await downloadOwnerStorage.set(
-    (map) =>
-      trimOwnerMap({
-        ...(map || {}),
-        [String(params.id)]: {
-          galleryUrl: params.galleryUrl,
-          index: params.index,
-        },
-      }) as Record<string, { galleryUrl: string; index: number }>
-  );
-
-  await galleryRecordsStorage.upsertImage(params.galleryUrl, {
-    index: params.index,
-    sourceUrl: params.sourceUrl ?? '',
-    taskId: params.taskId ?? undefined,
-    state: 'in_progress',
-    chromeDownloadId: params.id,
-    filename: params.filename,
-    updatedAt: Date.now(),
-  });
 };
 
 export const clearTrackedDownloads = () => {

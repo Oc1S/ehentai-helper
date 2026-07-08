@@ -295,6 +295,41 @@
   .eh-data-table tbody tr:hover {
     background: var(--eh-hover-bg);
   }
+
+  /* 进度条填充：沉稳的深墨实色，与主题文字色一致，避免突兀的彩色 */
+  .eh-progress-fill {
+    background: rgb(var(--eh-ink) / 0.88);
+  }
+
+  /* 进行中流光：一条柔和的高光带缓慢滑过，传达"正在下载"的持续感 */
+  .eh-progress-fill--indeterminate {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .eh-progress-fill--indeterminate::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--eh-canvas) / 0.28) 50%,
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: eh-progress-shimmer 2.8s ease-in-out infinite;
+  }
+
+  @keyframes eh-progress-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    60%,
+    100% {
+      transform: translateX(100%);
+    }
+  }
 }
 
 @layer utilities {

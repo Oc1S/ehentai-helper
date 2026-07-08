@@ -1,30 +1,32 @@
-import { clearCbzTask } from './download/cbz-cache';
 import { consumePendingCbzFilename } from './download/cbz-download';
 import {
   buildStorageRelativeFilename,
   consumePendingDownloadFilename,
   extensionFromDownloadItem,
   normalizeDownloadDir,
+  peekPendingDownloadFilename,
+  peekPendingDownloadFilenameSync,
 } from './download/download-filename';
 import {
   clearTrackedDownloads,
-  mapChromeDownloadState,
-  registerDownloadIndex,
   trackedDownloadIds,
 } from './download/download-registry';
 import {
-  handleChromeDownloadSettled,
-  onGalleryRecordChanged,
+  releaseChromeDownloadSlot,
   requestCancelDownload,
   runDownloadJob,
 } from './download/orchestrator';
 import {
+  clearActiveTask,
+  patchChromeDownloadMetadata,
+  reconcileActiveTask,
+  registerChromeDownload,
+  settleChromeDownload,
+} from './download/state-store';
+import {
   configStorage,
   downloadIndexMapStorage,
   downloadListStorage,
-  downloadOwnerStorage,
-  downloadTaskStorage,
-  type GalleryImageState,
   galleryRecordsStorage,
 } from './storage';
 import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './utils';
@@ -41,7 +43,6 @@ type DownloadPatch = Partial<chrome.downloads.DownloadItem> & { id: number };
 type GalleryDownloadPatch = {
   filename?: string;
   error?: string;
-  bytesReceived?: number;
   totalBytes?: number;
 };
 
@@ -58,43 +59,19 @@ const rebuildTrackedIdsFromIndexMap = (map: Record<string, unknown> | null | und
   }
 };
 
-const buildGalleryPatchFromDownloadItem = (item: chrome.downloads.DownloadItem) => {
-  const patch: {
-    state?: GalleryImageState;
-    filename?: string;
-    error?: string;
-    bytesReceived?: number;
-    totalBytes?: number;
-  } = {};
-  const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
-
-  if (mapped) patch.state = mapped;
-  if (item.filename) patch.filename = item.filename;
-  if (item.error) patch.error = item.error;
-  if (typeof item.bytesReceived === 'number') patch.bytesReceived = item.bytesReceived;
-  if (typeof item.totalBytes === 'number') patch.totalBytes = item.totalBytes;
-
-  return patch;
-};
-
 const backfillGalleryRecordsFromDownloads = async (items: chrome.downloads.DownloadItem[]) => {
-  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
-  if (!ownerMap) return;
-
   await Promise.all(
-    items.map((item) => {
-      const owner = ownerMap[String(item.id)];
-      if (!owner) return Promise.resolve();
+    items.map(async (item) => {
+      if (item.state === 'complete' || item.state === 'interrupted') {
+        await settleChromeDownload(item.id, item.state, item.error);
+        return;
+      }
 
-      const patch = buildGalleryPatchFromDownloadItem(item);
-      if (Object.keys(patch).length === 0) return Promise.resolve();
-
-      return galleryRecordsStorage.patchImageByDownloadId(
-        item.id,
-        owner.galleryUrl,
-        owner.index,
-        patch
-      );
+      await patchChromeDownloadMetadata(item.id, {
+        filename: item.filename,
+        error: item.error,
+        totalBytes: item.totalBytes,
+      });
     })
   );
 };
@@ -183,22 +160,6 @@ const getFormatOverrideExtension = (): string | null => {
   return fmt;
 };
 
-const propagateImagePatchToGallery = async (
-  chromeDownloadId: number,
-  patch: GalleryDownloadPatch
-) => {
-  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
-  const owner = ownerMap?.[String(chromeDownloadId)];
-  if (!owner) return;
-
-  await galleryRecordsStorage.patchImageByDownloadId(
-    chromeDownloadId,
-    owner.galleryUrl,
-    owner.index,
-    patch
-  );
-};
-
 const registerListeners = () => {
   if (listenersRegistered) return;
   listenersRegistered = true;
@@ -209,20 +170,41 @@ const registerListeners = () => {
 
     trackedDownloadIds.add(downloadItem.id);
     patchDownloadListNow(downloadItem);
-    void propagateImagePatchToGallery(downloadItem.id, {
-      filename: downloadItem.filename,
+
+    // 兜底：chrome.downloads.download 的 callback 在 service worker 休眠时可能丢失。
+    // onCreated 用 pending intent 补注册 chrome id，注册成功后再消费 intent。
+    void peekPendingDownloadFilename(downloadItem.url, downloadItem.finalUrl).then((hint) => {
+      if (!hint?.galleryUrl || typeof hint.index !== 'number') return;
+      void registerChromeDownload({
+        id: downloadItem.id,
+        index: hint.index,
+        total: hint.total,
+        downloadPath: hint.downloadPath,
+        galleryUrl: hint.galleryUrl,
+        sourceUrl: hint.sourceUrl,
+        taskId: hint.taskId ?? null,
+        filename: hint.filename,
+      }).then((registered) => {
+        if (registered) {
+          void consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
+        }
+        void patchChromeDownloadMetadata(downloadItem.id, {
+          filename: downloadItem.filename,
+          totalBytes: downloadItem.totalBytes,
+        });
+      });
     });
   });
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
 
-    // 下载进入终态时，统一由 handleChromeDownloadSettled 释放并发槽 + 回写 gallery record
-    // state（top-level 注册的监听，service worker 唤醒后也能收到事件）。
+    // 下载进入终态时，释放并发槽，并把终态交给 state-store 幂等提交。
     if (downloadDelta.state) {
       const nextState = downloadDelta.state.current;
       if (nextState === 'complete' || nextState === 'interrupted') {
-        void handleChromeDownloadSettled(id, nextState, downloadDelta.error?.current);
+        releaseChromeDownloadSlot(id);
+        void settleChromeDownload(id, nextState, downloadDelta.error?.current);
       }
     }
 
@@ -232,7 +214,7 @@ const registerListeners = () => {
     if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
     if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
     if (Object.keys(galleryPatch).length > 0) {
-      void propagateImagePatchToGallery(id, galleryPatch);
+      void patchChromeDownloadMetadata(id, galleryPatch);
     }
 
     if (!trackedDownloadIds.has(id)) return;
@@ -264,10 +246,10 @@ const registerListeners = () => {
 
     const indexMap = downloadIndexMapStorage.getSnapshot() ?? {};
     const { fileNameRule, filenameConflictAction: conflictAction } = currentConfig;
-    const pending = consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
+    const pending = peekPendingDownloadFilenameSync(downloadItem.url, downloadItem.finalUrl);
     if (pending) {
       suggest({
-        filename: buildStorageRelativeFilename({ fileNameRule }, pending),
+        filename: pending.filename ?? buildStorageRelativeFilename({ fileNameRule }, pending),
         conflictAction,
       });
       return;
@@ -323,7 +305,7 @@ const registerListeners = () => {
     }
 
     if (message.type === 'register-download-index') {
-      void registerDownloadIndex({
+      void registerChromeDownload({
         id: message.id,
         index: message.index,
         total: message.total,
@@ -331,8 +313,6 @@ const registerListeners = () => {
         galleryUrl: message.galleryUrl,
         sourceUrl: message.sourceUrl,
         taskId: message.taskId ?? null,
-      }).then(() => {
-        if (message.galleryUrl) onGalleryRecordChanged(message.galleryUrl);
       });
 
       sendResponse({ ok: true });
@@ -363,13 +343,6 @@ const registerListeners = () => {
           galleryName: payload.galleryName,
           galleryId: payload.galleryId,
         };
-        await galleryRecordsStorage.upsertGallery({
-          galleryUrl: payload.galleryFrontPageUrl,
-          galleryName: payload.galleryName,
-          galleryId: payload.galleryId,
-          downloadPath: payload.downloadPath,
-          total: payload.totalImages,
-        });
         void runDownloadJob({ ...payload, mode });
       })();
     };
@@ -394,11 +367,13 @@ const registerListeners = () => {
 
     if (message.type === 'cancel-download') {
       requestCancelDownload();
-      void (async () => {
-        const prev = await downloadTaskStorage.get();
-        if (prev?.taskId) await clearCbzTask(prev.taskId);
-        await downloadTaskStorage.set(null);
-      })();
+      void clearActiveTask();
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === 'clear-download-task') {
+      void clearActiveTask();
       sendResponse({ ok: true });
       return true;
     }
@@ -421,6 +396,13 @@ const registerListeners = () => {
         });
       }
       sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === 'reconcile-gallery') {
+      void reconcileActiveTask(message.galleryUrl).then(() => {
+        sendResponse({ ok: true });
+      });
       return true;
     }
 
@@ -448,10 +430,9 @@ registerListeners();
   const indexMap = await downloadIndexMapStorage.get();
   rebuildTrackedIdsFromIndexMap(indexMap);
   await downloadListStorage.get().catch(() => []);
-  await downloadOwnerStorage.get().catch(() => ({}));
   await galleryRecordsStorage.get().catch(() => ({}));
-  await downloadTaskStorage.get().catch(() => null);
   await syncDownloadList().catch(() => undefined);
+  await reconcileActiveTask().catch(() => undefined);
 
   configStorage.subscribe(() => {
     void configStorage.get().then((config) => {

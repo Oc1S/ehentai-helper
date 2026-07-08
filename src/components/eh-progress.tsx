@@ -10,6 +10,8 @@ type EhProgressBarProps = {
   failedPercent?: number;
   ariaLabel: string;
   className?: string;
+  /** 单色模式下是否为"进行中"语义：使用品牌强调色 + 流光动画 */
+  indeterminate?: boolean;
 };
 
 /** 单色或双色（成功 + 失败）原生进度条 */
@@ -21,6 +23,7 @@ export const EhProgressBar = ({
   failedPercent,
   ariaLabel,
   className = '',
+  indeterminate = false,
 }: EhProgressBarProps) => {
   const isSegmented =
     successPercent !== undefined || inProgressPercent !== undefined || failedPercent !== undefined;
@@ -32,7 +35,7 @@ export const EhProgressBar = ({
 
   return (
     <div
-      className={`flex h-2 w-full overflow-hidden rounded-full bg-[var(--eh-hairline-soft)] ${className}`.trim()}
+      className={`eh-progress-track flex h-2 w-full overflow-hidden rounded-full bg-[var(--eh-hairline-soft)] ${className}`.trim()}
       role="progressbar"
       aria-valuenow={value}
       aria-valuemin={0}
@@ -62,7 +65,9 @@ export const EhProgressBar = ({
         </>
       ) : (
         <div
-          className="h-full bg-primary transition-[width] duration-300"
+          className={`eh-progress-fill h-full transition-[width] duration-300 ${
+            indeterminate ? 'eh-progress-fill--indeterminate' : ''
+          }`}
           style={{ width: `${percent}%` }}
         />
       )}
@@ -152,6 +157,7 @@ export const EhDownloadResultProgress = ({
           value={valueCount ?? completeCount}
           max={downloadCount}
           ariaLabel={t('downloadProgress')}
+          indeterminate
         />
       )}
       {children}

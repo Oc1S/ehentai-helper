@@ -4,6 +4,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -20,8 +21,13 @@ type RangeThumb = 'start' | 'end';
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+const sanitizeRangeText = (raw: string) => raw.replace(/[^0-9]/g, '');
+
 export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue }) => {
   const [activeThumb, setActiveThumb] = useState<RangeThumb | null>(null);
+  // 输入框本地草稿：允许清空/部分输入，仅在 blur 或回车时 commit 校验
+  const [fromDraft, setFromDraft] = useState(String(range[0]));
+  const [toDraft, setToDraft] = useState(String(range[1]));
   const trackRef = useRef<HTMLDivElement>(null);
   const startThumbRef = useRef<HTMLButtonElement>(null);
   const endThumbRef = useRef<HTMLButtonElement>(null);
@@ -38,6 +44,14 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
   };
   const startThumbStyle: CSSProperties = { left: `${startPercent}%` };
   const endThumbStyle: CSSProperties = { left: `${endPercent}%` };
+
+  // 外部 range 变化（如拖动滑块）时同步草稿
+  useEffect(() => {
+    setFromDraft(String(range[0]));
+  }, [range[0]]);
+  useEffect(() => {
+    setToDraft(String(range[1]));
+  }, [range[1]]);
 
   const valueFromPointer = useCallback(
     (clientX: number) => {
@@ -71,20 +85,38 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
 
   const commitFrom = (raw: string) => {
     const next = Number.parseInt(raw, 10);
+    // 清空或非法：回退到当前值，不强制改成 1（允许用户中途清空重新输入）
     if (Number.isNaN(next)) {
-      setRange([1, range[1]]);
+      setFromDraft(String(range[0]));
       return;
     }
-    setRange([clamp(next, 1, range[1]), range[1]]);
+    const clamped = clamp(next, 1, range[1]);
+    setRange([clamped, range[1]]);
+    setFromDraft(String(clamped));
   };
 
   const commitTo = (raw: string) => {
     const next = Number.parseInt(raw, 10);
+    // 清空或非法：回退到当前值，不强制改成 maxValue（允许用户中途清空重新输入）
     if (Number.isNaN(next)) {
-      setRange([range[0], maxValue]);
+      setToDraft(String(range[1]));
       return;
     }
-    setRange([range[0], clamp(next, range[0], maxValue)]);
+    const clamped = clamp(next, range[0], maxValue);
+    setRange([range[0], clamped]);
+    setToDraft(String(clamped));
+  };
+
+  const handleFromKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.currentTarget.blur();
+    }
+  };
+
+  const handleToKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.currentTarget.blur();
+    }
   };
 
   const focusThumb = (thumb: RangeThumb) => {
@@ -202,11 +234,12 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             inputMode="numeric"
             min={1}
             max={range[1]}
-            value={range[0]}
+            value={fromDraft}
             aria-label={t('rangeFrom')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
-            onChange={(e) => commitFrom(e.target.value)}
+            onChange={(e) => setFromDraft(sanitizeRangeText(e.target.value))}
             onBlur={(e) => commitFrom(e.target.value)}
+            onKeyDown={handleFromKeyDown}
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -218,11 +251,12 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             inputMode="numeric"
             min={range[0]}
             max={maxValue}
-            value={range[1]}
+            value={toDraft}
             aria-label={t('rangeTo')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
-            onChange={(e) => commitTo(e.target.value)}
+            onChange={(e) => setToDraft(sanitizeRangeText(e.target.value))}
             onBlur={(e) => commitTo(e.target.value)}
+            onKeyDown={handleToKeyDown}
           />
         </label>
       </div>

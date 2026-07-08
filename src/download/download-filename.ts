@@ -1,3 +1,4 @@
+import { pendingDownloadHintsStorage } from '@/storage/pending-download-hints';
 import type { Config } from '@/utils';
 import { DEFAULT_CONFIG, splitFilename } from '@/utils';
 import { removeInvalidCharFromFilename } from '@/utils/download';
@@ -8,6 +9,9 @@ export type PendingDownloadFilename = {
   total: number;
   ext: string;
   sourceUrl: string;
+  taskId?: string;
+  galleryUrl?: string;
+  filename?: string;
 };
 
 const MAX_PENDING_FILENAME_HINTS = 2000;
@@ -41,21 +45,93 @@ export const enqueuePendingDownloadFilename = (
   pendingByDownloadUrl.set(downloadUrl, list);
   pendingHintCount += 1;
   trimPendingFilenameHints();
+  // 持久化到 session storage，service worker 重启后 onCreated 兜底仍可读取
+  void pendingDownloadHintsStorage.set((map) => ({
+    ...(map || {}),
+    [downloadUrl]: list,
+  }));
 };
 
-export const consumePendingDownloadFilename = (...downloadUrls: Array<string | undefined>) => {
+const removePendingHintFromMemory = (downloadUrl: string) => {
+  const list = pendingByDownloadUrl.get(downloadUrl);
+  if (!list || list.length === 0) return undefined;
+
+  const item = list.shift();
+  pendingHintCount -= 1;
+  if (list.length === 0) pendingByDownloadUrl.delete(downloadUrl);
+  return { item, list };
+};
+
+const updatePersistedPendingHints = async (
+  downloadUrl: string,
+  list: PendingDownloadFilename[]
+) => {
+  await pendingDownloadHintsStorage.set((map) => {
+    if (!map) return map;
+    const next = { ...map };
+    if (list.length === 0) delete next[downloadUrl];
+    else next[downloadUrl] = list;
+    return next;
+  });
+};
+
+export const consumePendingDownloadFilename = async (
+  ...downloadUrls: Array<string | undefined>
+) => {
   for (const downloadUrl of downloadUrls) {
     if (!downloadUrl) continue;
 
-    const list = pendingByDownloadUrl.get(downloadUrl);
-    if (!list || list.length === 0) continue;
-
-    const item = list.shift();
-    pendingHintCount -= 1;
-    if (list.length === 0) pendingByDownloadUrl.delete(downloadUrl);
-    if (item) return item;
+    const memoryMatch = removePendingHintFromMemory(downloadUrl);
+    if (memoryMatch?.item) {
+      await updatePersistedPendingHints(downloadUrl, memoryMatch.list);
+      return memoryMatch.item;
+    }
   }
 
+  const persisted = await pendingDownloadHintsStorage.get();
+  for (const downloadUrl of downloadUrls) {
+    if (!downloadUrl) continue;
+    const list = persisted?.[downloadUrl];
+    if (!list || list.length === 0) continue;
+
+    const [item, ...rest] = list;
+    if (item) {
+      await updatePersistedPendingHints(downloadUrl, rest);
+      return item;
+    }
+  }
+
+  return undefined;
+};
+
+export const peekPendingDownloadFilenameSync = (
+  ...downloadUrls: Array<string | undefined>
+): PendingDownloadFilename | undefined => {
+  for (const downloadUrl of downloadUrls) {
+    if (!downloadUrl) continue;
+    const list = pendingByDownloadUrl.get(downloadUrl);
+    if (list && list.length > 0) return list[0];
+  }
+  return undefined;
+};
+
+/**
+ * 读取但不消费 pending intent：确定文件名时只 peek；拿到 chrome download id
+ * 并成功注册 owner 后才 consume，避免 onCreated/callback 顺序不同导致 hint 丢失。
+ */
+export const peekPendingDownloadFilename = async (
+  ...downloadUrls: Array<string | undefined>
+): Promise<PendingDownloadFilename | undefined> => {
+  const memoryMatch = peekPendingDownloadFilenameSync(...downloadUrls);
+  if (memoryMatch) return memoryMatch;
+
+  // 内存未命中（service worker 重启后），读 session storage
+  const persisted = await pendingDownloadHintsStorage.get();
+  for (const downloadUrl of downloadUrls) {
+    if (!downloadUrl) continue;
+    const list = persisted?.[downloadUrl];
+    if (list && list.length > 0) return list[0];
+  }
   return undefined;
 };
 

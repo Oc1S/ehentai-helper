@@ -18,3 +18,8 @@ export const retryFailedDownload = (payload: DownloadJobPayload) =>
   sendDownloadMessage('retry-failed', { payload, mode: 'retry' });
 
 export const cancelDownload = () => sendDownloadMessage('cancel-download');
+
+export const clearDownloadTask = () => sendDownloadMessage('clear-download-task');
+
+export const reconcileGallery = (galleryUrl: string) =>
+  sendDownloadMessage('reconcile-gallery', { galleryUrl });
