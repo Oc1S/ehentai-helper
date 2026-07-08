@@ -13,6 +13,9 @@ export type RegisterDownloadParams = {
   galleryUrl: string;
   sourceUrl: string;
   taskId: string | null;
+  /** 调用 chrome.downloads.download 时指定的相对文件名，用于直接回写 gallery record，
+   *  避免 onCreated/onChanged(filename) 在 register 之前触发导致 filename 丢失 */
+  filename?: string;
 };
 
 /** 本扩展发起的 chrome.downloads id，供 onChanged 过滤 */
@@ -42,40 +45,6 @@ export const mapChromeDownloadState = (
       return 'in_progress';
     default:
       return undefined;
-  }
-};
-
-const refreshDownloadMetadata = async (params: RegisterDownloadParams) => {
-  try {
-    const [item] = await chrome.downloads.search({ id: params.id });
-    if (!item) return;
-
-    const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
-    const patch: Parameters<typeof galleryRecordsStorage.patchImageByDownloadId>[3] = {};
-    if (mapped && mapped !== 'in_progress') patch.state = mapped;
-    if (item.filename) patch.filename = item.filename;
-    if (item.error) patch.error = item.error;
-    if (typeof item.bytesReceived === 'number') patch.bytesReceived = item.bytesReceived;
-    if (typeof item.totalBytes === 'number') patch.totalBytes = item.totalBytes;
-
-    if (Object.keys(patch).length > 0) {
-      await galleryRecordsStorage.patchImageByDownloadId(
-        params.id,
-        params.galleryUrl,
-        params.index,
-        patch
-      );
-    }
-  } catch {
-    /* downloads.search may fail for brand-new ids on some builds */
-  }
-};
-
-const scheduleDownloadMetadataRefresh = (params: RegisterDownloadParams) => {
-  for (const delay of [150, 750, 2000]) {
-    setTimeout(() => {
-      void refreshDownloadMetadata(params);
-    }, delay);
   }
 };
 
@@ -111,11 +80,9 @@ export const registerDownloadIndex = async (params: RegisterDownloadParams) => {
     taskId: params.taskId ?? undefined,
     state: 'in_progress',
     chromeDownloadId: params.id,
+    filename: params.filename,
     updatedAt: Date.now(),
   });
-
-  await refreshDownloadMetadata(params);
-  scheduleDownloadMetadataRefresh(params);
 };
 
 export const clearTrackedDownloads = () => {

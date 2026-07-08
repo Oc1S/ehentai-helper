@@ -13,6 +13,7 @@ import {
   trackedDownloadIds,
 } from './download/download-registry';
 import {
+  handleChromeDownloadSettled,
   onGalleryRecordChanged,
   requestCancelDownload,
   runDownloadJob,
@@ -38,7 +39,6 @@ let listenersRegistered = false;
 let patchFlushTimer: ReturnType<typeof setTimeout> | null = null;
 type DownloadPatch = Partial<chrome.downloads.DownloadItem> & { id: number };
 type GalleryDownloadPatch = {
-  state?: chrome.downloads.DownloadItem['state'];
   filename?: string;
   error?: string;
   bytesReceived?: number;
@@ -183,29 +183,6 @@ const getFormatOverrideExtension = (): string | null => {
   return fmt;
 };
 
-const hydrateDownloadPatch = async (
-  chromeDownloadId: number,
-  patch: GalleryDownloadPatch
-): Promise<GalleryDownloadPatch> => {
-  if (!patch.state && patch.filename && patch.totalBytes !== undefined) return patch;
-
-  try {
-    const [item] = await chrome.downloads.search({ id: chromeDownloadId });
-    if (!item) return patch;
-
-    return {
-      ...patch,
-      state: patch.state ?? item.state,
-      filename: patch.filename || item.filename,
-      error: patch.error || item.error,
-      bytesReceived: patch.bytesReceived ?? item.bytesReceived,
-      totalBytes: patch.totalBytes ?? item.totalBytes,
-    };
-  } catch {
-    return patch;
-  }
-};
-
 const propagateImagePatchToGallery = async (
   chromeDownloadId: number,
   patch: GalleryDownloadPatch
@@ -214,26 +191,11 @@ const propagateImagePatchToGallery = async (
   const owner = ownerMap?.[String(chromeDownloadId)];
   if (!owner) return;
 
-  const hydratedPatch = await hydrateDownloadPatch(chromeDownloadId, patch);
-  const galleryPatch: {
-    state?: GalleryImageState;
-    filename?: string;
-    error?: string;
-    bytesReceived?: number;
-    totalBytes?: number;
-  } = { ...hydratedPatch };
-
-  if (hydratedPatch.state) {
-    const mapped = mapChromeDownloadState(hydratedPatch.state);
-    if (mapped) galleryPatch.state = mapped;
-    else delete galleryPatch.state;
-  }
-
   await galleryRecordsStorage.patchImageByDownloadId(
     chromeDownloadId,
     owner.galleryUrl,
     owner.index,
-    galleryPatch
+    patch
   );
 };
 
@@ -247,34 +209,30 @@ const registerListeners = () => {
 
     trackedDownloadIds.add(downloadItem.id);
     patchDownloadListNow(downloadItem);
-    propagateImagePatchToGallery(downloadItem.id, {
-      state: downloadItem.state,
+    void propagateImagePatchToGallery(downloadItem.id, {
       filename: downloadItem.filename,
-    }).then(() => {
-      const ownerMap = downloadOwnerStorage.getSnapshot();
-      const owner = ownerMap?.[String(downloadItem.id)];
-      if (owner?.galleryUrl) onGalleryRecordChanged(owner.galleryUrl);
     });
   });
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
 
-    // gallery record 状态回写不依赖 trackedDownloadIds（service worker 重载后它可能尚未重建），
-    // propagateImagePatchToGallery 内部会通过 downloadOwnerStorage 过滤非本扩展的下载。
-    const galleryPatch: GalleryDownloadPatch = {};
+    // 下载进入终态时，统一由 handleChromeDownloadSettled 释放并发槽 + 回写 gallery record
+    // state（top-level 注册的监听，service worker 唤醒后也能收到事件）。
     if (downloadDelta.state) {
-      galleryPatch.state = downloadDelta.state.current as chrome.downloads.DownloadItem['state'];
+      const nextState = downloadDelta.state.current;
+      if (nextState === 'complete' || nextState === 'interrupted') {
+        void handleChromeDownloadSettled(id, nextState, downloadDelta.error?.current);
+      }
     }
+
+    // 非 state 字段（filename / 进度等）回写 gallery record
+    const galleryPatch: GalleryDownloadPatch = {};
     if (downloadDelta.filename) galleryPatch.filename = downloadDelta.filename.current;
     if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
     if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
     if (Object.keys(galleryPatch).length > 0) {
-      propagateImagePatchToGallery(id, galleryPatch).then(() => {
-        const ownerMap = downloadOwnerStorage.getSnapshot();
-        const owner = ownerMap?.[String(id)];
-        if (owner?.galleryUrl) onGalleryRecordChanged(owner.galleryUrl);
-      });
+      void propagateImagePatchToGallery(id, galleryPatch);
     }
 
     if (!trackedDownloadIds.has(id)) return;

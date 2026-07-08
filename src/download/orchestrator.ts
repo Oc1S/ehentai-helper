@@ -5,12 +5,13 @@ import {
   consumePendingDownloadFilename,
   enqueuePendingDownloadFilename,
 } from '@/download/download-filename';
-import { mapChromeDownloadState, registerDownloadIndex } from '@/download/download-registry';
+import { registerDownloadIndex } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
 import {
   type ActiveDownloadTask,
   configStorage,
+  downloadOwnerStorage,
   downloadTaskStorage,
   galleryRecordsStorage,
 } from '@/storage';
@@ -52,6 +53,9 @@ const downloadSemaphore: DownloadSemaphore = {
   active: 0,
   waiters: [],
 };
+
+/** 已移交给 chrome download 的并发槽（由 handleChromeDownloadSettled 在下载终态时释放） */
+const activeSlotIds = new Set<number>();
 
 const setDownloadConcurrency = (limit: number) => {
   const next = Math.max(1, Math.floor(limit) || 1);
@@ -97,6 +101,7 @@ const resetDownloadSemaphore = () => {
 export const requestCancelDownload = () => {
   cancelRequested = true;
   resetDownloadSemaphore();
+  activeSlotIds.clear();
 };
 
 const patchTask = async (patch: Partial<ActiveDownloadTask>) => {
@@ -113,64 +118,67 @@ const needsImageBlob = (config: Config) =>
   config.saveOriginalImages ||
   Boolean(config.imageFormat && config.imageFormat !== 'original');
 
-const waitForChromeDownloadSettled = (chromeDownloadId: number): Promise<void> =>
-  new Promise<void>((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      chrome.downloads.onChanged.removeListener(onChanged);
-      resolve();
-    };
-    const onChanged = (delta: chrome.downloads.DownloadDelta) => {
-      if (delta.id !== chromeDownloadId) return;
-      const next = delta.state?.current;
-      if (next === 'complete' || next === 'interrupted') finish();
-    };
-    chrome.downloads.onChanged.addListener(onChanged);
-    void chrome.downloads
-      .search({ id: chromeDownloadId })
-      .then(([item]) => {
-        if (item && (item.state === 'complete' || item.state === 'interrupted')) finish();
-      })
-      .catch(() => undefined);
-  });
-
-const ensureChromeDownloadSettledState = async (
+/**
+ * chrome download 进入终态（complete/interrupted）时由 background 的 onChanged 监听调用：
+ * 1. 释放该下载占用的并发槽；
+ * 2. 把终态回写到 gallery record。
+ *
+ * 把槽位释放与状态回写都挂在 top-level 注册的全局 onChanged 监听上，避免在 orchestrator
+ * 内部 `await` 下载完成——MV3 service worker 在无 pending chrome API 的 await 期间会休眠，
+ * 休眠后 Promise 丢失，槽位永远无法释放（表现为一半图片卡在 queued/in_progress）。
+ */
+export const handleChromeDownloadSettled = async (
   chromeDownloadId: number,
-  params: RuntimeJobParams,
-  currentIndex: number,
-  sourceImageUrl: string
+  chromeState: 'complete' | 'interrupted',
+  error?: string
 ) => {
+  if (activeSlotIds.delete(chromeDownloadId)) {
+    releaseDownloadSlot();
+  }
+
+  const ownerMap = downloadOwnerStorage.getSnapshot() || (await downloadOwnerStorage.get());
+  const owner = ownerMap?.[String(chromeDownloadId)];
+  if (!owner) return;
+
+  const records = await galleryRecordsStorage.get();
+  const image = records?.[owner.galleryUrl]?.images[String(owner.index)];
+  if (!image) return;
+
+  if (chromeState === 'complete') {
+    if (image.state === 'complete') return;
+    await markImageComplete(
+      image.taskId ?? '',
+      owner.galleryUrl,
+      owner.index,
+      image.sourceUrl ?? ''
+    );
+    return;
+  }
+
+  if (image.state === 'interrupted') return;
+  await markImageFailed(
+    image.taskId ?? '',
+    owner.galleryUrl,
+    owner.index,
+    error ?? 'Download interrupted',
+    image.sourceUrl ?? ''
+  );
+};
+
+/**
+ * 兜底：下载可能在 registerDownloadIndex 之前就已进入终态（onChanged complete 已错过），
+ * 此时 handOverSlot 刚把 id 加入 activeSlotIds 但 onChanged 不会再触发，槽位会泄漏。
+ * 在 handOverSlot 后主动 search 一次，若已终态则复用 handleChromeDownloadSettled 收尾。
+ */
+const ensureSettledIfAlreadyDone = async (chromeDownloadId: number) => {
   try {
     const [item] = await chrome.downloads.search({ id: chromeDownloadId });
     if (!item) return;
-    const mapped = item.state ? mapChromeDownloadState(item.state) : undefined;
-    if (mapped !== 'complete' && mapped !== 'interrupted') return;
-
-    // 已是目标 state 则跳过，避免与 onChanged 重复回写导致 queueFailedCount 翻倍
-    const records = await galleryRecordsStorage.get();
-    const image = records?.[params.galleryFrontPageUrl]?.images[String(currentIndex)];
-    if (image?.state === mapped) return;
-
-    if (mapped === 'complete') {
-      await markImageComplete(
-        params.taskId,
-        params.galleryFrontPageUrl,
-        currentIndex,
-        sourceImageUrl
-      );
-    } else {
-      await markImageFailed(
-        params.taskId,
-        params.galleryFrontPageUrl,
-        currentIndex,
-        item.error ?? 'Download interrupted',
-        sourceImageUrl
-      );
+    if (item.state === 'complete' || item.state === 'interrupted') {
+      await handleChromeDownloadSettled(chromeDownloadId, item.state, item.error);
     }
-  } catch (e) {
-    console.warn('ensure settled state failed@', e);
+  } catch {
+    /* downloads.search may fail for brand-new ids on some builds */
   }
 };
 
@@ -181,7 +189,8 @@ const startChromeFileDownload = async (
   currentIndex: number,
   ext: string,
   downloadUrl: string,
-  revoke?: () => void
+  revoke: (() => void) | undefined,
+  handOverSlot: (chromeDownloadId: number) => void
 ) => {
   const filenameHint = {
     downloadPath: params.downloadPath,
@@ -225,11 +234,12 @@ const startChromeFileDownload = async (
               galleryUrl: params.galleryFrontPageUrl,
               sourceUrl: sourceImageUrl,
               taskId: params.taskId,
+              filename: relativeFilename,
             });
             releaseDownloadUrlOnDownloadDone(id, revoke);
+            handOverSlot(id);
             onGalleryRecordChanged(params.galleryFrontPageUrl);
-            await waitForChromeDownloadSettled(id);
-            await ensureChromeDownloadSettledState(id, params, currentIndex, sourceImageUrl);
+            await ensureSettledIfAlreadyDone(id);
           } catch (error) {
             console.error('register download failed@', error);
             revoke?.();
@@ -471,47 +481,73 @@ const downloadResolvedImage = async (
     );
   }
 
-  const sourceImageUrl = imageParsed.url;
-  const directFileDownload = needsFileDownload(config) && !needsImageBlob(config);
+  if (cancelRequested) return;
 
-  if (directFileDownload) {
-    await probeImageUrl(sourceImageUrl);
-    await startChromeFileDownload(
-      config,
-      params,
-      sourceImageUrl,
-      currentIndex,
-      resolveDownloadExt(sourceImageUrl),
-      sourceImageUrl
-    );
-    return;
-  }
+  await acquireDownloadSlot();
+  let slotHandedOver = false;
+  const handOverSlot = (chromeDownloadId: number) => {
+    slotHandedOver = true;
+    activeSlotIds.add(chromeDownloadId);
+  };
 
-  const { blob, ext } = await resolveImageBlob(sourceImageUrl, config.imageFormat);
+  try {
+    if (cancelRequested) return;
 
-  if (needsCbzCache(config)) {
-    try {
-      await putCbzImage(params.taskId, currentIndex, blob, ext, sourceImageUrl);
-    } catch (e) {
-      console.error('cbz cache failed@', e);
-      await markImageFailed(
-        params.taskId,
-        params.galleryFrontPageUrl,
+    const sourceImageUrl = imageParsed.url;
+    const directFileDownload = needsFileDownload(config) && !needsImageBlob(config);
+
+    if (directFileDownload) {
+      await probeImageUrl(sourceImageUrl);
+      await startChromeFileDownload(
+        config,
+        params,
+        sourceImageUrl,
         currentIndex,
-        'Failed to cache image for CBZ',
-        sourceImageUrl
+        resolveDownloadExt(sourceImageUrl),
+        sourceImageUrl,
+        undefined,
+        handOverSlot
       );
       return;
     }
-  }
 
-  if (needsFileDownload(config)) {
-    const { url, revoke } = await createDownloadUrl(blob);
-    await startChromeFileDownload(config, params, sourceImageUrl, currentIndex, ext, url, revoke);
-    return;
-  }
+    const { blob, ext } = await resolveImageBlob(sourceImageUrl, config.imageFormat);
 
-  await markImageComplete(params.taskId, params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
+    if (needsCbzCache(config)) {
+      try {
+        await putCbzImage(params.taskId, currentIndex, blob, ext, sourceImageUrl);
+      } catch (e) {
+        console.error('cbz cache failed@', e);
+        await markImageFailed(
+          params.taskId,
+          params.galleryFrontPageUrl,
+          currentIndex,
+          'Failed to cache image for CBZ',
+          sourceImageUrl
+        );
+        return;
+      }
+    }
+
+    if (needsFileDownload(config)) {
+      const { url, revoke } = await createDownloadUrl(blob);
+      await startChromeFileDownload(
+        config,
+        params,
+        sourceImageUrl,
+        currentIndex,
+        ext,
+        url,
+        revoke,
+        handOverSlot
+      );
+      return;
+    }
+
+    await markImageComplete(params.taskId, params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
+  } finally {
+    if (!slotHandedOver) releaseDownloadSlot();
+  }
 };
 
 const downloadImage = async (
@@ -647,13 +683,8 @@ const runSingleDownload = async (
   imagePageUrl: string,
   currentIndex: number
 ) => {
-  await acquireDownloadSlot();
-  try {
-    if (cancelRequested || currentJobId !== jobId) return;
-    await downloadImageIfNeeded(config, params, imagePageUrl, currentIndex);
-  } finally {
-    releaseDownloadSlot();
-  }
+  if (cancelRequested || currentJobId !== jobId) return;
+  await downloadImageIfNeeded(config, params, imagePageUrl, currentIndex);
 };
 
 const processGalleryPage = async (
