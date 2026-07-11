@@ -3,14 +3,12 @@ import {
   buildStorageRelativeFilename,
   consumePendingDownloadFilename,
   extensionFromDownloadItem,
+  hydratePendingDownloadHintsFromSession,
   normalizeDownloadDir,
   peekPendingDownloadFilename,
   peekPendingDownloadFilenameSync,
 } from './download/download-filename';
-import {
-  clearTrackedDownloads,
-  trackedDownloadIds,
-} from './download/download-registry';
+import { clearTrackedDownloads, trackedDownloadIds } from './download/download-registry';
 import {
   releaseChromeDownloadSlot,
   requestCancelDownload,
@@ -18,6 +16,7 @@ import {
 } from './download/orchestrator';
 import {
   clearActiveTask,
+  ensureSettledIfAlreadyDone,
   patchChromeDownloadMetadata,
   reconcileActiveTask,
   registerChromeDownload,
@@ -187,6 +186,9 @@ const registerListeners = () => {
       }).then((registered) => {
         if (registered) {
           void consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
+          void ensureSettledIfAlreadyDone(downloadItem.id).then((settled) => {
+            if (settled) releaseChromeDownloadSlot(downloadItem.id);
+          });
         }
         void patchChromeDownloadMetadata(downloadItem.id, {
           filename: downloadItem.filename,
@@ -204,7 +206,12 @@ const registerListeners = () => {
       const nextState = downloadDelta.state.current;
       if (nextState === 'complete' || nextState === 'interrupted') {
         releaseChromeDownloadSlot(id);
-        void settleChromeDownload(id, nextState, downloadDelta.error?.current);
+        void settleChromeDownload(
+          id,
+          nextState,
+          downloadDelta.error?.current,
+          downloadDelta.filename?.current
+        );
       }
     }
 
@@ -231,8 +238,7 @@ const registerListeners = () => {
 
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
     const isOurDownload =
-      downloadItem.byExtensionId === extensionId ||
-      downloadItem.byExtensionName === EXTENSION_NAME;
+      downloadItem.byExtensionId === extensionId || downloadItem.byExtensionName === EXTENSION_NAME;
     if (!isOurDownload) return;
 
     const cbzPath = consumePendingCbzFilename();
@@ -255,48 +261,68 @@ const registerListeners = () => {
       return;
     }
 
-    const entry = indexMap[String(downloadItem.id)];
-    if (!entry && downloadItem.mime !== textMime) return;
+    const suggestFromEntryOrDefault = () => {
+      const entry = indexMap[String(downloadItem.id)];
+      if (!entry && downloadItem.mime !== textMime) {
+        suggest();
+        return;
+      }
 
-    const downloadPath =
-      entry?.downloadPath ||
-      currentDownloadContext?.downloadPath ||
-      currentConfig.intermediateDownloadPath;
+      const downloadPath =
+        entry?.downloadPath ||
+        currentDownloadContext?.downloadPath ||
+        currentConfig.intermediateDownloadPath;
 
-    let { filename } = downloadItem;
-    if (downloadItem.mime === textMime) {
-      filename = `${normalizeDownloadDir(downloadPath)}info.txt`;
-    } else {
-      const overrideExt = getFormatOverrideExtension();
-      const fileType = extensionFromDownloadItem(downloadItem, overrideExt);
-      const name =
-        entry?.sourceUrl != null
-          ? (() => {
-              try {
-                const base = new URL(entry.sourceUrl).pathname.split('/').pop() ?? 'image';
-                return splitFilename(base)[0] || 'image';
-              } catch {
-                return 'image';
-              }
-            })()
-          : splitFilename(downloadItem.filename ?? '')[0] || 'image';
+      let { filename } = downloadItem;
+      if (downloadItem.mime === textMime) {
+        filename = `${normalizeDownloadDir(downloadPath)}info.txt`;
+      } else {
+        const overrideExt = getFormatOverrideExtension();
+        const fileType = extensionFromDownloadItem(downloadItem, overrideExt);
+        const name =
+          entry?.sourceUrl != null
+            ? (() => {
+                try {
+                  const base = new URL(entry.sourceUrl).pathname.split('/').pop() ?? 'image';
+                  return splitFilename(base)[0] || 'image';
+                } catch {
+                  return 'image';
+                }
+              })()
+            : splitFilename(downloadItem.filename ?? '')[0] || 'image';
 
-      filename = `${normalizeDownloadDir(downloadPath)}${fileNameRule
-        .replace('[index]', String(entry?.index ?? ''))
-        .replace('[name]', name)
-        .replace(
-          '[total]',
-          String(entry?.total ?? currentDownloadContext?.total ?? '')
-        )}.${fileType}`;
-    }
+        filename = `${normalizeDownloadDir(downloadPath)}${fileNameRule
+          .replace('[index]', String(entry?.index ?? ''))
+          .replace('[name]', name)
+          .replace(
+            '[total]',
+            String(entry?.total ?? currentDownloadContext?.total ?? '')
+          )}.${fileType}`;
+      }
 
-    const normalized =
-      filename.replace(/\\/g, '/').replace(/^\/+/, '') || 'download.bin';
+      const normalized = filename.replace(/\\/g, '/').replace(/^\/+/, '') || 'download.bin';
 
-    suggest({
-      filename: normalized,
-      conflictAction,
-    });
+      suggest({
+        filename: normalized,
+        conflictAction,
+      });
+    };
+
+    // 内存 miss（SW 刚唤醒）：异步读 session hint，再 suggest
+    void peekPendingDownloadFilename(downloadItem.url, downloadItem.finalUrl).then(
+      (asyncPending) => {
+        if (asyncPending) {
+          suggest({
+            filename:
+              asyncPending.filename ?? buildStorageRelativeFilename({ fileNameRule }, asyncPending),
+            conflictAction,
+          });
+          return;
+        }
+        suggestFromEntryOrDefault();
+      }
+    );
+    return true;
   });
 
   chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
@@ -427,6 +453,7 @@ registerListeners();
 
 (async () => {
   currentConfig = await configStorage.get();
+  await hydratePendingDownloadHintsFromSession().catch(() => undefined);
   const indexMap = await downloadIndexMapStorage.get();
   rebuildTrackedIdsFromIndexMap(indexMap);
   await downloadListStorage.get().catch(() => []);

@@ -84,12 +84,19 @@ const mergeImageRecord = (
     updatedAt: Date.now(),
   });
 
-  if (!hasOwn(image, 'filename') || !image.filename) delete merged.filename;
-  if (!hasOwn(image, 'chromeDownloadId') || image.chromeDownloadId == null) {
-    delete merged.chromeDownloadId;
+  // 缺省保留已有字段；仅当 patch 显式带上 key 时才覆盖/清空
+  if (hasOwn(image, 'filename')) {
+    if (!image.filename) delete merged.filename;
   }
-  if (!hasOwn(image, 'bytesReceived')) delete merged.bytesReceived;
-  if (!hasOwn(image, 'totalBytes')) delete merged.totalBytes;
+  if (hasOwn(image, 'chromeDownloadId')) {
+    if (image.chromeDownloadId == null) delete merged.chromeDownloadId;
+  }
+  if (hasOwn(image, 'bytesReceived')) {
+    if (image.bytesReceived == null) delete merged.bytesReceived;
+  }
+  if (hasOwn(image, 'totalBytes')) {
+    if (image.totalBytes == null) delete merged.totalBytes;
+  }
 
   return merged;
 };
@@ -139,11 +146,15 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
         const key = String(index);
         const prev = current.images[key];
         if (prev?.state === 'complete' && prev?.taskId === taskId) continue;
+        // 新一轮排队：显式清空旧 chrome 绑定与进度，避免缺省保留语义留下脏 id
         nextImages[key] = mergeImageRecord(prev, {
           index,
           sourceUrl: prev?.sourceUrl ?? '',
           taskId,
           state: 'queued',
+          chromeDownloadId: undefined,
+          bytesReceived: undefined,
+          totalBytes: undefined,
           updatedAt: now,
         });
       }

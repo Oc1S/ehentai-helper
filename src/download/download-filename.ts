@@ -17,6 +17,15 @@ export type PendingDownloadFilename = {
 const MAX_PENDING_FILENAME_HINTS = 2000;
 const pendingByDownloadUrl = new Map<string, PendingDownloadFilename[]>();
 let pendingHintCount = 0;
+let pendingHintsHydrated = false;
+
+const persistAllPendingHints = () => {
+  const next: Record<string, PendingDownloadFilename[]> = {};
+  for (const [url, list] of pendingByDownloadUrl.entries()) {
+    if (list.length > 0) next[url] = [...list];
+  }
+  void pendingDownloadHintsStorage.set(next);
+};
 
 const trimPendingFilenameHints = () => {
   while (pendingHintCount > MAX_PENDING_FILENAME_HINTS) {
@@ -35,6 +44,23 @@ const trimPendingFilenameHints = () => {
   }
 };
 
+/** SW 重启后把 session 中的 pending hint 灌回内存，供 onDeterminingFilename 同步 peek */
+export const hydratePendingDownloadHintsFromSession = async () => {
+  if (pendingHintsHydrated) return;
+  const persisted = await pendingDownloadHintsStorage.get();
+  pendingHintsHydrated = true;
+  if (!persisted) return;
+
+  for (const [url, list] of Object.entries(persisted)) {
+    if (!url || !list?.length) continue;
+    if (pendingByDownloadUrl.has(url)) continue;
+    pendingByDownloadUrl.set(url, [...list]);
+    pendingHintCount += list.length;
+  }
+  trimPendingFilenameHints();
+  persistAllPendingHints();
+};
+
 export const enqueuePendingDownloadFilename = (
   downloadUrl: string,
   item: PendingDownloadFilename
@@ -45,11 +71,8 @@ export const enqueuePendingDownloadFilename = (
   pendingByDownloadUrl.set(downloadUrl, list);
   pendingHintCount += 1;
   trimPendingFilenameHints();
-  // 持久化到 session storage，service worker 重启后 onCreated 兜底仍可读取
-  void pendingDownloadHintsStorage.set((map) => ({
-    ...(map || {}),
-    [downloadUrl]: list,
-  }));
+  // 整表写回 session，避免 trim 与单 key 合并产生竞态
+  persistAllPendingHints();
 };
 
 const removePendingHintFromMemory = (downloadUrl: string) => {

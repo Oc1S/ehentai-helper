@@ -44,10 +44,7 @@ const trimFilename = (filename?: string) => {
 };
 
 const visibleFilename = (row: GalleryImageRecord) => {
-  const filename = trimFilename(row.filename);
-  if (!filename) return '';
-  if (row.chromeDownloadId || row.state === 'complete') return filename;
-  return '';
+  return trimFilename(row.filename);
 };
 
 const detailColumns = (showAction: boolean) => {

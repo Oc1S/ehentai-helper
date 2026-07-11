@@ -1,6 +1,9 @@
 import { clearCbzTask } from '@/download/cbz-cache';
 import { packAndDownloadCbz } from '@/download/cbz-pack';
-import { buildStorageRelativeFilename } from '@/download/download-filename';
+import {
+  buildStorageRelativeFilename,
+  normalizeDownloadDir,
+} from '@/download/download-filename';
 import { trackedDownloadIds } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode } from '@/download/types';
@@ -10,6 +13,7 @@ import {
   type DownloadIndexEntry,
   downloadIndexMapStorage,
   downloadTaskStorage,
+  type GalleryImageRecord,
   galleryRecordsStorage,
 } from '@/storage';
 
@@ -211,7 +215,73 @@ const isActiveTaskImage = async (galleryUrl: string, index: number, taskId: stri
   return true;
 };
 
-const getRegisteredImageContext = async (chromeDownloadId: number) => {
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** 匹配期望 basename，或 Chrome uniquify 产生的 `name (N).ext` 变体 */
+const isExpectedBasenameOrUniquifyVariant = (actualBasename: string, expectedBasename: string) => {
+  if (actualBasename === expectedBasename) return true;
+  const dot = expectedBasename.lastIndexOf('.');
+  if (dot <= 0) return false;
+  const stem = expectedBasename.slice(0, dot);
+  const ext = expectedBasename.slice(dot);
+  return new RegExp(`^${escapeRegExp(stem)}(?: \\(\\d+\\))?${escapeRegExp(ext)}$`).test(
+    actualBasename
+  );
+};
+
+const pathIncludesDownloadDir = (absolutePath: string, downloadPath: string) => {
+  const normalized = absolutePath.replace(/\\/g, '/').toLowerCase();
+  const dir = normalizeDownloadDir(downloadPath).replace(/\/+$/, '').toLowerCase();
+  if (!dir) return true;
+  return normalized.includes(dir);
+};
+
+/**
+ * 从 indexMap 自愈绑定 gallery record 的 chromeDownloadId。
+ * 解决 register 只写了 indexMap、或 settle 早于 gallery 写入的半绑定问题。
+ */
+const bindGalleryImageFromIndexEntry = async (
+  chromeDownloadId: number,
+  entry: DownloadIndexEntry,
+  taskId: string,
+  filename?: string
+): Promise<GalleryImageRecord | null> => {
+  if (!entry.galleryUrl || typeof entry.index !== 'number') return null;
+
+  const records = await galleryRecordsStorage.get();
+  const existing = records?.[entry.galleryUrl]?.images[String(entry.index)];
+  if (existing?.taskId && existing.taskId !== taskId) return null;
+
+  if (
+    existing?.taskId === taskId &&
+    existing.chromeDownloadId === chromeDownloadId
+  ) {
+    return existing;
+  }
+
+  const state =
+    existing?.taskId === taskId &&
+    (existing.state === 'complete' || existing.state === 'interrupted')
+      ? existing.state
+      : 'in_progress';
+
+  await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
+    index: entry.index,
+    sourceUrl: entry.sourceUrl || existing?.sourceUrl || '',
+    taskId,
+    state,
+    chromeDownloadId,
+    ...(filename || existing?.filename
+      ? { filename: filename || existing?.filename }
+      : {}),
+    updatedAt: Date.now(),
+  });
+
+  const updated = await galleryRecordsStorage.get();
+  return updated?.[entry.galleryUrl]?.images[String(entry.index)] ?? null;
+};
+
+const resolveDownloadBinding = async (chromeDownloadId: number, filename?: string) => {
   const indexMap = downloadIndexMapStorage.getSnapshot() || (await downloadIndexMapStorage.get());
   const entry = indexMap[String(chromeDownloadId)];
   const taskId = normalizeTaskId(entry?.taskId);
@@ -221,9 +291,12 @@ const getRegisteredImageContext = async (chromeDownloadId: number) => {
   if (!task || task.taskId !== taskId || task.galleryUrl !== entry.galleryUrl) return null;
 
   const records = await galleryRecordsStorage.get();
-  const image = records?.[entry.galleryUrl]?.images[String(entry.index)];
-  if (!image || image.taskId !== taskId || image.chromeDownloadId !== chromeDownloadId) {
-    return null;
+  let image = records?.[entry.galleryUrl]?.images[String(entry.index)];
+  if (image?.taskId && image.taskId !== taskId) return null;
+
+  if (!image || image.chromeDownloadId !== chromeDownloadId) {
+    image = await bindGalleryImageFromIndexEntry(chromeDownloadId, entry, taskId, filename);
+    if (!image) return null;
   }
 
   return { entry, image, task, taskId };
@@ -302,7 +375,7 @@ export const registerChromeDownload = async (params: RegisterChromeDownloadParam
     taskId,
     state,
     chromeDownloadId: params.id,
-    filename: params.filename,
+    ...(params.filename ? { filename: params.filename } : {}),
     updatedAt: Date.now(),
   });
   await refreshTaskStatus(params.galleryUrl);
@@ -313,7 +386,7 @@ export const patchChromeDownloadMetadata = async (
   chromeDownloadId: number,
   patch: ChromeDownloadMetadata
 ) => {
-  const context = await getRegisteredImageContext(chromeDownloadId);
+  const context = await resolveDownloadBinding(chromeDownloadId, patch.filename);
   if (!context) return false;
 
   await galleryRecordsStorage.patchImageByDownloadId(
@@ -328,14 +401,36 @@ export const patchChromeDownloadMetadata = async (
 export const settleChromeDownload = async (
   chromeDownloadId: number,
   chromeState: 'complete' | 'interrupted',
-  error?: string
+  error?: string,
+  filename?: string
 ) => {
-  const context = await getRegisteredImageContext(chromeDownloadId);
+  let resolvedFilename = filename;
+  if (!resolvedFilename) {
+    try {
+      const [item] = await chrome.downloads.search({ id: chromeDownloadId });
+      if (item?.filename) resolvedFilename = item.filename;
+      if (!error && item?.error) error = item.error;
+    } catch {
+      /* optional enrichment */
+    }
+  }
+
+  const context = await resolveDownloadBinding(chromeDownloadId, resolvedFilename);
   if (!context) return false;
 
   const { entry, image } = context;
   if (chromeState === 'interrupted' && image.state === 'complete') return true;
-  if (image.state === chromeState) return true;
+  if (image.state === chromeState) {
+    if (resolvedFilename && resolvedFilename !== image.filename) {
+      await galleryRecordsStorage.patchImageByDownloadId(
+        chromeDownloadId,
+        entry.galleryUrl,
+        entry.index,
+        { filename: resolvedFilename }
+      );
+    }
+    return true;
+  }
 
   await galleryRecordsStorage.patchImageByDownloadId(
     chromeDownloadId,
@@ -345,10 +440,28 @@ export const settleChromeDownload = async (
       state: chromeState,
       error: chromeState === 'interrupted' ? error ?? 'Download interrupted' : undefined,
       sourceUrl: entry.sourceUrl || image.sourceUrl || '',
+      ...(resolvedFilename ? { filename: resolvedFilename } : {}),
     }
   );
   await refreshTaskStatus(entry.galleryUrl);
   return true;
+};
+
+/**
+ * 兜底：下载可能在 register 之前就已进入终态（onChanged complete 已错过）。
+ * 主动 search 一次，若已终态则复用 settle 提交流程。
+ */
+export const ensureSettledIfAlreadyDone = async (chromeDownloadId: number) => {
+  try {
+    const [item] = await chrome.downloads.search({ id: chromeDownloadId });
+    if (!item) return false;
+    if (item.state === 'complete' || item.state === 'interrupted') {
+      return settleChromeDownload(chromeDownloadId, item.state, item.error, item.filename);
+    }
+  } catch {
+    /* downloads.search may fail for brand-new ids on some builds */
+  }
+  return false;
 };
 
 export const completeImage = async (
@@ -414,6 +527,7 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
   const config = await configStorage.get();
   const indexMap = downloadIndexMapStorage.getSnapshot() || (await downloadIndexMapStorage.get());
 
+  // 第一轮：按 chrome download id 自愈绑定并 settle
   for (const [idKey, entry] of Object.entries(indexMap || {})) {
     if (entry.galleryUrl !== task.galleryUrl || entry.taskId !== task.taskId) continue;
     const chromeDownloadId = Number(idKey);
@@ -422,7 +536,7 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
     try {
       const [item] = await chrome.downloads.search({ id: chromeDownloadId });
       if (item?.state === 'complete' || item?.state === 'interrupted') {
-        await settleChromeDownload(chromeDownloadId, item.state, item.error);
+        await settleChromeDownload(chromeDownloadId, item.state, item.error, item.filename);
       } else if (item) {
         await patchChromeDownloadMetadata(chromeDownloadId, {
           filename: item.filename,
@@ -441,6 +555,25 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
     for (const index of taskTargetIndices(task)) {
       const image = gallery.images[String(index)];
       if (!image || image.taskId !== task.taskId || image.state === 'complete') continue;
+
+      // 已有 chromeDownloadId：优先按 id 再 settle 一次
+      if (image.chromeDownloadId != null) {
+        try {
+          const [item] = await chrome.downloads.search({ id: image.chromeDownloadId });
+          if (item?.state === 'complete' || item?.state === 'interrupted') {
+            await settleChromeDownload(
+              image.chromeDownloadId,
+              item.state,
+              item.error,
+              item.filename
+            );
+            continue;
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
       if (!image.sourceUrl) continue;
 
       const expectedFilename = buildStorageRelativeFilename(config, {
@@ -453,14 +586,19 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
         galleryUrl: task.galleryUrl,
       });
       const basename = expectedFilename.split('/').pop() ?? expectedFilename;
+      const searchStem = basename.includes('.')
+        ? basename.slice(0, basename.lastIndexOf('.'))
+        : basename;
 
       try {
-        const items = await chrome.downloads.search({ query: [basename] });
-        const match = items.find(
-          (item) =>
-            item.filename.replace(/\\/g, '/').endsWith(basename) &&
-            (item.state === 'complete' || item.state === 'interrupted')
-        );
+        const items = await chrome.downloads.search({ query: [searchStem] });
+        const match = items.find((item) => {
+          if (item.state !== 'complete' && item.state !== 'interrupted') return false;
+          const normalized = item.filename.replace(/\\/g, '/');
+          if (!pathIncludesDownloadDir(normalized, task.downloadPath)) return false;
+          const actualBasename = normalized.split('/').pop() ?? normalized;
+          return isExpectedBasenameOrUniquifyVariant(actualBasename, basename);
+        });
         if (!match) continue;
 
         await registerChromeDownload({
@@ -471,9 +609,14 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
           galleryUrl: task.galleryUrl,
           sourceUrl: image.sourceUrl,
           taskId: task.taskId,
-          filename: expectedFilename,
+          filename: match.filename || expectedFilename,
         });
-        await settleChromeDownload(match.id, match.state as 'complete' | 'interrupted', match.error);
+        await settleChromeDownload(
+          match.id,
+          match.state as 'complete' | 'interrupted',
+          match.error,
+          match.filename
+        );
       } catch {
         /* The bounded filename search is a best-effort repair path. */
       }

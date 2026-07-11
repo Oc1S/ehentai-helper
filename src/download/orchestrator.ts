@@ -8,10 +8,10 @@ import { rangeIndices } from '@/download/helpers';
 import {
   clearActiveTask,
   completeImage,
+  ensureSettledIfAlreadyDone,
   failImage,
   markDispatchComplete,
   registerChromeDownload,
-  settleChromeDownload,
   startTask,
 } from '@/download/state-store';
 import type { DownloadJobMode, DownloadJobPayload } from '@/download/types';
@@ -122,23 +122,6 @@ export const releaseChromeDownloadSlot = (chromeDownloadId: number) => {
   }
 };
 
-/**
- * 兜底：下载可能在 registerChromeDownload 之前就已进入终态（onChanged complete 已错过）。
- * 在 handOverSlot 后主动 search 一次，若已终态则复用同一条 settle 提交流程。
- */
-const ensureSettledIfAlreadyDone = async (chromeDownloadId: number) => {
-  try {
-    const [item] = await chrome.downloads.search({ id: chromeDownloadId });
-    if (!item) return;
-    if (item.state === 'complete' || item.state === 'interrupted') {
-      releaseChromeDownloadSlot(chromeDownloadId);
-      await settleChromeDownload(chromeDownloadId, item.state, item.error);
-    }
-  } catch {
-    /* downloads.search may fail for brand-new ids on some builds */
-  }
-};
-
 const startChromeFileDownload = async (
   config: Config,
   params: RuntimeJobParams,
@@ -188,7 +171,7 @@ const startChromeFileDownload = async (
           }
 
           try {
-            await registerChromeDownload({
+            const registered = await registerChromeDownload({
               id,
               index: currentIndex,
               total: params.totalImages,
@@ -198,10 +181,16 @@ const startChromeFileDownload = async (
               taskId: params.taskId,
               filename: relativeFilename,
             });
-            await consumePendingDownloadFilename(downloadUrl);
+            // 仅注册成功才消费 hint，失败时留给 onCreated 重试
+            if (registered) {
+              await consumePendingDownloadFilename(downloadUrl);
+            }
             releaseDownloadUrlOnDownloadDone(id, revoke);
             handOverSlot(id);
-            await ensureSettledIfAlreadyDone(id);
+            if (registered) {
+              const settled = await ensureSettledIfAlreadyDone(id);
+              if (settled) releaseChromeDownloadSlot(id);
+            }
           } catch (error) {
             console.error('register download failed@', error);
             await consumePendingDownloadFilename(downloadUrl);
@@ -376,13 +365,7 @@ const downloadImage = async (
     candidate = await resolveImagePageCandidate(config, imagePageUrl);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to fetch image page';
-    await failImage(
-      params.taskId,
-      params.galleryFrontPageUrl,
-      currentIndex,
-      msg,
-      imagePageUrl
-    );
+    await failImage(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
     return;
   }
 
@@ -545,13 +528,7 @@ const processGalleryPage = async (
       runSingleDownload(jobId, config, params, imagePageUrl, currentIndex).catch(async (error) => {
         console.error('download image failed@', error);
         const msg = error instanceof Error ? error.message : 'Unexpected download error';
-        await failImage(
-          params.taskId,
-          params.galleryFrontPageUrl,
-          currentIndex,
-          msg,
-          imagePageUrl
-        );
+        await failImage(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
       })
     );
 
