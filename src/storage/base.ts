@@ -98,10 +98,61 @@ export function createStorage<D = string>(
     listeners.forEach((listener) => listener());
   };
 
-  const set = async (valueOrUpdate: ValueOrUpdate<D>) => {
-    cache = await updateCache(valueOrUpdate, cache);
-    await chrome.storage[storageType].set({ [key]: serialize(cache) });
-    _emitChange();
+  // 本地写入进行中时忽略 onChanged，避免回声覆盖尚未落盘的合并结果
+  let persisting = false;
+  let pendingUpdates: ValueOrUpdate<D>[] = [];
+  let writeChain: Promise<void> = Promise.resolve();
+
+  let ready = _getDataFromStorage().then((data) => {
+    // set 可能已先写入；勿用过期快照覆盖
+    if (cache === null) {
+      cache = data;
+      _emitChange();
+    }
+  });
+
+  const flushPendingUpdates = async () => {
+    if (pendingUpdates.length === 0) return;
+
+    const batch = pendingUpdates;
+    pendingUpdates = [];
+
+    try {
+      await ready;
+      if (cache === null) {
+        cache = await _getDataFromStorage();
+      }
+
+      for (const valueOrUpdate of batch) {
+        cache = await updateCache(valueOrUpdate, cache);
+      }
+
+      persisting = true;
+      try {
+        await chrome.storage[storageType].set({ [key]: serialize(cache as D) });
+      } finally {
+        persisting = false;
+      }
+
+      _emitChange();
+    } catch (error) {
+      pendingUpdates = [...batch, ...pendingUpdates];
+      throw error;
+    }
+  };
+
+  const set = (valueOrUpdate: ValueOrUpdate<D>): Promise<void> => {
+    pendingUpdates.push(valueOrUpdate);
+    writeChain = writeChain.then(flushPendingUpdates, flushPendingUpdates);
+    return writeChain;
+  };
+
+  const get = async (): Promise<D> => {
+    if (cache !== null) return cache;
+    await ready;
+    if (cache !== null) return cache;
+    cache = await _getDataFromStorage();
+    return cache;
   };
 
   const subscribe = (listener: () => void) => {
@@ -115,15 +166,12 @@ export function createStorage<D = string>(
     return cache;
   };
 
-  _getDataFromStorage().then((data) => {
-    cache = data;
-    _emitChange();
-  });
-
   async function _updateFromStorageOnChanged(changes: {
     [key: string]: chrome.storage.StorageChange;
   }) {
     if (changes[key] === undefined) return;
+    // 本上下文正在合并/落盘时，以本地 cache 为准
+    if (persisting || pendingUpdates.length > 0) return;
 
     const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue as string);
 
@@ -139,7 +187,7 @@ export function createStorage<D = string>(
   }
 
   return {
-    get: _getDataFromStorage,
+    get,
     set,
     getSnapshot,
     subscribe,

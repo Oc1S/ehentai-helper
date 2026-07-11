@@ -42,7 +42,6 @@ type DownloadPatch = Partial<chrome.downloads.DownloadItem> & { id: number };
 type GalleryDownloadPatch = {
   filename?: string;
   error?: string;
-  totalBytes?: number;
 };
 
 const pendingDownloadPatches = new Map<number, DownloadPatch>();
@@ -69,7 +68,6 @@ const backfillGalleryRecordsFromDownloads = async (items: chrome.downloads.Downl
       await patchChromeDownloadMetadata(item.id, {
         filename: item.filename,
         error: item.error,
-        totalBytes: item.totalBytes,
       });
     })
   );
@@ -192,7 +190,6 @@ const registerListeners = () => {
         }
         void patchChromeDownloadMetadata(downloadItem.id, {
           filename: downloadItem.filename,
-          totalBytes: downloadItem.totalBytes,
         });
       });
     });
@@ -218,7 +215,7 @@ const registerListeners = () => {
       }
     }
 
-    // 非 state 字段（filename / 进度等）回写 gallery record
+    // 非 state 字段回写 gallery record（不写 totalBytes：无消费方，且 onChanged 会放大全量写）
     const galleryPatch: GalleryDownloadPatch = {};
     if (!settledTerminal && downloadDelta.filename) {
       galleryPatch.filename = downloadDelta.filename.current;
@@ -226,7 +223,6 @@ const registerListeners = () => {
     if (!settledTerminal && downloadDelta.error) {
       galleryPatch.error = downloadDelta.error.current;
     }
-    if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
     if (Object.keys(galleryPatch).length > 0) {
       void patchChromeDownloadMetadata(id, galleryPatch);
     }

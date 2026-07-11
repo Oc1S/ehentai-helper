@@ -1,9 +1,6 @@
 import { clearCbzTask } from '@/download/cbz-cache';
 import { packAndDownloadCbz } from '@/download/cbz-pack';
-import {
-  buildStorageRelativeFilename,
-  normalizeDownloadDir,
-} from '@/download/download-filename';
+import { buildStorageRelativeFilename, normalizeDownloadDir } from '@/download/download-filename';
 import { trackedDownloadIds } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode } from '@/download/types';
@@ -52,7 +49,6 @@ export type RegisterChromeDownloadParams = {
 export type ChromeDownloadMetadata = {
   filename?: string;
   error?: string;
-  totalBytes?: number;
 };
 
 const TERMINAL_TASK_STATUSES = new Set<ActiveDownloadTask['status']>([
@@ -368,7 +364,7 @@ export const registerChromeDownload = async (params: RegisterChromeDownloadParam
     ...(params.filename ? { filename: params.filename } : {}),
     updatedAt: Date.now(),
   });
-  await refreshTaskStatus(params.galleryUrl);
+  // register 只推进 in_progress，不会改变终态；settle/complete/fail 再 refresh
   return true;
 };
 
@@ -383,8 +379,7 @@ export const patchChromeDownloadMetadata = async (
 
   if (needsBind) {
     const state =
-      image.taskId === taskId &&
-      (image.state === 'complete' || image.state === 'interrupted')
+      image.taskId === taskId && (image.state === 'complete' || image.state === 'interrupted')
         ? image.state
         : 'in_progress';
     await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
@@ -393,9 +388,12 @@ export const patchChromeDownloadMetadata = async (
       taskId,
       state,
       chromeDownloadId,
-      ...(patch.filename ? { filename: patch.filename } : image.filename ? { filename: image.filename } : {}),
+      ...(patch.filename
+        ? { filename: patch.filename }
+        : image.filename
+          ? { filename: image.filename }
+          : {}),
       ...(patch.error != null ? { error: patch.error } : {}),
-      ...(patch.totalBytes != null ? { totalBytes: patch.totalBytes } : {}),
       updatedAt: Date.now(),
     });
     return true;
@@ -468,9 +466,7 @@ export const settleChromeDownload = async (
       state: chromeState,
       chromeDownloadId,
       ...(resolvedFilename ? { filename: resolvedFilename } : {}),
-      ...(chromeState === 'interrupted'
-        ? { error: error ?? 'Download interrupted' }
-        : {}),
+      error: chromeState === 'interrupted' ? error ?? 'Download interrupted' : undefined,
       updatedAt: Date.now(),
     });
   } else {
@@ -583,13 +579,21 @@ export const failImage = async (
 };
 
 export const markDispatchComplete = async (taskId: string, galleryUrl: string) => {
-  // 若 settle 已把任务推到终态，不要降级回 dispatch_complete（否则成功页会闪回下载中）
-  await downloadTaskStorage.set((prev) => {
-    if (!prev || prev.taskId !== taskId) return prev;
-    if (TERMINAL_TASK_STATUSES.has(prev.status)) return prev;
-    if (prev.status === 'dispatch_complete') return prev;
-    return { ...prev, status: 'dispatch_complete', updatedAt: Date.now() };
-  });
+  const task = await downloadTaskStorage.get();
+  if (!task || task.taskId !== taskId) return;
+  if (TERMINAL_TASK_STATUSES.has(task.status)) {
+    await finishTerminalTask(task);
+    return;
+  }
+
+  // 先按图片进度尝试直接进终态，避免无意义的 running→dispatch_complete→completed 两跳
+  await refreshTaskStatus(galleryUrl, { allowRunningTerminal: true });
+
+  const after = await downloadTaskStorage.get();
+  if (!after || after.taskId !== taskId) return;
+  if (TERMINAL_TASK_STATUSES.has(after.status) || after.status === 'dispatch_complete') return;
+
+  await patchActiveTask(taskId, { status: 'dispatch_complete' });
   await refreshTaskStatus(galleryUrl);
 };
 
@@ -621,7 +625,6 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
         await patchChromeDownloadMetadata(chromeDownloadId, {
           filename: item.filename,
           error: item.error,
-          totalBytes: item.totalBytes,
         });
       }
     } catch {

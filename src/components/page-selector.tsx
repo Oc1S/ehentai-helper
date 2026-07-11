@@ -85,19 +85,19 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
     [safeEnd, safeStart],
   );
 
-  // 非受控：onChange 时若输入合理（合法数字且在范围内）则更新 range，否则不动，
-  // 让用户继续编辑。blur 时若仍不合理，回退到当前 range 值。
+  // 非受控：合法数字即提交。start > end 时抬高 end；end < start 时压低 start。
+  // blur 时若仍不合理，回退到当前 range 值。
   const tryCommitFrom = (raw: string) => {
     const next = Number.parseInt(raw, 10);
-    if (Number.isNaN(next) || next < 1 || next > range[1]) return false;
-    setRange([next, range[1]]);
+    if (Number.isNaN(next) || next < minValue || next > safeMaxValue) return false;
+    setRange(next > range[1] ? [next, next] : [next, range[1]]);
     return true;
   };
 
   const tryCommitTo = (raw: string) => {
     const next = Number.parseInt(raw, 10);
-    if (Number.isNaN(next) || next < range[0] || next > maxValue) return false;
-    setRange([range[0], next]);
+    if (Number.isNaN(next) || next < minValue || next > safeMaxValue) return false;
+    setRange(next < range[0] ? [next, next] : [range[0], next]);
     return true;
   };
 
@@ -239,8 +239,8 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             ref={fromInputRef}
             type="number"
             inputMode="numeric"
-            min={1}
-            max={range[1]}
+            min={minValue}
+            max={safeMaxValue}
             defaultValue={range[0]}
             aria-label={t('rangeFrom')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"
@@ -257,8 +257,8 @@ export const PageSelector: FC<PageSelectorProps> = ({ range, setRange, maxValue 
             ref={toInputRef}
             type="number"
             inputMode="numeric"
-            min={range[0]}
-            max={maxValue}
+            min={minValue}
+            max={safeMaxValue}
             defaultValue={range[1]}
             aria-label={t('rangeTo')}
             className="eh-number-input flex-1 rounded-eh-sm border border-[var(--eh-hairline)] bg-transparent px-2.5 py-2 font-mono text-[13px] tabular-nums text-ink outline-none transition-colors placeholder:text-muted-soft focus:border-[rgb(var(--eh-brand-primary-active))]"

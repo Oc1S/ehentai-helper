@@ -55,7 +55,6 @@ export const DownloadResultSummary = ({
           ? t('partialSuccessSummary', [String(completeCount), String(failedCount)])
         : t('downloadFailedDesc');
   const metaRange = rangeLabel ?? `${rangeStart} - ${rangeEnd}`;
-  const unfinishedCount = Math.max(0, downloadCount - completeCount);
 
   return (
     <div className="glass-panel rounded-eh-2xl flex shrink-0 flex-col gap-3 p-5">
@@ -84,16 +83,7 @@ export const DownloadResultSummary = ({
             <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
           </p>
         </div>
-        {variant === 'running' ? (
-          <div className="text-right">
-            <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
-              {t('stateUnfinished')}
-            </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
-              {unfinishedCount}
-            </p>
-          </div>
-        ) : variant !== 'success' && failedCount > 0 ? (
+        {variant !== 'running' && variant !== 'success' && failedCount > 0 ? (
           <div className="text-right">
             <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
               {t('stateFailed')}

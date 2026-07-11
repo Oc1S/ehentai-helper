@@ -81,6 +81,32 @@ export const usePopupController = () => {
   }, [currentTask, dismissResult]);
 
   const downloadCount = range[1] - range[0] + 1;
+
+  const { completeCount, failedCount, inProgressCount } = useMemo(() => {
+    const record = galleryRecords[currentGalleryUrl];
+    if (currentTask?.targetIndices?.length) {
+      return countIndicesProgress(record, currentTask.targetIndices, currentTask.taskId);
+    }
+    if (optimisticTaskStatus === StatusEnum.Downloading) {
+      return { completeCount: 0, failedCount: 0, inProgressCount: 0 };
+    }
+    if (currentTask) {
+      return countRangeProgress(
+        record,
+        currentTask.rangeStart,
+        currentTask.rangeEnd,
+        currentTask.taskId
+      );
+    }
+    return countRangeProgress(record, range[0], range[1]);
+  }, [
+    galleryRecords,
+    currentGalleryUrl,
+    currentTask,
+    optimisticTaskStatus,
+    range,
+  ]);
+
   const viewModel = useMemo(
     () =>
       derivePopupViewModel({
@@ -91,12 +117,16 @@ export const usePopupController = () => {
         galleryUrl: currentGalleryUrl,
         range,
         downloadCount,
+        progressComplete: completeCount,
+        progressFailed: failedCount,
       }),
     [
       activeTask,
+      completeCount,
       currentGalleryUrl,
       dismissResult,
       downloadCount,
+      failedCount,
       optimisticTaskStatus,
       pageStatus,
       range,
@@ -120,24 +150,6 @@ export const usePopupController = () => {
       setOptimisticTaskStatus(null);
     }
   }, [isTaskForCurrentGallery, optimisticTaskStatus]);
-
-  const { completeCount, failedCount, inProgressCount } = useMemo(() => {
-    const record = galleryRecords[currentGalleryUrl];
-    if (currentTask?.targetIndices?.length) {
-      return countIndicesProgress(record, currentTask.targetIndices, currentTask.taskId);
-    }
-    if (optimisticTaskStatus === StatusEnum.Downloading) {
-      return { completeCount: 0, failedCount: 0, inProgressCount: 0 };
-    }
-    return countRangeProgress(record, progressRange.start, progressRange.end);
-  }, [
-    galleryRecords,
-    currentGalleryUrl,
-    currentTask,
-    optimisticTaskStatus,
-    progressRange.start,
-    progressRange.end,
-  ]);
 
   const buildJobPayload = (
     indices?: number[],
