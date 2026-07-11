@@ -11,6 +11,7 @@ import {
   ensureSettledIfAlreadyDone,
   failImage,
   markDispatchComplete,
+  markImageInProgress,
   registerChromeDownload,
   startTask,
 } from '@/download/state-store';
@@ -359,6 +360,9 @@ const downloadImage = async (
   currentIndex: number
 ) => {
   if (cancelRequested) return;
+
+  // 开始解析/抓取前就标为进行中，避免详情里长时间停在「排队中」
+  await markImageInProgress(params.taskId, params.galleryFrontPageUrl, currentIndex);
 
   let candidate: ImagePageCandidate;
   try {

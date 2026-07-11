@@ -40,6 +40,7 @@ const formatTargetIndicesLabel = (task: ActiveDownloadTask | null) => {
 export type PopupViewModelInput = {
   pageStatus: StatusEnum;
   optimisticTaskStatus: StatusEnum.Downloading | null;
+  dismissResult: boolean;
   activeTask: ActiveDownloadTask | null;
   galleryUrl: string;
   range: [number, number];
@@ -49,6 +50,7 @@ export type PopupViewModelInput = {
 export const derivePopupViewModel = ({
   pageStatus,
   optimisticTaskStatus,
+  dismissResult,
   activeTask,
   galleryUrl,
   range,
@@ -56,8 +58,10 @@ export const derivePopupViewModel = ({
 }: PopupViewModelInput) => {
   const currentTask = activeTask?.galleryUrl === galleryUrl ? activeTask : null;
   const taskStatus = currentTask ? taskStatusToUi(currentTask.status) : null;
-  const status =
-    pageStatus === StatusEnum.BeforeDownload
+  // 用户点「返回下载范围」后忽略终态 task，直到新下载开始或 task 被清空
+  const status = dismissResult
+    ? StatusEnum.BeforeDownload
+    : pageStatus === StatusEnum.BeforeDownload
       ? taskStatus ?? optimisticTaskStatus ?? pageStatus
       : pageStatus;
   const isTerminalDownload =

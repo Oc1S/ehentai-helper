@@ -202,9 +202,12 @@ const registerListeners = () => {
     const { id } = downloadDelta;
 
     // 下载进入终态时，释放并发槽，并把终态交给 state-store 幂等提交。
+    // settle 已带上同事件的 filename/error 时，下面不再重复 patch，避免双写闪烁。
+    let settledTerminal = false;
     if (downloadDelta.state) {
       const nextState = downloadDelta.state.current;
       if (nextState === 'complete' || nextState === 'interrupted') {
+        settledTerminal = true;
         releaseChromeDownloadSlot(id);
         void settleChromeDownload(
           id,
@@ -217,8 +220,12 @@ const registerListeners = () => {
 
     // 非 state 字段（filename / 进度等）回写 gallery record
     const galleryPatch: GalleryDownloadPatch = {};
-    if (downloadDelta.filename) galleryPatch.filename = downloadDelta.filename.current;
-    if (downloadDelta.error) galleryPatch.error = downloadDelta.error.current;
+    if (!settledTerminal && downloadDelta.filename) {
+      galleryPatch.filename = downloadDelta.filename.current;
+    }
+    if (!settledTerminal && downloadDelta.error) {
+      galleryPatch.error = downloadDelta.error.current;
+    }
     if (downloadDelta.totalBytes) galleryPatch.totalBytes = downloadDelta.totalBytes.current;
     if (Object.keys(galleryPatch).length > 0) {
       void patchChromeDownloadMetadata(id, galleryPatch);
@@ -393,14 +400,16 @@ const registerListeners = () => {
 
     if (message.type === 'cancel-download') {
       requestCancelDownload();
-      void clearActiveTask();
-      sendResponse({ ok: true });
+      void clearActiveTask().then(() => {
+        sendResponse({ ok: true });
+      });
       return true;
     }
 
     if (message.type === 'clear-download-task') {
-      void clearActiveTask();
-      sendResponse({ ok: true });
+      void clearActiveTask().then(() => {
+        sendResponse({ ok: true });
+      });
       return true;
     }
 

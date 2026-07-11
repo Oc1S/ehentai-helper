@@ -50,6 +50,7 @@ export const usePopupController = () => {
   const [optimisticTaskStatus, setOptimisticTaskStatus] = useState<StatusEnum.Downloading | null>(
     null
   );
+  const [dismissResult, setDismissResult] = useState(false);
   const galleryRecords = useStorageSuspense(galleryRecordsStorage) || {};
   const activeTask = useStorage(downloadTaskStorage);
   const galleryFrontPageUrl = useRef('');
@@ -72,18 +73,34 @@ export const usePopupController = () => {
     setRange([1, galleryPageInfo.totalImages]);
   }, [galleryPageInfo.totalImages]);
 
+  // task 已清空后收起 dismiss 标记，避免影响后续会话
+  useEffect(() => {
+    if (dismissResult && !currentTask) {
+      setDismissResult(false);
+    }
+  }, [currentTask, dismissResult]);
+
   const downloadCount = range[1] - range[0] + 1;
   const viewModel = useMemo(
     () =>
       derivePopupViewModel({
         pageStatus,
         optimisticTaskStatus,
+        dismissResult,
         activeTask,
         galleryUrl: currentGalleryUrl,
         range,
         downloadCount,
       }),
-    [activeTask, currentGalleryUrl, downloadCount, optimisticTaskStatus, pageStatus, range]
+    [
+      activeTask,
+      currentGalleryUrl,
+      dismissResult,
+      downloadCount,
+      optimisticTaskStatus,
+      pageStatus,
+      range,
+    ]
   );
   const {
     status,
@@ -152,6 +169,7 @@ export const usePopupController = () => {
     rangeOverride?: [number, number]
   ) => {
     if (!galleryInfo) return false;
+    setDismissResult(false);
     setOptimisticTaskStatus(StatusEnum.Downloading);
 
     const payload = buildJobPayload(
@@ -284,9 +302,11 @@ export const usePopupController = () => {
     if (activeTask?.galleryUrl === galleryFrontPageUrl.current) {
       setRange([activeTask.rangeStart, activeTask.rangeEnd]);
     }
-    await clearDownloadTask();
+    // 先切 UI，避免 clear 异步返回前仍被终态 taskStatus 钉在成功页
+    setDismissResult(true);
     setOptimisticTaskStatus(null);
     setPageStatus(StatusEnum.BeforeDownload);
+    await clearDownloadTask();
   };
 
   const handleCancelDownload = async () => {

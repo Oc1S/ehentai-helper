@@ -191,8 +191,18 @@ const refreshTaskStatus = async (
   const gallery = records?.[galleryUrl];
   const nextStatus = resolveTaskStatus(task, countTaskImages(task, gallery?.images));
 
-  if (task.status === 'running' && !options.allowRunningTerminal) return;
+  // running 期间：允许直接进入终态（全部 settle 完），避免「进度已满仍显示下载中」再闪到成功页。
+  // dispatch_complete 仍由 orchestrator 的 markDispatchComplete 推进。
   if (task.status === 'running' && nextStatus === 'dispatch_complete') return;
+  if (
+    task.status === 'running' &&
+    !options.allowRunningTerminal &&
+    nextStatus !== 'completed' &&
+    nextStatus !== 'partial_success' &&
+    nextStatus !== 'failed'
+  ) {
+    return;
+  }
 
   if (nextStatus === 'dispatch_complete') {
     if (task.status !== 'dispatch_complete') {
@@ -236,52 +246,25 @@ const pathIncludesDownloadDir = (absolutePath: string, downloadPath: string) => 
   return normalized.includes(dir);
 };
 
-/**
- * 从 indexMap 自愈绑定 gallery record 的 chromeDownloadId。
- * 解决 register 只写了 indexMap、或 settle 早于 gallery 写入的半绑定问题。
- */
-const bindGalleryImageFromIndexEntry = async (
-  chromeDownloadId: number,
-  entry: DownloadIndexEntry,
-  taskId: string,
-  filename?: string
-): Promise<GalleryImageRecord | null> => {
-  if (!entry.galleryUrl || typeof entry.index !== 'number') return null;
-
-  const records = await galleryRecordsStorage.get();
-  const existing = records?.[entry.galleryUrl]?.images[String(entry.index)];
-  if (existing?.taskId && existing.taskId !== taskId) return null;
-
-  if (
-    existing?.taskId === taskId &&
-    existing.chromeDownloadId === chromeDownloadId
-  ) {
-    return existing;
-  }
-
-  const state =
-    existing?.taskId === taskId &&
-    (existing.state === 'complete' || existing.state === 'interrupted')
-      ? existing.state
-      : 'in_progress';
-
-  await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
-    index: entry.index,
-    sourceUrl: entry.sourceUrl || existing?.sourceUrl || '',
-    taskId,
-    state,
-    chromeDownloadId,
-    ...(filename || existing?.filename
-      ? { filename: filename || existing?.filename }
-      : {}),
-    updatedAt: Date.now(),
-  });
-
-  const updated = await galleryRecordsStorage.get();
-  return updated?.[entry.galleryUrl]?.images[String(entry.index)] ?? null;
+/** 相对路径与 Chrome 绝对路径视为同一文件，避免反复 patch 引发 UI 闪烁 */
+const filenamesEquivalent = (a?: string, b?: string) => {
+  if (!a || !b) return a === b;
+  if (a === b) return true;
+  const na = a.replace(/\\/g, '/');
+  const nb = b.replace(/\\/g, '/');
+  if (na === nb) return true;
+  if (na.endsWith(nb) || nb.endsWith(na)) return true;
+  const baseA = na.split('/').pop() ?? na;
+  const baseB = nb.split('/').pop() ?? nb;
+  return baseA === baseB;
 };
 
-const resolveDownloadBinding = async (chromeDownloadId: number, filename?: string) => {
+/**
+ * 解析 chromeDownloadId → gallery 绑定上下文。
+ * 若 gallery 尚未写入 chromeDownloadId，不提前 upsert（避免 queued→in_progress→complete 三连闪烁），
+ * 由 settle/patch 一次写终态。
+ */
+const resolveDownloadBinding = async (chromeDownloadId: number) => {
   const indexMap = downloadIndexMapStorage.getSnapshot() || (await downloadIndexMapStorage.get());
   const entry = indexMap[String(chromeDownloadId)];
   const taskId = normalizeTaskId(entry?.taskId);
@@ -291,15 +274,22 @@ const resolveDownloadBinding = async (chromeDownloadId: number, filename?: strin
   if (!task || task.taskId !== taskId || task.galleryUrl !== entry.galleryUrl) return null;
 
   const records = await galleryRecordsStorage.get();
-  let image = records?.[entry.galleryUrl]?.images[String(entry.index)];
+  const image = records?.[entry.galleryUrl]?.images[String(entry.index)];
   if (image?.taskId && image.taskId !== taskId) return null;
 
-  if (!image || image.chromeDownloadId !== chromeDownloadId) {
-    image = await bindGalleryImageFromIndexEntry(chromeDownloadId, entry, taskId, filename);
-    if (!image) return null;
-  }
+  const needsBind = !image || image.chromeDownloadId !== chromeDownloadId;
+  const resolvedImage: GalleryImageRecord =
+    image && (!image.taskId || image.taskId === taskId)
+      ? image
+      : {
+          index: entry.index,
+          sourceUrl: entry.sourceUrl || '',
+          taskId,
+          state: 'queued',
+          updatedAt: 0,
+        };
 
-  return { entry, image, task, taskId };
+  return { entry, image: resolvedImage, task, taskId, needsBind };
 };
 
 export const startTask = async (params: StartTaskParams) => {
@@ -386,13 +376,47 @@ export const patchChromeDownloadMetadata = async (
   chromeDownloadId: number,
   patch: ChromeDownloadMetadata
 ) => {
-  const context = await resolveDownloadBinding(chromeDownloadId, patch.filename);
+  const context = await resolveDownloadBinding(chromeDownloadId);
   if (!context) return false;
+
+  const { entry, image, taskId, needsBind } = context;
+
+  if (needsBind) {
+    const state =
+      image.taskId === taskId &&
+      (image.state === 'complete' || image.state === 'interrupted')
+        ? image.state
+        : 'in_progress';
+    await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
+      index: entry.index,
+      sourceUrl: entry.sourceUrl || image.sourceUrl || '',
+      taskId,
+      state,
+      chromeDownloadId,
+      ...(patch.filename ? { filename: patch.filename } : image.filename ? { filename: image.filename } : {}),
+      ...(patch.error != null ? { error: patch.error } : {}),
+      ...(patch.totalBytes != null ? { totalBytes: patch.totalBytes } : {}),
+      updatedAt: Date.now(),
+    });
+    return true;
+  }
+
+  if (patch.filename && filenamesEquivalent(patch.filename, image.filename)) {
+    const { filename: _ignored, ...rest } = patch;
+    if (Object.keys(rest).length === 0) return true;
+    await galleryRecordsStorage.patchImageByDownloadId(
+      chromeDownloadId,
+      entry.galleryUrl,
+      entry.index,
+      rest
+    );
+    return true;
+  }
 
   await galleryRecordsStorage.patchImageByDownloadId(
     chromeDownloadId,
-    context.entry.galleryUrl,
-    context.entry.index,
+    entry.galleryUrl,
+    entry.index,
     patch
   );
   return true;
@@ -404,6 +428,25 @@ export const settleChromeDownload = async (
   error?: string,
   filename?: string
 ) => {
+  const context = await resolveDownloadBinding(chromeDownloadId);
+  if (!context) return false;
+
+  const { entry, image, taskId, needsBind } = context;
+  if (chromeState === 'interrupted' && image.state === 'complete') return true;
+
+  // 已终态且已绑定：幂等返回，避免 reconcile 反复 search/patch 导致闪烁
+  if (image.state === chromeState && !needsBind) {
+    if (filename && !filenamesEquivalent(filename, image.filename)) {
+      await galleryRecordsStorage.patchImageByDownloadId(
+        chromeDownloadId,
+        entry.galleryUrl,
+        entry.index,
+        { filename }
+      );
+    }
+    return true;
+  }
+
   let resolvedFilename = filename;
   if (!resolvedFilename) {
     try {
@@ -414,35 +457,37 @@ export const settleChromeDownload = async (
       /* optional enrichment */
     }
   }
+  if (!resolvedFilename) resolvedFilename = image.filename;
 
-  const context = await resolveDownloadBinding(chromeDownloadId, resolvedFilename);
-  if (!context) return false;
-
-  const { entry, image } = context;
-  if (chromeState === 'interrupted' && image.state === 'complete') return true;
-  if (image.state === chromeState) {
-    if (resolvedFilename && resolvedFilename !== image.filename) {
-      await galleryRecordsStorage.patchImageByDownloadId(
-        chromeDownloadId,
-        entry.galleryUrl,
-        entry.index,
-        { filename: resolvedFilename }
-      );
-    }
-    return true;
-  }
-
-  await galleryRecordsStorage.patchImageByDownloadId(
-    chromeDownloadId,
-    entry.galleryUrl,
-    entry.index,
-    {
-      state: chromeState,
-      error: chromeState === 'interrupted' ? error ?? 'Download interrupted' : undefined,
+  // 未绑定或状态变化：一次 upsert 写终态，避免先 in_progress 再 complete 的闪烁
+  if (needsBind || image.chromeDownloadId !== chromeDownloadId) {
+    await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
+      index: entry.index,
       sourceUrl: entry.sourceUrl || image.sourceUrl || '',
+      taskId,
+      state: chromeState,
+      chromeDownloadId,
       ...(resolvedFilename ? { filename: resolvedFilename } : {}),
-    }
-  );
+      ...(chromeState === 'interrupted'
+        ? { error: error ?? 'Download interrupted' }
+        : {}),
+      updatedAt: Date.now(),
+    });
+  } else {
+    await galleryRecordsStorage.patchImageByDownloadId(
+      chromeDownloadId,
+      entry.galleryUrl,
+      entry.index,
+      {
+        state: chromeState,
+        error: chromeState === 'interrupted' ? error ?? 'Download interrupted' : undefined,
+        sourceUrl: entry.sourceUrl || image.sourceUrl || '',
+        ...(resolvedFilename && !filenamesEquivalent(resolvedFilename, image.filename)
+          ? { filename: resolvedFilename }
+          : {}),
+      }
+    );
+  }
   await refreshTaskStatus(entry.galleryUrl);
   return true;
 };
@@ -462,6 +507,35 @@ export const ensureSettledIfAlreadyDone = async (chromeDownloadId: number) => {
     /* downloads.search may fail for brand-new ids on some builds */
   }
   return false;
+};
+
+export const markImageInProgress = async (
+  taskId: string,
+  galleryUrl: string,
+  index: number,
+  sourceUrl = ''
+) => {
+  if (!(await isActiveTaskImage(galleryUrl, index, taskId))) return false;
+
+  const records = await galleryRecordsStorage.get();
+  const existing = records?.[galleryUrl]?.images[String(index)];
+  if (
+    existing?.taskId === taskId &&
+    (existing.state === 'complete' ||
+      existing.state === 'interrupted' ||
+      existing.state === 'in_progress')
+  ) {
+    return true;
+  }
+
+  await galleryRecordsStorage.upsertImage(galleryUrl, {
+    index,
+    sourceUrl: sourceUrl || existing?.sourceUrl || '',
+    taskId,
+    state: 'in_progress',
+    updatedAt: Date.now(),
+  });
+  return true;
 };
 
 export const completeImage = async (
@@ -509,7 +583,13 @@ export const failImage = async (
 };
 
 export const markDispatchComplete = async (taskId: string, galleryUrl: string) => {
-  await patchActiveTask(taskId, { status: 'dispatch_complete' });
+  // 若 settle 已把任务推到终态，不要降级回 dispatch_complete（否则成功页会闪回下载中）
+  await downloadTaskStorage.set((prev) => {
+    if (!prev || prev.taskId !== taskId) return prev;
+    if (TERMINAL_TASK_STATUSES.has(prev.status)) return prev;
+    if (prev.status === 'dispatch_complete') return prev;
+    return { ...prev, status: 'dispatch_complete', updatedAt: Date.now() };
+  });
   await refreshTaskStatus(galleryUrl);
 };
 
@@ -574,6 +654,8 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
         }
       }
 
+      // 正在抓取/尚未拿到 chrome id：不要用 basename 误匹配旧文件
+      if (image.state === 'in_progress' && image.chromeDownloadId == null) continue;
       if (!image.sourceUrl) continue;
 
       const expectedFilename = buildStorageRelativeFilename(config, {

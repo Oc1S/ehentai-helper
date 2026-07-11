@@ -2,22 +2,11 @@ import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
-import { computeMissingIndices } from '@/download/helpers';
 import type { GalleryInfo, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
 
+import { countRangeProgress } from '../../lib/progress';
 import { RangeSelectorContent } from '../range-selector-panel';
-
-const countGalleryRecordStates = (record: GalleryRecord | undefined) => {
-  if (!record) return { complete: 0, failed: 0 };
-  let complete = 0;
-  let failed = 0;
-  for (const img of Object.values(record.images)) {
-    if (img.state === 'complete') complete++;
-    else if (img.state === 'interrupted') failed++;
-  }
-  return { complete, failed };
-};
 
 export const BeforeDownloadView = ({
   galleryInfo,
@@ -38,9 +27,14 @@ export const BeforeDownloadView = ({
   onResumeMissing: () => void;
   onViewDetails: () => void;
 }) => {
-  const rangeTotal = range[1] - range[0] + 1;
-  const { complete: completeCount, failed: failedCount } = countGalleryRecordStates(galleryRecord);
-  const missingCount = computeMissingIndices(galleryRecord, range[0], range[1]).length;
+  const rangeTotal = Math.max(0, range[1] - range[0] + 1);
+  // 与下载中/结果页同一套范围进度模型：主指标永远是「完成/总数」
+  const { completeCount, failedCount } = countRangeProgress(
+    galleryRecord,
+    range[0],
+    range[1]
+  );
+  const missingCount = Math.max(0, rangeTotal - completeCount);
   const hasHistory = Boolean(galleryRecord && Object.keys(galleryRecord.images).length > 0);
   const rangeSelector =
     range[1] > 0 ? (
@@ -113,7 +107,7 @@ export const BeforeDownloadView = ({
           </div>
 
           {hasHistory ? (
-            <HistorySection
+            <RangeProgressSection
               completeCount={completeCount}
               failedCount={failedCount}
               missingCount={missingCount}
@@ -168,26 +162,13 @@ const GalleryCover = ({ src, name }: { src?: string; name: string }) => {
   );
 };
 
-const HistoryPill = ({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: 'success' | 'error';
-}) => (
-  <span className="inline-flex items-center gap-1 rounded-full border border-[var(--eh-hairline-soft)] bg-[var(--eh-hover-bg)] px-2 py-0.5 text-[11px]">
-    <span className="text-muted-soft">{label}</span>
-    <span
-      className={`font-semibold tabular-nums ${tone === 'success' ? 'text-success' : 'text-error'}`}
-    >
-      {value}
-    </span>
-  </span>
-);
-
-const HistorySection = ({
+/**
+ * 范围进度：与下载中/结果页同一语义。
+ * - 主指标：完成 / 总数（正向进度）
+ * - 失败：仅作补充信息
+ * - 缺失：只驱动「补下载」CTA，不再作为主展示数字
+ */
+const RangeProgressSection = ({
   completeCount,
   failedCount,
   missingCount,
@@ -203,39 +184,48 @@ const HistorySection = ({
   rangeTotal: number;
   onResumeMissing: () => void;
   onViewDetails: () => void;
-}) => (
-  <section className="shrink-0 border-t border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)]/40 px-3 py-2.5">
-    <div className="flex items-center gap-2">
-      <span className="shrink-0 text-[10px] font-medium text-muted-soft">
-        {t('previouslyTracked')}
-      </span>
-      <HistoryPill label={t('stateComplete')} value={completeCount} tone="success" />
-      <HistoryPill label={t('stateFailed')} value={failedCount} tone="error" />
-    </div>
+}) => {
+  const allComplete = rangeTotal > 0 && completeCount >= rangeTotal;
 
-    <div className="mt-2 flex items-center gap-2 rounded-eh-sm border border-[var(--eh-hairline)] bg-surface px-2.5 py-1.5">
-      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-        <span className="shrink-0 text-[10px] font-medium text-muted">{t('thisDownloadRange')}</span>
-        <span className="shrink-0 rounded-full border border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)] px-1.5 py-px font-mono text-[10px] text-ink">
-          {range[0]}-{range[1]}
-        </span>
-        <span className="text-[var(--eh-hairline)]">·</span>
-        <span className="shrink-0 text-[10px] text-muted-soft">{t('stateMissing')}</span>
-        <span className="shrink-0 text-sm font-semibold tabular-nums leading-none text-ink">
-          {missingCount}
-          <span className="text-xs font-normal text-muted-soft">/{rangeTotal}</span>
-        </span>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
-          {t('viewDetails')}
-        </EhButton>
-        {missingCount > 0 ? (
-          <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
-            {t('continueMissing', String(missingCount))}
+  return (
+    <section className="shrink-0 border-t border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)]/40 px-3 py-2.5">
+      <div className="flex items-center gap-2 rounded-eh-sm border border-[var(--eh-hairline)] bg-surface px-2.5 py-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+          <span className="shrink-0 text-[10px] font-medium text-muted">{t('thisDownloadRange')}</span>
+          <span className="shrink-0 rounded-full border border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)] px-1.5 py-px font-mono text-[10px] text-ink">
+            {range[0]}-{range[1]}
+          </span>
+          <span className="text-[var(--eh-hairline)]">·</span>
+          <span className="shrink-0 text-[10px] text-muted-soft">{t('stateComplete')}</span>
+          <span
+            className={`shrink-0 text-sm font-semibold tabular-nums leading-none ${
+              allComplete ? 'text-success' : 'text-ink'
+            }`}
+          >
+            {completeCount}
+            <span className="text-xs font-normal text-muted-soft">/{rangeTotal}</span>
+          </span>
+          {failedCount > 0 ? (
+            <>
+              <span className="text-[var(--eh-hairline)]">·</span>
+              <span className="shrink-0 text-[10px] text-muted-soft">{t('stateFailed')}</span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums leading-none text-error">
+                {failedCount}
+              </span>
+            </>
+          ) : null}
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>
+            {t('viewDetails')}
           </EhButton>
-        ) : null}
+          {missingCount > 0 ? (
+            <EhButton variant="primary" ehSize="sm" onPress={onResumeMissing}>
+              {t('continueMissing', String(missingCount))}
+            </EhButton>
+          ) : null}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
