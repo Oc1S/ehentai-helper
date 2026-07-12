@@ -525,6 +525,15 @@ const processGalleryPage = async (
   const launchedDownloads: Promise<void>[] = [];
   if (!isCurrentDownloadJob(jobId) || indicesOnPage.length === 0) return launchedDownloads;
 
+  const owned = await Promise.all(
+    indicesOnPage.map((index) =>
+      markImageInProgress(params.taskId, params.galleryFrontPageUrl, index)
+    )
+  );
+  if (!isCurrentDownloadJob(jobId) || owned.some((result) => !result)) {
+    return launchedDownloads;
+  }
+
   const pageUrl =
     pageIndex === 0 ? params.galleryFrontPageUrl : `${params.galleryFrontPageUrl}?p=${pageIndex}`;
 

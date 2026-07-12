@@ -1,6 +1,10 @@
 import { clearCbzTask } from '@/download/cbz-cache';
 import { packAndDownloadCbz } from '@/download/cbz-pack';
-import { isImageOwnedByTask, resolveOwnedDownloadBinding } from '@/download/download-binding';
+import {
+  isImageOwnedByTask,
+  needsInProgressUpdate,
+  resolveOwnedDownloadBinding,
+} from '@/download/download-binding';
 import { buildStorageRelativeFilename, normalizeDownloadDir } from '@/download/download-filename';
 import { trackedDownloadIds } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
@@ -489,14 +493,8 @@ export const markImageInProgress = async (
 
   const records = await galleryRecordsStorage.get();
   const existing = records?.[galleryUrl]?.images[String(index)];
-  if (
-    existing?.taskId === taskId &&
-    (existing.state === 'complete' ||
-      existing.state === 'interrupted' ||
-      existing.state === 'in_progress')
-  ) {
-    return true;
-  }
+  if (existing?.state === 'complete' || existing?.state === 'interrupted') return true;
+  if (!needsInProgressUpdate(existing, taskId, sourceUrl)) return true;
 
   await galleryRecordsStorage.upsertImage(galleryUrl, {
     index,

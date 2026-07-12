@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { resolveOwnedDownloadBinding } from '../src/download/download-binding';
+import {
+  needsInProgressUpdate,
+  resolveOwnedDownloadBinding,
+} from '../src/download/download-binding';
 import type { DownloadIndexEntry, GalleryRecordsMap } from '../src/storage';
 
 const ownerMap: Record<string, DownloadIndexEntry> = {
@@ -44,6 +47,17 @@ test('晚到终态只依赖持久化 owner，不依赖已清除或已切换的�
 
 test('旧任务事件不能覆盖同一图片的新任务记录', () => {
   assert.equal(resolveOwnedDownloadBinding(42, ownerMap, records('task-b')), null);
+});
+
+test('批次开始即可进入下载中，解析出直链后仍会补写 sourceUrl', () => {
+  const image = records('task-a')['gallery-a'].images['7'];
+  image.state = 'queued';
+  image.sourceUrl = '';
+  assert.equal(needsInProgressUpdate(image, 'task-a'), true);
+
+  image.state = 'in_progress';
+  assert.equal(needsInProgressUpdate(image, 'task-a'), false);
+  assert.equal(needsInProgressUpdate(image, 'task-a', 'https://example.test/7.jpg'), true);
 });
 
 test('下载 owner hint 必须持久化完成后才能继续启动 Chrome 下载', async () => {

@@ -12,6 +12,18 @@ export const isImageOwnedByTask = (
   taskId: string
 ): image is GalleryImageRecord => image?.taskId === taskId;
 
+export const needsInProgressUpdate = (
+  image: GalleryImageRecord | undefined,
+  taskId: string,
+  sourceUrl = ''
+) => {
+  if (!image) return true;
+  if (!isImageOwnedByTask(image, taskId)) return false;
+  if (image.state === 'complete' || image.state === 'interrupted') return false;
+  if (image.state === 'queued') return true;
+  return Boolean(sourceUrl && sourceUrl !== image.sourceUrl);
+};
+
 /**
  * 用持久化 owner（gallery/index/taskId）解析 Chrome 下载事件。
  * 活动任务不参与判断：它只负责当前 UI 汇总，不能阻止历史下载的晚到终态落账。
