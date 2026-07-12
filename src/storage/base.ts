@@ -102,11 +102,14 @@ export function createStorage<D = string>(
   let persisting = false;
   let pendingUpdates: ValueOrUpdate<D>[] = [];
   let writeChain: Promise<void> = Promise.resolve();
+  // 与 cache 分离：cache 合法值可为 null（如 download-active-task 清空后）
+  let hydrated = false;
 
   let ready = _getDataFromStorage().then((data) => {
     // set 可能已先写入；勿用过期快照覆盖
-    if (cache === null) {
+    if (!hydrated) {
       cache = data;
+      hydrated = true;
       _emitChange();
     }
   });
@@ -119,13 +122,15 @@ export function createStorage<D = string>(
 
     try {
       await ready;
-      if (cache === null) {
+      if (!hydrated) {
         cache = await _getDataFromStorage();
+        hydrated = true;
       }
 
       for (const valueOrUpdate of batch) {
         cache = await updateCache(valueOrUpdate, cache);
       }
+      hydrated = true;
 
       persisting = true;
       try {
@@ -148,11 +153,12 @@ export function createStorage<D = string>(
   };
 
   const get = async (): Promise<D> => {
-    if (cache !== null) return cache;
+    if (hydrated) return cache as D;
     await ready;
-    if (cache !== null) return cache;
+    if (hydrated) return cache as D;
     cache = await _getDataFromStorage();
-    return cache;
+    hydrated = true;
+    return cache as D;
   };
 
   const subscribe = (listener: () => void) => {
@@ -163,7 +169,7 @@ export function createStorage<D = string>(
   };
 
   const getSnapshot = () => {
-    return cache;
+    return hydrated ? cache : null;
   };
 
   async function _updateFromStorageOnChanged(changes: {
@@ -173,12 +179,14 @@ export function createStorage<D = string>(
     // 本上下文正在合并/落盘时，以本地 cache 为准
     if (persisting || pendingUpdates.length > 0) return;
 
-    const valueOrUpdate: ValueOrUpdate<D> = deserialize(changes[key].newValue as string);
+    const raw = changes[key].newValue;
+    const next =
+      raw === undefined ? fallback : ((deserialize(raw as string) as D | undefined) ?? fallback);
 
-    if (cache === valueOrUpdate) return;
+    if (hydrated && cache === next) return;
 
-    cache = await updateCache(valueOrUpdate, cache);
-
+    cache = next;
+    hydrated = true;
     _emitChange();
   }
 

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
+    "test": "esbuild tests/download-state.test.ts --bundle --platform=node --format=cjs --outfile=test-results/download-state.test.cjs && node --test test-results/download-state.test.cjs",
     "package": "plasmo package",
     "check:indexes": "node scripts/check-download-indexes.mjs",
     "format": "prettier --write ."
@@ -35,6 +36,7 @@
     "@typescript-eslint/eslint-plugin": "8.54.0",
     "@typescript-eslint/parser": "8.54.0",
     "autoprefixer": "^10.4.20",
+    "esbuild": "0.18.20",
     "eslint": "8.53.0",
     "eslint-config-airbnb-typescript": "17.1.0",
     "eslint-config-prettier": "9.1.0",

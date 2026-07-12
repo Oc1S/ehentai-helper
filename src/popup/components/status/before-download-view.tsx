@@ -28,7 +28,6 @@ export const BeforeDownloadView = ({
   onViewDetails: () => void;
 }) => {
   const rangeTotal = Math.max(0, range[1] - range[0] + 1);
-  // 与下载中/结果页同一套范围进度模型：主指标永远是「完成/总数」
   const { completeCount, failedCount } = countRangeProgress(
     galleryRecord,
     range[0],
@@ -163,10 +162,10 @@ const GalleryCover = ({ src, name }: { src?: string; name: string }) => {
 };
 
 /**
- * 范围进度：与下载中/结果页同一语义。
- * - 主指标：完成 / 总数（正向进度）
- * - 失败：仅作补充信息
- * - 缺失：只驱动「补下载」CTA，不再作为主展示数字
+ * 下载前：展示「所选范围」的历史状态，避免套用结果页的「完成/失败」语义。
+ * - 从未下载过 → 待下载 N
+ * - 有记录 → 已下载 / 失败 / 待下载 分项
+ * - missingCount 仍只驱动「补下载」CTA
  */
 const RangeProgressSection = ({
   completeCount,
@@ -186,34 +185,55 @@ const RangeProgressSection = ({
   onViewDetails: () => void;
 }) => {
   const allComplete = rangeTotal > 0 && completeCount >= rangeTotal;
+  const pendingCount = Math.max(0, rangeTotal - completeCount - failedCount);
+  const untouched = completeCount === 0 && failedCount === 0;
 
   return (
     <section className="shrink-0 border-t border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)]/40 px-3 py-2.5">
       <div className="flex items-center gap-2 rounded-eh-sm border border-[var(--eh-hairline)] bg-surface px-2.5 py-1.5">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-          <span className="shrink-0 text-[10px] font-medium text-muted">{t('thisDownloadRange')}</span>
-          <span className="shrink-0 rounded-full border border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)] px-1.5 py-px font-mono text-[10px] text-ink">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-[10px]">
+          <span className="shrink-0 font-medium text-muted">{t('selectedRange')}</span>
+          <span className="shrink-0 rounded-full border border-[var(--eh-hairline)] bg-[var(--eh-hover-bg)] px-1.5 py-px font-mono text-ink">
             {range[0]}-{range[1]}
           </span>
-          <span className="text-[var(--eh-hairline)]">·</span>
-          <span className="shrink-0 text-[10px] text-muted-soft">{t('stateComplete')}</span>
-          <span
-            className={`shrink-0 text-sm font-semibold tabular-nums leading-none ${
-              allComplete ? 'text-success' : 'text-ink'
-            }`}
-          >
-            {completeCount}
-            <span className="text-xs font-normal text-muted-soft">/{rangeTotal}</span>
+          <span className="text-[var(--eh-hairline)]" aria-hidden>
+            ·
           </span>
-          {failedCount > 0 ? (
+          {allComplete ? (
+            <span className="shrink-0 font-medium text-success">{t('rangeAllDownloaded')}</span>
+          ) : untouched ? (
+            <span className="shrink-0 font-medium text-muted">
+              {t('countPendingShort', String(rangeTotal))}
+            </span>
+          ) : (
             <>
-              <span className="text-[var(--eh-hairline)]">·</span>
-              <span className="shrink-0 text-[10px] text-muted-soft">{t('stateFailed')}</span>
-              <span className="shrink-0 text-sm font-semibold tabular-nums leading-none text-error">
-                {failedCount}
-              </span>
+              {completeCount > 0 ? (
+                <span className="shrink-0 font-medium text-ink">
+                  {t('countDownloadedRatio', [String(completeCount), String(rangeTotal)])}
+                </span>
+              ) : null}
+              {completeCount > 0 && failedCount > 0 ? (
+                <span className="text-[var(--eh-hairline)]" aria-hidden>
+                  ·
+                </span>
+              ) : null}
+              {failedCount > 0 ? (
+                <span className="shrink-0 font-medium text-error">
+                  {t('countFailedShort', String(failedCount))}
+                </span>
+              ) : null}
+              {(completeCount > 0 || failedCount > 0) && pendingCount > 0 ? (
+                <span className="text-[var(--eh-hairline)]" aria-hidden>
+                  ·
+                </span>
+              ) : null}
+              {pendingCount > 0 ? (
+                <span className="shrink-0 font-medium text-muted">
+                  {t('countPendingShort', String(pendingCount))}
+                </span>
+              ) : null}
             </>
-          ) : null}
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <EhButton variant="secondary" ehSize="sm" onPress={onViewDetails}>

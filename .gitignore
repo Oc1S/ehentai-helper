@@ -10,6 +10,7 @@
 
 # testing
 /coverage
+/test-results
 
 # misc
 .DS_Store

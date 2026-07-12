@@ -1,5 +1,6 @@
 import { clearCbzTask } from '@/download/cbz-cache';
 import { packAndDownloadCbz } from '@/download/cbz-pack';
+import { isImageOwnedByTask, resolveOwnedDownloadBinding } from '@/download/download-binding';
 import { buildStorageRelativeFilename, normalizeDownloadDir } from '@/download/download-filename';
 import { trackedDownloadIds } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
@@ -10,7 +11,6 @@ import {
   type DownloadIndexEntry,
   downloadIndexMapStorage,
   downloadTaskStorage,
-  type GalleryImageRecord,
   galleryRecordsStorage,
 } from '@/storage';
 
@@ -59,8 +59,6 @@ const TERMINAL_TASK_STATUSES = new Set<ActiveDownloadTask['status']>([
 ]);
 
 const MAX_INDEX_ENTRIES = 5000;
-
-const normalizeTaskId = (taskId: string | null | undefined) => taskId ?? undefined;
 
 const trimIndexMap = (
   map: Record<string, DownloadIndexEntry>
@@ -257,35 +255,12 @@ const filenamesEquivalent = (a?: string, b?: string) => {
 
 /**
  * 解析 chromeDownloadId → gallery 绑定上下文。
- * 若 gallery 尚未写入 chromeDownloadId，不提前 upsert（避免 queued→in_progress→complete 三连闪烁），
- * 由 settle/patch 一次写终态。
+ * owner 由持久化的 gallery/index/taskId 决定，不依赖当前活动任务。
  */
 const resolveDownloadBinding = async (chromeDownloadId: number) => {
   const indexMap = downloadIndexMapStorage.getSnapshot() || (await downloadIndexMapStorage.get());
-  const entry = indexMap[String(chromeDownloadId)];
-  const taskId = normalizeTaskId(entry?.taskId);
-  if (!entry?.galleryUrl || typeof entry.index !== 'number' || !taskId) return null;
-
-  const task = await downloadTaskStorage.get();
-  if (!task || task.taskId !== taskId || task.galleryUrl !== entry.galleryUrl) return null;
-
   const records = await galleryRecordsStorage.get();
-  const image = records?.[entry.galleryUrl]?.images[String(entry.index)];
-  if (image?.taskId && image.taskId !== taskId) return null;
-
-  const needsBind = !image || image.chromeDownloadId !== chromeDownloadId;
-  const resolvedImage: GalleryImageRecord =
-    image && (!image.taskId || image.taskId === taskId)
-      ? image
-      : {
-          index: entry.index,
-          sourceUrl: entry.sourceUrl || '',
-          taskId,
-          state: 'queued',
-          updatedAt: 0,
-        };
-
-  return { entry, image: resolvedImage, task, taskId, needsBind };
+  return resolveOwnedDownloadBinding(chromeDownloadId, indexMap, records);
 };
 
 export const startTask = async (params: StartTaskParams) => {
@@ -325,7 +300,13 @@ export const startTask = async (params: StartTaskParams) => {
 };
 
 export const registerChromeDownload = async (params: RegisterChromeDownloadParams) => {
-  const taskId = normalizeTaskId(params.taskId);
+  const taskId = params.taskId ?? undefined;
+  if (!taskId) return false;
+
+  const records = await galleryRecordsStorage.get();
+  const existing = records?.[params.galleryUrl]?.images[String(params.index)];
+  if (!isImageOwnedByTask(existing, taskId)) return false;
+
   trackedDownloadIds.add(params.id);
 
   await downloadIndexMapStorage.set((map) => {
@@ -343,15 +324,8 @@ export const registerChromeDownload = async (params: RegisterChromeDownloadParam
     return next;
   });
 
-  if (!taskId || !(await isActiveTaskImage(params.galleryUrl, params.index, taskId))) {
-    return false;
-  }
-
-  const records = await galleryRecordsStorage.get();
-  const existing = records?.[params.galleryUrl]?.images[String(params.index)];
   const state =
-    existing?.taskId === taskId &&
-    (existing.state === 'complete' || existing.state === 'interrupted')
+    existing.state === 'complete' || existing.state === 'interrupted'
       ? existing.state
       : 'in_progress';
 
@@ -600,8 +574,10 @@ export const markDispatchComplete = async (taskId: string, galleryUrl: string) =
 export const clearActiveTask = async (taskId?: string) => {
   const task = await downloadTaskStorage.get();
   if (!task || (taskId && task.taskId !== taskId)) return;
-  await clearCbzTask(task.taskId);
+  // 先清 task 再清 CBZ：IndexedDB 可能很慢，SW 若在 set(null) 前被挂起会导致
+  // 「返回下载范围」后重开 popup 仍停在终态页。
   await downloadTaskStorage.set(null);
+  void clearCbzTask(task.taskId).catch(() => undefined);
 };
 
 export const reconcileActiveTask = async (galleryUrl?: string) => {
@@ -657,8 +633,6 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
         }
       }
 
-      // 正在抓取/尚未拿到 chrome id：不要用 basename 误匹配旧文件
-      if (image.state === 'in_progress' && image.chromeDownloadId == null) continue;
       if (!image.sourceUrl) continue;
 
       const expectedFilename = buildStorageRelativeFilename(config, {
@@ -679,6 +653,7 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
         const items = await chrome.downloads.search({ query: [searchStem] });
         const match = items.find((item) => {
           if (item.state !== 'complete' && item.state !== 'interrupted') return false;
+          if (Date.parse(item.startTime) < image.updatedAt - 5000) return false;
           const normalized = item.filename.replace(/\\/g, '/');
           if (!pathIncludesDownloadDir(normalized, task.downloadPath)) return false;
           const actualBasename = normalized.split('/').pop() ?? normalized;

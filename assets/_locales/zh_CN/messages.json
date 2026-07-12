@@ -39,7 +39,7 @@
   "viewDetails": { "message": "查看详情" },
   "downloadCancelled": { "message": "下载已取消" },
   "partialSuccessToast": {
-    "message": "成功 $1 张，失败 $2 张",
+    "message": "已下载 $1 张，失败 $2 张",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "downloadFailedToast": {
@@ -83,26 +83,26 @@
   },
   "downloadRange": { "message": "下载范围" },
   "selected": { "message": "已选" },
-  "downloadingImages": { "message": "正在下载图片..." },
+  "downloadingImages": { "message": "下载中" },
   "allImagesSuccess": {
-    "message": "全部 $1 张图片下载成功",
+    "message": "全部 $1 张已下载完成",
     "placeholders": { "1": { "content": "$1" } }
   },
-  "downloadCompleted": { "message": "下载完成！" },
+  "downloadCompleted": { "message": "下载完成" },
   "enjoyingExtension": { "message": "如果这个插件对你有帮助，" },
   "starGithubLink": { "message": "欢迎给这个项目留一个小星星✨" },
   "partialSuccessSummary": {
-    "message": "成功 $1 张，失败 $2 张",
+    "message": "已下载 $1 张，失败 $2 张",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "partiallyCompleted": { "message": "部分完成" },
   "partialCompletedDesc": { "message": "部分图片未能下载，请在详情中查看失败项。" },
   "allImagesFailed": {
-    "message": "全部 $1 张均失败",
+    "message": "全部 $1 张均未下载成功",
     "placeholders": { "1": { "content": "$1" } }
   },
   "downloadFailedTitle": { "message": "下载失败" },
-  "downloadFailedDesc": { "message": "未保存任何图片，请检查网络连接后重试。" },
+  "downloadFailedDesc": { "message": "没有成功保存的图片，请检查网络后重试。" },
   "failedStartDownload": { "message": "启动下载失败" },
   "failedSaveHistory": { "message": "保存下载历史失败" },
   "nothingToResume": { "message": "没有可续传的内容" },
@@ -227,6 +227,21 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "thisDownloadRange": { "message": "本次下载范围" },
+  "selectedRange": { "message": "所选范围" },
+  "taskRange": { "message": "下载范围" },
+  "imageCount": {
+    "message": "$1 张",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "rangeAllDownloaded": { "message": "已全部下载" },
+  "countDownloadedRatio": {
+    "message": "已下载 $1/$2",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "countPendingShort": {
+    "message": "待下载 $1",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "backToInitial": { "message": "返回下载范围" },
   "close": { "message": "关闭" },
   "optionsSubtitle": { "message": "下载偏好设置" },

@@ -53,7 +53,7 @@ export const DownloadResultSummary = ({
         ? t('allImagesSuccess', String(downloadCount))
         : variant === 'partial'
           ? t('partialSuccessSummary', [String(completeCount), String(failedCount)])
-        : t('downloadFailedDesc');
+        : t('allImagesFailed', String(failedCount || downloadCount));
   const metaRange = rangeLabel ?? `${rangeStart} - ${rangeEnd}`;
 
   return (
@@ -63,12 +63,12 @@ export const DownloadResultSummary = ({
           {galleryName}
         </h3>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-soft">
-          <span>{t('thisDownloadRange')}</span>
+          <span>{t('taskRange')}</span>
           <span className="rounded-full border border-hairline px-2 py-0.5 font-mono text-xs font-normal text-ink">
             {metaRange}
           </span>
           <span>
-            · {downloadCount} {t('imagesLabel')}
+            · {t('imageCount', String(downloadCount))}
           </span>
         </p>
       </div>
@@ -79,11 +79,17 @@ export const DownloadResultSummary = ({
             {statusLabel}
           </p>
           <p className={`mt-1 text-2xl font-semibold tabular-nums ${statusClass}`}>
-            {completeCount}
-            <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
+            {variant === 'failed' ? (
+              t('imageCount', String(failedCount))
+            ) : (
+              <>
+                {completeCount}
+                <span className="text-sm font-normal text-muted"> / {downloadCount}</span>
+              </>
+            )}
           </p>
         </div>
-        {variant !== 'running' && variant !== 'success' && failedCount > 0 ? (
+        {variant === 'partial' && failedCount > 0 ? (
           <div className="text-right">
             <p className="text-xs font-normal uppercase tracking-wide text-muted-soft">
               {t('stateFailed')}

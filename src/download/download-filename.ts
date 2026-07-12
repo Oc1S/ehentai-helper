@@ -19,12 +19,12 @@ const pendingByDownloadUrl = new Map<string, PendingDownloadFilename[]>();
 let pendingHintCount = 0;
 let pendingHintsHydrated = false;
 
-const persistAllPendingHints = () => {
+const persistAllPendingHints = async () => {
   const next: Record<string, PendingDownloadFilename[]> = {};
   for (const [url, list] of pendingByDownloadUrl.entries()) {
     if (list.length > 0) next[url] = [...list];
   }
-  void pendingDownloadHintsStorage.set(next);
+  await pendingDownloadHintsStorage.set(next);
 };
 
 const trimPendingFilenameHints = () => {
@@ -58,10 +58,10 @@ export const hydratePendingDownloadHintsFromSession = async () => {
     pendingHintCount += list.length;
   }
   trimPendingFilenameHints();
-  persistAllPendingHints();
+  await persistAllPendingHints();
 };
 
-export const enqueuePendingDownloadFilename = (
+export const enqueuePendingDownloadFilename = async (
   downloadUrl: string,
   item: PendingDownloadFilename
 ) => {
@@ -71,8 +71,8 @@ export const enqueuePendingDownloadFilename = (
   pendingByDownloadUrl.set(downloadUrl, list);
   pendingHintCount += 1;
   trimPendingFilenameHints();
-  // 整表写回 session，避免 trim 与单 key 合并产生竞态
-  persistAllPendingHints();
+  // Chrome 下载是外部副作用；必须先持久化 owner hint，确保 callback 丢失后 onCreated 仍可恢复绑定。
+  await persistAllPendingHints();
 };
 
 const removePendingHintFromMemory = (downloadUrl: string) => {

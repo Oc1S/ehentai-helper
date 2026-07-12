@@ -41,7 +41,7 @@
   "viewDetails": { "message": "View details" },
   "downloadCancelled": { "message": "Download cancelled" },
   "partialSuccessToast": {
-    "message": "$1 succeeded, $2 failed",
+    "message": "$1 downloaded, $2 failed",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
   "downloadFailedToast": {
@@ -89,27 +89,27 @@
   },
   "downloadRange": { "message": "Download Range" },
   "selected": { "message": "Selected" },
-  "downloadingImages": { "message": "Downloading images..." },
+  "downloadingImages": { "message": "Downloading" },
   "allImagesSuccess": {
-    "message": "All $1 images downloaded successfully",
+    "message": "All $1 images downloaded",
     "placeholders": { "1": { "content": "$1" } }
   },
-  "downloadCompleted": { "message": "Download Completed!" },
+  "downloadCompleted": { "message": "Download complete" },
   "enjoyingExtension": { "message": "If you find this extension helpful, " },
   "starGithubLink": { "message": "please leave a star ✨ on GitHub" },
   "partialSuccessSummary": {
-    "message": "$1 succeeded, $2 failed",
+    "message": "$1 downloaded, $2 failed",
     "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
   },
-  "partiallyCompleted": { "message": "Partially Completed" },
+  "partiallyCompleted": { "message": "Partially complete" },
   "partialCompletedDesc": {
     "message": "Some images could not be downloaded. Check Details for failed items."
   },
   "allImagesFailed": {
-    "message": "All $1 images failed",
+    "message": "None of the $1 images were downloaded",
     "placeholders": { "1": { "content": "$1" } }
   },
-  "downloadFailedTitle": { "message": "Download Failed" },
+  "downloadFailedTitle": { "message": "Download failed" },
   "downloadFailedDesc": { "message": "No images were saved. Check your connection and try again." },
   "failedStartDownload": { "message": "Failed to start download" },
   "failedSaveHistory": { "message": "Failed to save download history" },
@@ -241,6 +241,21 @@
     "placeholders": { "1": { "content": "$1" } }
   },
   "thisDownloadRange": { "message": "This download" },
+  "selectedRange": { "message": "Selected range" },
+  "taskRange": { "message": "Range" },
+  "imageCount": {
+    "message": "$1 images",
+    "placeholders": { "1": { "content": "$1" } }
+  },
+  "rangeAllDownloaded": { "message": "All downloaded" },
+  "countDownloadedRatio": {
+    "message": "Downloaded $1/$2",
+    "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } }
+  },
+  "countPendingShort": {
+    "message": "$1 pending",
+    "placeholders": { "1": { "content": "$1" } }
+  },
   "backToInitial": { "message": "Back to download range" },
   "close": { "message": "Close" },
   "optionsSubtitle": { "message": "Download preferences" },

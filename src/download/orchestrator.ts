@@ -45,6 +45,8 @@ type RuntimeJobParams = JobParams & {
 let cancelRequested = false;
 let currentJobId = 0;
 
+const isCurrentDownloadJob = (jobId: number) => !cancelRequested && currentJobId === jobId;
+
 type DownloadSemaphore = {
   limit: number;
   active: number;
@@ -124,6 +126,7 @@ export const releaseChromeDownloadSlot = (chromeDownloadId: number) => {
 };
 
 const startChromeFileDownload = async (
+  jobId: number,
   config: Config,
   params: RuntimeJobParams,
   sourceImageUrl: string,
@@ -141,12 +144,18 @@ const startChromeFileDownload = async (
     sourceUrl: sourceImageUrl,
   };
   const relativeFilename = buildStorageRelativeFilename(config, filenameHint);
-  enqueuePendingDownloadFilename(downloadUrl, {
+  await enqueuePendingDownloadFilename(downloadUrl, {
     ...filenameHint,
     taskId: params.taskId,
     galleryUrl: params.galleryFrontPageUrl,
     filename: relativeFilename,
   });
+
+  if (!isCurrentDownloadJob(jobId)) {
+    await consumePendingDownloadFilename(downloadUrl);
+    revoke?.();
+    return;
+  }
 
   return new Promise<void>((resolve) => {
     chrome.downloads.download(
@@ -272,6 +281,7 @@ const resolveReloadedImagePageCandidate = async (
 };
 
 const downloadResolvedImage = async (
+  jobId: number,
   config: Config,
   params: RuntimeJobParams,
   imageParsed: ParsedImageUrl,
@@ -284,7 +294,16 @@ const downloadResolvedImage = async (
     );
   }
 
-  if (cancelRequested) return;
+  if (!isCurrentDownloadJob(jobId)) return;
+
+  const sourceImageUrl = imageParsed.url;
+  const owned = await markImageInProgress(
+    params.taskId,
+    params.galleryFrontPageUrl,
+    currentIndex,
+    sourceImageUrl
+  );
+  if (!owned || !isCurrentDownloadJob(jobId)) return;
 
   await acquireDownloadSlot();
   let slotHandedOver = false;
@@ -294,14 +313,14 @@ const downloadResolvedImage = async (
   };
 
   try {
-    if (cancelRequested) return;
+    if (!isCurrentDownloadJob(jobId)) return;
 
-    const sourceImageUrl = imageParsed.url;
     const directFileDownload = needsFileDownload(config) && !needsImageBlob(config);
 
     if (directFileDownload) {
       await probeImageUrl(sourceImageUrl);
       await startChromeFileDownload(
+        jobId,
         config,
         params,
         sourceImageUrl,
@@ -315,6 +334,7 @@ const downloadResolvedImage = async (
     }
 
     const { blob, ext } = await resolveImageBlob(sourceImageUrl, config.imageFormat);
+    if (!isCurrentDownloadJob(jobId)) return;
 
     if (needsCbzCache(config)) {
       try {
@@ -330,11 +350,13 @@ const downloadResolvedImage = async (
         );
         return;
       }
+      if (!isCurrentDownloadJob(jobId)) return;
     }
 
     if (needsFileDownload(config)) {
       const { url, revoke } = await createDownloadUrl(blob);
       await startChromeFileDownload(
+        jobId,
         config,
         params,
         sourceImageUrl,
@@ -347,6 +369,7 @@ const downloadResolvedImage = async (
       return;
     }
 
+    if (!isCurrentDownloadJob(jobId)) return;
     await completeImage(params.taskId, params.galleryFrontPageUrl, currentIndex, sourceImageUrl);
   } finally {
     if (!slotHandedOver) releaseDownloadSlot();
@@ -354,24 +377,25 @@ const downloadResolvedImage = async (
 };
 
 const downloadImage = async (
+  jobId: number,
   config: Config,
   params: RuntimeJobParams,
   imagePageUrl: string,
   currentIndex: number
 ) => {
-  if (cancelRequested) return;
-
-  // 开始解析/抓取前就标为进行中，避免详情里长时间停在「排队中」
-  await markImageInProgress(params.taskId, params.galleryFrontPageUrl, currentIndex);
+  if (!isCurrentDownloadJob(jobId)) return;
 
   let candidate: ImagePageCandidate;
   try {
     candidate = await resolveImagePageCandidate(config, imagePageUrl);
   } catch (e) {
+    if (!isCurrentDownloadJob(jobId)) return;
     const msg = e instanceof Error ? e.message : 'Failed to fetch image page';
     await failImage(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
     return;
   }
+
+  if (!isCurrentDownloadJob(jobId)) return;
 
   if (!candidate.parsed) {
     await failImage(
@@ -385,13 +409,22 @@ const downloadImage = async (
   }
 
   try {
-    await downloadResolvedImage(config, params, candidate.parsed, candidate.pageUrl, currentIndex);
+    await downloadResolvedImage(
+      jobId,
+      config,
+      params,
+      candidate.parsed,
+      candidate.pageUrl,
+      currentIndex
+    );
     return;
   } catch (e) {
     const reloaded = await resolveReloadedImagePageCandidate(config, candidate);
+    if (!isCurrentDownloadJob(jobId)) return;
     if (reloaded?.parsed) {
       try {
         await downloadResolvedImage(
+          jobId,
           config,
           params,
           reloaded.parsed,
@@ -400,6 +433,7 @@ const downloadImage = async (
         );
         return;
       } catch (retryError) {
+        if (!isCurrentDownloadJob(jobId)) return;
         const msg = retryError instanceof Error ? retryError.message : 'Failed to fetch image';
         await failImage(
           params.taskId,
@@ -459,13 +493,15 @@ const cancelInProgressDownloadsForRetry = async (params: RuntimeJobParams, indic
 };
 
 const downloadImageIfNeeded = async (
+  jobId: number,
   config: Config,
   params: RuntimeJobParams,
   imagePageUrl: string,
   currentIndex: number
 ) => {
   if (await hasCompletedInCurrentTask(params, currentIndex)) return;
-  await downloadImage(config, params, imagePageUrl, currentIndex);
+  if (!isCurrentDownloadJob(jobId)) return;
+  await downloadImage(jobId, config, params, imagePageUrl, currentIndex);
 };
 
 const runSingleDownload = async (
@@ -475,8 +511,8 @@ const runSingleDownload = async (
   imagePageUrl: string,
   currentIndex: number
 ) => {
-  if (cancelRequested || currentJobId !== jobId) return;
-  await downloadImageIfNeeded(config, params, imagePageUrl, currentIndex);
+  if (!isCurrentDownloadJob(jobId)) return;
+  await downloadImageIfNeeded(jobId, config, params, imagePageUrl, currentIndex);
 };
 
 const processGalleryPage = async (
@@ -487,7 +523,7 @@ const processGalleryPage = async (
   indicesOnPage: number[]
 ): Promise<Promise<void>[]> => {
   const launchedDownloads: Promise<void>[] = [];
-  if (cancelRequested || indicesOnPage.length === 0) return launchedDownloads;
+  if (!isCurrentDownloadJob(jobId) || indicesOnPage.length === 0) return launchedDownloads;
 
   const pageUrl =
     pageIndex === 0 ? params.galleryFrontPageUrl : `${params.galleryFrontPageUrl}?p=${pageIndex}`;
@@ -498,16 +534,21 @@ const processGalleryPage = async (
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     pageHtml = await res.text();
   } catch (e) {
+    if (!isCurrentDownloadJob(jobId)) return launchedDownloads;
     const msg = e instanceof Error ? e.message : 'Failed to fetch gallery page';
     for (const i of indicesOnPage) {
+      if (!isCurrentDownloadJob(jobId)) return launchedDownloads;
       await failImage(params.taskId, params.galleryFrontPageUrl, i, msg);
     }
     return launchedDownloads;
   }
 
+  if (!isCurrentDownloadJob(jobId)) return launchedDownloads;
+
   const imagePageUrls = extractImagePageUrlsFromHtml(pageHtml);
   if (imagePageUrls.length === 0) {
     for (const i of indicesOnPage) {
+      if (!isCurrentDownloadJob(jobId)) return launchedDownloads;
       await failImage(params.taskId, params.galleryFrontPageUrl, i, 'No image links on page');
     }
     return launchedDownloads;
@@ -515,7 +556,7 @@ const processGalleryPage = async (
 
   const interval = Math.max(0, config.downloadInterval);
   for (const currentIndex of indicesOnPage) {
-    if (cancelRequested) return launchedDownloads;
+    if (!isCurrentDownloadJob(jobId)) return launchedDownloads;
     const imageIndex = (currentIndex - 1) % params.imagesPerPage;
     const imagePageUrl = imagePageUrls[imageIndex];
     if (!imagePageUrl) {
@@ -530,6 +571,7 @@ const processGalleryPage = async (
 
     launchedDownloads.push(
       runSingleDownload(jobId, config, params, imagePageUrl, currentIndex).catch(async (error) => {
+        if (!isCurrentDownloadJob(jobId)) return;
         console.error('download image failed@', error);
         const msg = error instanceof Error ? error.message : 'Unexpected download error';
         await failImage(params.taskId, params.galleryFrontPageUrl, currentIndex, msg, imagePageUrl);
@@ -580,6 +622,7 @@ export const runDownloadJob = async (params: JobParams) => {
   const jobId = ++currentJobId;
   resetDownloadSemaphore();
   const config = await configStorage.get();
+  if (!isCurrentDownloadJob(jobId)) return;
   setDownloadConcurrency(MAX_CONCURRENT_DOWNLOADS);
   const mode: DownloadJobMode = params.mode ?? 'full';
   const downloadIndices =
@@ -587,6 +630,7 @@ export const runDownloadJob = async (params: JobParams) => {
       ? [...new Set(params.indices)].sort((a, b) => a - b)
       : rangeIndices(params.rangeStart, params.rangeEnd);
   const existingTask = await downloadTaskStorage.get();
+  if (!isCurrentDownloadJob(jobId)) return;
   const reusableTask =
     mode === 'retry' &&
     params.taskId &&
@@ -604,6 +648,7 @@ export const runDownloadJob = async (params: JobParams) => {
 
   if (mode === 'retry') {
     await cancelInProgressDownloadsForRetry(jobParams, downloadIndices);
+    if (!isCurrentDownloadJob(jobId)) return;
   }
 
   await startTask({
@@ -623,6 +668,7 @@ export const runDownloadJob = async (params: JobParams) => {
     queuedIndices: downloadIndices,
     startedAt: reusableTask?.startedAt ?? now,
   });
+  if (!isCurrentDownloadJob(jobId)) return;
 
   const launchedDownloads: Promise<void>[] = [];
 
