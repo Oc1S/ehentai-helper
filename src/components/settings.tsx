@@ -34,7 +34,7 @@ const settingsRowClass = cva(
       variant: {
         modal: 'px-2.5 py-2.5 hover:bg-[var(--eh-hover-bg)]',
         overlay: 'px-3 py-3 hover:bg-[var(--eh-hover-bg)]',
-        page: 'px-3 py-3 hover:bg-[var(--eh-hover-bg)]',
+        page: 'eh-settings-row--page px-1.5 py-2.5',
       },
     },
   }
@@ -47,7 +47,7 @@ const settingsLabelClass = cva(
       variant: {
         modal: '',
         overlay: '',
-        page: 'text-sm',
+        page: 'eh-settings-label--page text-sm',
       },
     },
   }
@@ -58,7 +58,7 @@ const settingsFieldClass = cva('min-w-0 text-body', {
     variant: {
       modal: 'text-xs leading-5',
       overlay: 'text-[13px] leading-5',
-      page: 'text-sm',
+      page: 'eh-settings-field--page text-sm',
     },
   },
 });
@@ -70,7 +70,7 @@ const settingsTextInputClass = cva(
       variant: {
         modal: 'text-xs',
         overlay: 'w-full max-w-[420px] text-[13px]',
-        page: 'w-full max-w-[420px] py-2 text-sm',
+        page: 'w-full max-w-none border-hairline bg-transparent py-2 text-sm focus:border-brand-primary',
       },
     },
   }
@@ -81,22 +81,20 @@ const settingsPanelClass = cva('flex flex-col', {
     variant: {
       modal: 'gap-5 rounded-eh-lg border border-hairline p-3.5',
       overlay: 'mx-auto w-full max-w-[680px] gap-2.5',
-      page: 'gap-4 rounded-eh-lg border border-hairline p-6',
+      // 页面布局由 options.css 接管
+      page: 'eh-settings-panel--page',
     },
   },
 });
 
-const settingsGroupClass = cva(
-  'flex flex-col rounded-eh-sm border border-hairline bg-transparent',
-  {
-    variants: {
-      variant: {
-        overlay: 'gap-2.5 px-4 py-3.5',
-        page: 'gap-3 px-4 py-4',
-      },
+const settingsGroupClass = cva('flex flex-col', {
+  variants: {
+    variant: {
+      overlay: 'gap-2.5 rounded-eh-sm border border-hairline bg-transparent px-4 py-3.5',
+      page: 'eh-settings-group',
     },
-  }
-);
+  },
+});
 
 const settingsGroupRowsClass = cva(
   'flex flex-col border-t border-[var(--eh-hairline-soft)] pt-2.5',
@@ -104,7 +102,7 @@ const settingsGroupRowsClass = cva(
     variants: {
       variant: {
         overlay: 'gap-1',
-        page: 'gap-1.5',
+        page: 'eh-settings-group__rows',
       },
     },
   }
@@ -327,22 +325,22 @@ export const Settings: FC<{
 
   return (
     <div className={settingsPanelClass({ variant })}>
-      {pathPreview && variant === 'page' ? (
-        <p className="text-xs leading-relaxed text-muted">
-          {t('pathPreview')}{' '}
-          <span className="font-mono text-primary">
-            {t('defaultFolder')}
-            {pathPreview}
-          </span>
-        </p>
-      ) : null}
       {variant !== 'modal'
-        ? pageGroups.map((group) => (
+        ? pageGroups.map((group, groupIndex) => (
             <section key={group.title} className={settingsGroupClass({ variant })}>
-              <h2 className="select-none text-xs font-medium tracking-normal text-ink">
-                {group.title}
-              </h2>
-              <div className={settingsGroupRowsClass({ variant })}>{group.keys.map(renderRow)}</div>
+              <h2 className="eh-settings-section-title select-none">{group.title}</h2>
+              <div className={settingsGroupRowsClass({ variant })}>
+                {group.keys.map(renderRow)}
+                {variant === 'page' && groupIndex === 0 && pathPreview ? (
+                  <p className="eh-settings-path-preview">
+                    {t('pathPreview')}{' '}
+                    <code>
+                      {t('defaultFolder')}
+                      {pathPreview}
+                    </code>
+                  </p>
+                ) : null}
+              </div>
             </section>
           ))
         : (Object.keys(formItemMap) as ConfigKey[]).map(renderRow)}

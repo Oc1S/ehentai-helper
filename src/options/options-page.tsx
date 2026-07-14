@@ -35,15 +35,10 @@ export const OptionsPage = () => {
         <div className="options-shell">
           <header className="options-header">
             <div className="options-header__text">
+              <p className="options-header__eyebrow">E-Hentai Helper</p>
               <h1 className="options-header__title">{t('settings')}</h1>
-              <p className="options-header__desc">
-                <span className="options-header__accent">E-Hentai Helper</span> ·{' '}
-                {t('optionsSubtitle')}
-              </p>
+              <p className="options-header__desc">{t('optionsSubtitle')}</p>
             </div>
-            <EhButton variant="primary" ehSize="md" onPress={handleSave}>
-              {t('saveChanges')}
-            </EhButton>
           </header>
           <main className="options-main scrollbar-glass">
             <Settings
@@ -53,6 +48,11 @@ export const OptionsPage = () => {
               pathPreview={`${config.intermediateDownloadPath}${t('pathPreviewExample')}`}
             />
           </main>
+          <footer className="options-footer">
+            <EhButton variant="primary" ehSize="md" onPress={handleSave}>
+              {t('saveChanges')}
+            </EhButton>
+          </footer>
         </div>
       </div>
     </AppShell>

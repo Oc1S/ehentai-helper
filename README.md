@@ -1,42 +1,55 @@
 <h4 align="right"><strong>English</strong> | <a href="./README_CN.md">简体中文</a></h4>
 <div align="center">
 <img src="./assets/pic-logo.png" alt="E-Hentai Helper logo" width="96" height="96" />
-<h1> Ehentai Download Helper</h1>
+<h1>E-Hentai Helper</h1>
 </div>
 
-A Chrome Ehentai Helper Plugin.
+A Chrome / Chromium extension for downloading E-Hentai galleries.
 
-✨If this extension proves beneficial to you, Your Star will be appreciated🤗.
+✨ If this extension helps you, a Star would be appreciated 🤗
 
 ## Install
+
 Take Google Chrome as an example:
 
 1. Go to the [Release Page](../../releases) to download the zip file and extract it.
-2. Open the [Chrome Extensions Manager](chrome://extensions) 
-3. Check the `Developer mode` button.
-4. Click on `Load unpacked`, then select the directory where this extension is located.
-5. Go to an Ehentai Gallery，click the extension icon
-6. ✨Start Downloading!
+2. Open `chrome://extensions`
+3. Enable **Developer mode**
+4. Click **Load unpacked**, then select the extracted extension directory
+5. Open an E-Hentai gallery and click the extension icon
+6. ✨ Start downloading!
 
 ## Features
-+ Download the entire gallery with one click, without consuming credits or GP, and no need to log in to Ehentai.
-+ Freely select the range of images to download.
-+ Extract and save gallery information and tag list
-+ Choose download file naming rules, such as naming by sequence or by the original image name.
-+ Monitor download progress in real time, with the ability to retry if image download fails.
-+ **Previously tracked**: if a gallery was downloaded before, resume missing pages or redownload from History without starting from scratch.
-+ **CBZ export** (Settings → Output): pack images into a single `.cbz` after download (`CBZ only` or `Both` with individual files).
-+ Close the popup while downloading — the task continues in the background.
+
++ Download an entire gallery in one click — no credits / GP, no login required
++ Freely select the image range to download
++ Extract and save gallery information and tags
++ Choose file naming rules (sequence number or original image name)
++ Optional on-the-fly image format conversion
++ Monitor download progress in real time; retry failed images
++ **History**: resume missing pages or redownload a previously tracked gallery without starting over
++ **CBZ export** (Settings → Output): pack images into a single `.cbz` (`CBZ only` or `Both` with individual files)
++ Close the popup while downloading — the task continues in the background
 
 ## Preview
-##### Before download
-![before download.png](https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png)
-##### Downloading
-![downloading.png](https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png)
-##### Downloaded
-![downloaded.png](https://s2.loli.net/2025/05/18/wKUhBmuro7RLkz9.png)
-##### Download Management
-![download management.png](https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png)
 
-> This extension is inspired by [EHentaiChromeExtension
-](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)
+Three shots cover the main loop: configure → download → revisit history.
+
+<table>
+  <tr>
+    <td width="33%" align="center" valign="top">
+      <img src="https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png" alt="Before download" width="100%" /><br />
+      <sub><b>Before download</b> · pick range &amp; start</sub>
+    </td>
+    <td width="33%" align="center" valign="top">
+      <img src="https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png" alt="Downloading" width="100%" /><br />
+      <sub><b>Downloading</b> · live progress</sub>
+    </td>
+    <td width="33%" align="center" valign="top">
+      <img src="https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png" alt="History" width="100%" /><br />
+      <sub><b>History</b> · resume or redownload</sub>
+    </td>
+  </tr>
+</table>
+
+> This extension is inspired by [EHentaiChromeExtension](https://github.com/neoshell/EHentaiChromeExtension) by [neoshell](https://github.com/neoshell)

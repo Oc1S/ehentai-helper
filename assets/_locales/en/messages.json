@@ -33,7 +33,7 @@
   "backgroundHint": {
     "message": "You can close this popup. Download continues in the background."
   },
-  "pathPreviewExample": { "message": "Gallery Name/" },
+  "pathPreviewExample": { "message": "<Gallery Name>/" },
   "settings": { "message": "Settings" },
   "saveSettings": { "message": "Save Settings" },
   "historyTab": { "message": "History records" },
@@ -147,7 +147,7 @@
   },
   "formatOriginal": { "message": "Original" },
   "pathPreview": { "message": "Target path:" },
-  "defaultFolder": { "message": "[Default]/" },
+  "defaultFolder": { "message": "<Downloads>/" },
   "presetAll": { "message": "All" },
   "presetCurrentPage": { "message": "Current page" },
   "presetFirst20": { "message": "First 20" },
