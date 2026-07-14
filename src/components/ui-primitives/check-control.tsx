@@ -1,17 +1,7 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
-const checkboxMotion = {
-  type: 'spring',
-  visualDuration: 0.18,
-  bounce: 0,
-} as const;
-
-const checkPathMotion = {
-  type: 'spring',
-  visualDuration: 0.22,
-  bounce: 0,
-} as const;
+import { springSnappy, springSoft } from '@/utils/motion';
 
 export const CheckControl = ({
   checked,
@@ -40,7 +30,7 @@ export const CheckControl = ({
         .join(' ')}
       initial={false}
       animate={{ scale: checked ? 1 : 0.96 }}
-      transition={checkboxMotion}
+      transition={springSnappy}
       aria-hidden
     >
       <motion.svg
@@ -60,7 +50,7 @@ export const CheckControl = ({
             checked: { opacity: 1, pathLength: 1, scale: 1 },
             unchecked: { opacity: 0, pathLength: 0, scale: 0.92 },
           }}
-          transition={checkPathMotion}
+          transition={springSoft}
         />
       </motion.svg>
     </motion.span>

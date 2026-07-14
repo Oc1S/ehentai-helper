@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { cva } from 'class-variance-authority';
 import { type HTMLMotionProps, motion } from 'framer-motion';
 
+import { pressScale } from '@/utils/motion';
+
 export type EhButtonVariant = 'primary' | 'secondary' | 'danger' | 'link';
 
 export type EhButtonSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -115,10 +117,12 @@ export const EhButton = ({
     </>
   );
 
-  const tapMotion = {
-    whileTap: isDisabled ? undefined : { scale: 0.95 as const },
-    transition: { type: 'spring' as const, visualDuration: 0.25, bounce: 0.3 },
-  };
+  const tapMotion = isDisabled
+    ? {}
+    : {
+        whileTap: pressScale.whileTap,
+        transition: pressScale.transition,
+      };
 
   if (as === 'a' && href) {
     return (

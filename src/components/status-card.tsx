@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+
+import { staggerContainer, staggerItem } from '@/utils/motion';
 
 type StatusVariant = 'info' | 'warning' | 'success' | 'error';
 
@@ -44,8 +47,14 @@ export const StatusCard = ({
         aria-hidden
       />
 
-      <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-        <div
+      <motion.div
+        className="relative z-10 flex flex-col items-center gap-4 text-center"
+        initial="initial"
+        animate="animate"
+        variants={staggerContainer}
+      >
+        <motion.div
+          variants={staggerItem}
           className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-none ${iconGlass} ${
             variant === 'warning'
               ? 'text-warning/90'
@@ -57,9 +66,12 @@ export const StatusCard = ({
           } [&_svg]:h-6 [&_svg]:w-6`}
         >
           {icon}
-        </div>
+        </motion.div>
 
-        <div className="flex w-full flex-col items-center gap-2">
+        <motion.div
+          variants={staggerItem}
+          className="flex w-full flex-col items-center gap-2"
+        >
           <h3 className="text-lg font-bold tracking-tight text-ink">{title}</h3>
           {description && (
             <div className="max-w-[300px] text-[13px] leading-relaxed text-muted">
@@ -67,8 +79,8 @@ export const StatusCard = ({
             </div>
           )}
           {children && <div className="mt-2">{children}</div>}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

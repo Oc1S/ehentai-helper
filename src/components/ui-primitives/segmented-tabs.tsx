@@ -1,11 +1,7 @@
 import { useId } from 'react';
 import { motion } from 'framer-motion';
 
-const segmentedIndicatorMotion = {
-  type: 'spring',
-  visualDuration: 0.2,
-  bounce: 0.2,
-} as const;
+import { springSnappy } from '@/utils/motion';
 
 export const SegmentedTabs = <T extends string>({
   items,
@@ -63,7 +59,7 @@ export const SegmentedTabs = <T extends string>({
                 layoutId={indicatorLayoutId}
                 aria-hidden
                 className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] bg-[rgb(var(--eh-brand-primary-active))]"
-                transition={segmentedIndicatorMotion}
+                transition={springSnappy}
               />
             ) : null}
             <span className="relative z-[1]">{item.label}</span>

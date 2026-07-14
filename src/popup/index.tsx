@@ -1,10 +1,13 @@
 import '../styles/index.css';
 import '../styles/popup.css';
 
+import { AnimatePresence, motion } from 'framer-motion';
+
 import { AppShell } from '@/app';
 import { History } from '@/components/download-history';
 import { GalleryDetailModal } from '@/components/gallery-detail-modal';
 import { withErrorBoundary } from '@/components/hoc';
+import { tabEnter } from '@/utils/motion';
 
 import { PopupHeader } from './components/popup-header';
 import { PopupStatusContent } from './components/popup-status-content';
@@ -23,12 +26,31 @@ const Popup = () => {
 
         <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
           <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col">
-            {ctrl.selectedTab === 'info' && (
-              <div className={ctrl.tabContentClassName}>
-                <PopupStatusContent ctrl={ctrl} />
-              </div>
-            )}
-            {ctrl.selectedTab === 'history' && <History />}
+            <AnimatePresence mode="wait" initial={false}>
+              {ctrl.selectedTab === 'info' ? (
+                <motion.div
+                  key="info"
+                  className={ctrl.tabContentClassName}
+                  initial={tabEnter.initial}
+                  animate={tabEnter.animate}
+                  exit={tabEnter.exit}
+                  transition={tabEnter.transition}
+                >
+                  <PopupStatusContent ctrl={ctrl} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="history"
+                  className="h-full min-h-0 w-full"
+                  initial={tabEnter.initial}
+                  animate={tabEnter.animate}
+                  exit={tabEnter.exit}
+                  transition={tabEnter.transition}
+                >
+                  <History />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

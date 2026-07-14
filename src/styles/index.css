@@ -95,10 +95,10 @@
     appearance: none;
     transform: translate(-50%, -50%);
     transition:
-      background-color 0.18s ease,
-      border-color 0.18s ease,
-      box-shadow 0.18s ease,
-      transform 0.18s ease;
+      background-color 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 2;
   }
 
@@ -112,6 +112,17 @@
   .eh-dual-range__thumb:focus-visible {
     outline: none;
     box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.14);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eh-dual-range__thumb {
+      transition: none;
+    }
+
+    .eh-dual-range__thumb:hover,
+    .eh-dual-range__thumb.is-active {
+      transform: translate(-50%, -50%);
+    }
   }
 
   .eh-cover-skeleton,

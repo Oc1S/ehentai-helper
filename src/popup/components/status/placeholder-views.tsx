@@ -2,17 +2,9 @@ import { Info, Link2, X } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
 import { StatusCard } from '@/components/status-card';
-import { Spinner } from '@/components/ui-primitives';
 import { t } from '@/utils/i18n';
 
 const ICON_STROKE = 1.5;
-
-export const LoadingStatusView = () => (
-  <div className="flex h-full flex-col items-center justify-center gap-3">
-    <Spinner size="lg" />
-    <p className="animate-pulse text-[13px] font-normal text-muted">{t('initializing')}</p>
-  </div>
-);
 
 export const EHentaiOtherStatusView = () => (
   <StatusCard

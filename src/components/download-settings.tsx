@@ -8,6 +8,7 @@ import { useMounted } from '@/hooks';
 import { configStorage } from '@/storage';
 import { type Config, DEFAULT_CONFIG, PATTERN_INVALID_FILE_PATH_CHAR } from '@/utils';
 import { t } from '@/utils/i18n';
+import { overlayEnter } from '@/utils/motion';
 
 import { EhButton } from './eh-button';
 import { Settings } from './settings';
@@ -25,10 +26,10 @@ const formatDownloadDir = (path: string) => {
 };
 
 const settingsOverlayMotion = {
-  initial: { opacity: 0, y: 12, filter: 'blur(4px)', pointerEvents: 'auto' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)', pointerEvents: 'auto' },
-  exit: { opacity: 0, y: 8, filter: 'blur(2px)', pointerEvents: 'none' },
-  transition: { type: 'spring', visualDuration: 0.3, bounce: 0.12 },
+  ...overlayEnter,
+  initial: { ...overlayEnter.initial, pointerEvents: 'auto' as const },
+  animate: { ...overlayEnter.animate, pointerEvents: 'auto' as const },
+  exit: { ...overlayEnter.exit, pointerEvents: 'none' as const },
 } as const;
 
 export const DownloadSettings = () => {

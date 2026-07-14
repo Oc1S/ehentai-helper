@@ -6,28 +6,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
 import { t } from '@/utils/i18n';
+import { dialogEnter, fadeEnter, overlayEnter, springSnappy } from '@/utils/motion';
 
 import { EhButton } from '../eh-button';
 
 const modalRootMotion = {
-  initial: { opacity: 0, pointerEvents: 'auto' },
-  animate: { opacity: 1, pointerEvents: 'auto' },
-  exit: { opacity: 0, pointerEvents: 'none' },
-  transition: { type: 'spring', visualDuration: 0.18, bounce: 0.1 },
-} as const;
-
-const modalOverlayPanelMotion = {
-  initial: { opacity: 0, y: 14, filter: 'blur(4px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: 10, filter: 'blur(2px)' },
-  transition: { type: 'spring', visualDuration: 0.28, bounce: 0.2 },
-} as const;
-
-const modalDialogPanelMotion = {
-  initial: { opacity: 0, y: 8, scale: 0.985, filter: 'blur(4px)' },
-  animate: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
-  exit: { opacity: 0, y: 6, scale: 0.992, filter: 'blur(2px)' },
-  transition: { type: 'spring', visualDuration: 0.22, bounce: 0.08 },
+  ...fadeEnter,
+  initial: { ...fadeEnter.initial, pointerEvents: 'auto' as const },
+  animate: { ...fadeEnter.animate, pointerEvents: 'auto' as const },
+  exit: { ...fadeEnter.exit, pointerEvents: 'none' as const },
+  transition: springSnappy,
 } as const;
 
 type ModalPresentation = 'dialog' | 'overlay';
@@ -169,7 +157,7 @@ export const Modal = ({
             className={modalPanelClass({ presentation, size, className: panelClassName })}
             role="dialog"
             aria-modal="true"
-            {...(presentation === 'dialog' ? modalDialogPanelMotion : modalOverlayPanelMotion)}
+            {...(presentation === 'dialog' ? dialogEnter : overlayEnter)}
           >
             {title ? (
               <header className={modalHeaderClass({ presentation })}>

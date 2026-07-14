@@ -46,13 +46,13 @@ export const EhProgressBar = ({
         <div className="relative h-full w-full">
           {successWidth > 0 ? (
             <div
-              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-success transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-success transition-transform duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
               style={{ transform: `scaleX(${successWidth / 100})` }}
             />
           ) : null}
           {inProgressWidth > 0 ? (
             <div
-              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-warning transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-warning transition-transform duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
               style={{
                 transform: `translateX(${successWidth}%) scaleX(${inProgressWidth / 100})`,
               }}
@@ -60,7 +60,7 @@ export const EhProgressBar = ({
           ) : null}
           {failedWidth > 0 ? (
             <div
-              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-error transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-error transition-transform duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
               style={{
                 transform: `translateX(${successWidth + inProgressWidth}%) scaleX(${failedWidth / 100})`,
               }}
@@ -69,7 +69,7 @@ export const EhProgressBar = ({
         </div>
       ) : (
         <div
-          className={`eh-progress-fill h-full w-full origin-left transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
+          className={`eh-progress-fill h-full w-full origin-left transition-transform duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
             indeterminate ? 'eh-progress-fill--indeterminate' : ''
           }`}
           style={{ transform: `scaleX(${percent / 100})` }}

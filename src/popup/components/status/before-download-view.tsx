@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Download, ImageOff } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
 import type { GalleryInfo, GalleryRecord } from '@/storage';
 import { t } from '@/utils/i18n';
+import { staggerContainer, staggerItem } from '@/utils/motion';
 
 import { countRangeProgress } from '../../lib/progress';
 import { RangeSelectorContent } from '../range-selector-panel';
@@ -65,16 +67,22 @@ export const BeforeDownloadView = ({
                 </div>
               </div>
 
-              <div className="mt-auto flex flex-wrap gap-1.5 text-xs text-muted-soft">
+              <motion.div
+                className="mt-auto flex flex-wrap gap-1.5 text-xs text-muted-soft"
+                initial="initial"
+                animate="animate"
+                variants={staggerContainer}
+              >
                 {galleryMeta.map((item) => (
-                  <span
+                  <motion.span
                     key={item}
+                    variants={staggerItem}
                     className="max-w-full truncate rounded-full border border-[var(--eh-hairline)] px-2 py-0.5 text-[11px] font-normal text-muted"
                   >
                     {item}
-                  </span>
+                  </motion.span>
                 ))}
-              </div>
+              </motion.div>
             </section>
 
             <aside className="flex min-w-0 flex-col border-l border-[var(--eh-hairline)] p-4">
@@ -158,7 +166,7 @@ const GalleryCover = ({ src, name }: { src?: string; name: string }) => {
       <img
         src={src}
         alt={name ? `${name} cover` : ''}
-        className={`h-full w-full object-cover transition-opacity duration-300 ${
+        className={`h-full w-full object-cover transition-opacity duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         draggable={false}

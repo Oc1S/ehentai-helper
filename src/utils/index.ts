@@ -9,3 +9,4 @@ export * from './gallery-info-txt';
 export * from './htmlStr2Dom';
 export * from './image-blob';
 export * from './image-format';
+export * from './motion';

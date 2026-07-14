@@ -1,5 +1,8 @@
+import { AnimatePresence, motion } from 'framer-motion';
+
 import { EhButton } from '@/components/eh-button';
 import { t } from '@/utils/i18n';
+import { viewEnter } from '@/utils/motion';
 
 import { StatusEnum } from '../status';
 import type { PopupController } from '../use-popup-controller';
@@ -9,11 +12,10 @@ import { DownloadFailedView, DownloadingView } from './status/downloading-view';
 import {
   EHentaiOtherStatusView,
   FailStatusView,
-  LoadingStatusView,
   OtherPageStatusView,
 } from './status/placeholder-views';
 
-export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
+const renderStatus = (ctrl: PopupController) => {
   const {
     status,
     galleryInfo,
@@ -41,8 +43,6 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
   } = ctrl;
 
   switch (status) {
-    case StatusEnum.Loading:
-      return <LoadingStatusView />;
     case StatusEnum.EHentaiOther:
       return <EHentaiOtherStatusView />;
     case StatusEnum.OtherPage:
@@ -96,11 +96,7 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
               <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
                 {t('viewDetails')}
               </EhButton>
-              <EhButton
-                variant="secondary"
-                ehSize="md"
-                onPress={openDownloadFolder}
-              >
+              <EhButton variant="secondary" ehSize="md" onPress={openDownloadFolder}>
                 {t('openFolder')}
               </EhButton>
               <EhButton
@@ -165,7 +161,11 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
             <PostDownloadActionRow
               leading={
                 <>
-                  <EhButton variant="secondary" ehSize="md" onPress={() => setGalleryDetailOpen(true)}>
+                  <EhButton
+                    variant="secondary"
+                    ehSize="md"
+                    onPress={() => setGalleryDetailOpen(true)}
+                  >
                     {t('viewDetails')}
                   </EhButton>
                   <EhButton variant="secondary" ehSize="md" onPress={resetToBeforeDownload}>
@@ -182,4 +182,23 @@ export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
     default:
       return null;
   }
+};
+
+export const PopupStatusContent = ({ ctrl }: { ctrl: PopupController }) => {
+  if (ctrl.status === StatusEnum.Loading) return null;
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={ctrl.status}
+        className="h-full min-h-0 w-full"
+        initial={viewEnter.initial}
+        animate={viewEnter.animate}
+        exit={viewEnter.exit}
+        transition={viewEnter.transition}
+      >
+        {renderStatus(ctrl)}
+      </motion.div>
+    </AnimatePresence>
+  );
 };
