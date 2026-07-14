@@ -156,10 +156,7 @@ const finishTerminalTask = async (task: ActiveDownloadTask) => {
   }
 };
 
-const refreshTaskStatus = async (
-  galleryUrl: string,
-  options: { allowRunningTerminal?: boolean } = {}
-) => {
+const refreshTaskStatus = async (galleryUrl: string) => {
   const task = await downloadTaskStorage.get();
   if (!task || task.galleryUrl !== galleryUrl || task.status === 'cancelled') return;
 
@@ -172,18 +169,9 @@ const refreshTaskStatus = async (
   const gallery = records?.[galleryUrl];
   const nextStatus = resolveTaskStatus(task, countTaskImages(task, gallery?.images));
 
-  // running 期间：允许直接进入终态（全部 settle 完），避免「进度已满仍显示下载中」再闪到成功页。
-  // dispatch_complete 仍由 orchestrator 的 markDispatchComplete 推进。
+  // running 期间不写入 dispatch_complete（留给 markDispatchComplete）；
+  // 但若图片已全部 settle，直接进终态，避免进度已满仍停在下载中。
   if (task.status === 'running' && nextStatus === 'dispatch_complete') return;
-  if (
-    task.status === 'running' &&
-    !options.allowRunningTerminal &&
-    nextStatus !== 'completed' &&
-    nextStatus !== 'partial_success' &&
-    nextStatus !== 'failed'
-  ) {
-    return;
-  }
 
   if (nextStatus === 'dispatch_complete') {
     if (task.status !== 'dispatch_complete') {
@@ -468,7 +456,7 @@ export const markDispatchComplete = async (taskId: string, galleryUrl: string) =
   }
 
   // 先按图片进度尝试直接进终态，避免无意义的 running→dispatch_complete→completed 两跳
-  await refreshTaskStatus(galleryUrl, { allowRunningTerminal: true });
+  await refreshTaskStatus(galleryUrl);
 
   const after = await downloadTaskStorage.get();
   if (!after || after.taskId !== taskId) return;
@@ -522,5 +510,5 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
     }
   }
 
-  await refreshTaskStatus(task.galleryUrl, { allowRunningTerminal: true });
+  await refreshTaskStatus(task.galleryUrl);
 };

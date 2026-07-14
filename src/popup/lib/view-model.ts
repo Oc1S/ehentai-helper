@@ -21,8 +21,8 @@ const taskStatusToUi = (taskStatus: string): StatusEnum | null => {
 };
 
 /**
- * 当图片进度已全部 settle，但 task.status 仍滞后于 running/dispatch_complete 时，
- * 用进度直接推导终态，避免「下载中 1/1 → 成功页」闪烁。
+ * gallery-records 与 download-task 分两次 storage 更新，popup 可能先看到图片已满。
+ * 此时用进度补一层终态，避免短暂停在「下载中」。
  */
 const statusFromSettledProgress = (
   expected: number,

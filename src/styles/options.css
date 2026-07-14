@@ -14,21 +14,21 @@
   max-width: var(--options-content-w);
   min-height: 100vh;
   margin-inline: auto;
-  padding: 28px var(--options-gutter) 48px;
+  padding: 20px var(--options-gutter) 48px;
 }
 
 .options-header {
   position: sticky;
-  top: 20px;
+  top: 12px;
   z-index: 10;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 24px;
-  min-height: 124px;
-  padding: 28px 32px;
+  gap: 16px;
+  min-height: var(--options-header-h);
+  padding: 14px 20px;
   border: 1px solid rgb(var(--eh-primary-fg) / 0.16);
-  border-radius: 22px;
+  border-radius: 14px;
   background:
     radial-gradient(ellipse 46% 80% at 90% 0%, rgb(var(--eh-brand-helper) / 0.16), transparent 72%),
     linear-gradient(135deg, rgb(var(--eh-brand-primary)) 0%, rgb(var(--eh-brand-primary-active)) 100%);
@@ -39,22 +39,23 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
 .options-header__title {
-  max-width: 920px;
-  font-size: clamp(44px, 7vw, 82px);
-  font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: 0;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: rgb(var(--eh-primary-fg));
 }
 
 .options-header__desc {
+  margin: 0;
   max-width: 620px;
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.4;
   color: rgb(var(--eh-primary-fg) / 0.72);
 }
 
@@ -65,7 +66,7 @@
 
 .options-main {
   flex: 1;
-  padding-top: 44px;
+  padding-top: 28px;
 }
 
 .options-shell .eh-settings-panel--page {

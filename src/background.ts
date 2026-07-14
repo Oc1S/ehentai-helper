@@ -152,54 +152,7 @@ const registerListeners = () => {
       return;
     }
 
-    const suggestFromEntryOrDefault = () => {
-      const entry = indexMap[String(downloadItem.id)];
-      if (!entry && downloadItem.mime !== textMime) {
-        suggest();
-        return;
-      }
-
-      const downloadPath =
-        entry?.downloadPath ||
-        currentDownloadContext?.downloadPath ||
-        currentConfig.intermediateDownloadPath;
-
-      let { filename } = downloadItem;
-      if (downloadItem.mime === textMime) {
-        filename = `${normalizeDownloadDir(downloadPath)}info.txt`;
-      } else {
-        const overrideExt = getFormatOverrideExtension();
-        const fileType = extensionFromDownloadItem(downloadItem, overrideExt);
-        const name =
-          entry?.sourceUrl != null
-            ? (() => {
-                try {
-                  const base = new URL(entry.sourceUrl).pathname.split('/').pop() ?? 'image';
-                  return splitFilename(base)[0] || 'image';
-                } catch {
-                  return 'image';
-                }
-              })()
-            : splitFilename(downloadItem.filename ?? '')[0] || 'image';
-
-        filename = `${normalizeDownloadDir(downloadPath)}${fileNameRule
-          .replace('[index]', String(entry?.index ?? ''))
-          .replace('[name]', name)
-          .replace(
-            '[total]',
-            String(entry?.total ?? currentDownloadContext?.total ?? '')
-          )}.${fileType}`;
-      }
-
-      const normalized = filename.replace(/\\/g, '/').replace(/^\/+/, '') || 'download.bin';
-
-      suggest({
-        filename: normalized,
-        conflictAction,
-      });
-    };
-
-    // 内存 miss（SW 刚唤醒）：异步读 session hint，再 suggest
+    // 内存 miss（SW 刚唤醒）：异步读 session hint；再退到 indexMap / 当前任务上下文
     void peekPendingDownloadFilename(downloadItem.url, downloadItem.finalUrl).then(
       (asyncPending) => {
         if (asyncPending) {
@@ -210,7 +163,46 @@ const registerListeners = () => {
           });
           return;
         }
-        suggestFromEntryOrDefault();
+
+        const entry = indexMap[String(downloadItem.id)];
+        if (!entry && downloadItem.mime !== textMime) {
+          suggest();
+          return;
+        }
+
+        const downloadPath =
+          entry?.downloadPath ||
+          currentDownloadContext?.downloadPath ||
+          currentConfig.intermediateDownloadPath;
+
+        let filename: string;
+        if (downloadItem.mime === textMime) {
+          filename = `${normalizeDownloadDir(downloadPath)}info.txt`;
+        } else {
+          const overrideExt = getFormatOverrideExtension();
+          const fileType = extensionFromDownloadItem(downloadItem, overrideExt);
+          let name = splitFilename(downloadItem.filename ?? '')[0] || 'image';
+          if (entry?.sourceUrl) {
+            try {
+              const base = new URL(entry.sourceUrl).pathname.split('/').pop() ?? 'image';
+              name = splitFilename(base)[0] || 'image';
+            } catch {
+              /* keep fallback name */
+            }
+          }
+          filename = `${normalizeDownloadDir(downloadPath)}${fileNameRule
+            .replace('[index]', String(entry?.index ?? ''))
+            .replace('[name]', name)
+            .replace(
+              '[total]',
+              String(entry?.total ?? currentDownloadContext?.total ?? '')
+            )}.${fileType}`;
+        }
+
+        suggest({
+          filename: filename.replace(/\\/g, '/').replace(/^\/+/, '') || 'download.bin',
+          conflictAction,
+        });
       }
     );
     return true;
@@ -219,21 +211,6 @@ const registerListeners = () => {
   chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
     if (!message || typeof message !== 'object') {
       return false;
-    }
-
-    if (message.type === 'register-download-index') {
-      void registerChromeDownload({
-        id: message.id,
-        index: message.index,
-        total: message.total,
-        downloadPath: message.downloadPath,
-        galleryUrl: message.galleryUrl,
-        sourceUrl: message.sourceUrl,
-        taskId: message.taskId ?? null,
-      });
-
-      sendResponse({ ok: true });
-      return true;
     }
 
     const handleDownloadJob = (
@@ -297,39 +274,10 @@ const registerListeners = () => {
       return true;
     }
 
-    if (message.type === 'set-download-context') {
-      currentDownloadContext = {
-        downloadPath: message.downloadPath,
-        total: message.total,
-        galleryUrl: message.galleryUrl,
-        galleryName: message.galleryName,
-        galleryId: message.galleryId,
-      };
-      if (message.galleryUrl) {
-        void galleryRecordsStorage.upsertGallery({
-          galleryUrl: message.galleryUrl,
-          galleryName: message.galleryName ?? '',
-          galleryId: message.galleryId ?? '',
-          downloadPath: message.downloadPath,
-          total: message.total,
-        });
-      }
-      sendResponse({ ok: true });
-      return true;
-    }
-
     if (message.type === 'reconcile-gallery') {
       void reconcileActiveTask(message.galleryUrl).then(() => {
         sendResponse({ ok: true });
       });
-      return true;
-    }
-
-    if (message.type === 'clear-download-index-map') {
-      void downloadIndexMapStorage.set({});
-      currentDownloadContext = null;
-      clearTrackedDownloads();
-      sendResponse({ ok: true });
       return true;
     }
 

@@ -11,8 +11,6 @@ export type GalleryImageRecord = {
   state: GalleryImageState;
   chromeDownloadId?: number;
   error?: string;
-  bytesReceived?: number;
-  totalBytes?: number;
   updatedAt: number;
 };
 
@@ -91,12 +89,6 @@ const mergeImageRecord = (
   if (hasOwn(image, 'chromeDownloadId')) {
     if (image.chromeDownloadId == null) delete merged.chromeDownloadId;
   }
-  if (hasOwn(image, 'bytesReceived')) {
-    if (image.bytesReceived == null) delete merged.bytesReceived;
-  }
-  if (hasOwn(image, 'totalBytes')) {
-    if (image.totalBytes == null) delete merged.totalBytes;
-  }
 
   return merged;
 };
@@ -153,8 +145,6 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
           taskId,
           state: 'queued',
           chromeDownloadId: undefined,
-          bytesReceived: undefined,
-          totalBytes: undefined,
           updatedAt: now,
         });
       }
