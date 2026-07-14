@@ -286,8 +286,10 @@ export const usePopupController = () => {
     const items = configLatest.current ?? DEFAULT_CONFIG;
     configLatest.current = items;
 
-    const trimmed = url.split('?')[0];
-    galleryFrontPageUrl.current = trimmed.substring(0, trimmed.lastIndexOf('/') + 1);
+    // 标准形式带尾斜杠：/g/{gid}/{token}/；无尾斜杠也能打开，但旧逻辑
+    // lastIndexOf('/') 会把 token 裁掉。统一规范成带尾斜杠的 front URL。
+    const trimmed = url.split('?')[0].replace(/\/+$/, '');
+    galleryFrontPageUrl.current = `${trimmed}/`;
     const galleryHtmlStr = await getCurrentTabHtml().catch(() => '');
     if (!isGalleryPageHtml(galleryHtmlStr)) {
       setPageStatus(StatusEnum.Fail);
