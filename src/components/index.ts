@@ -1,6 +1,5 @@
 export * from './download-history';
 export * from './download-settings';
-export * from './download-table';
 export * from './eh-button';
 export * from './eh-progress';
 export * from './eh-section-label';

@@ -525,12 +525,13 @@ const processGalleryPage = async (
   const launchedDownloads: Promise<void>[] = [];
   if (!isCurrentDownloadJob(jobId) || indicesOnPage.length === 0) return launchedDownloads;
 
-  const owned = await Promise.all(
-    indicesOnPage.map((index) =>
-      markImageInProgress(params.taskId, params.galleryFrontPageUrl, index)
-    )
-  );
-  if (!isCurrentDownloadJob(jobId) || owned.some((result) => !result)) {
+  // 页级不再批量写 in_progress；解析出直链后再标记，减少无效全量 storage 写
+  const active = await downloadTaskStorage.get();
+  if (
+    !active ||
+    active.taskId !== params.taskId ||
+    active.galleryUrl !== params.galleryFrontPageUrl
+  ) {
     return launchedDownloads;
   }
 

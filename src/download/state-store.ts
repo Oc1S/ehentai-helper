@@ -5,7 +5,6 @@ import {
   needsInProgressUpdate,
   resolveOwnedDownloadBinding,
 } from '@/download/download-binding';
-import { buildStorageRelativeFilename, normalizeDownloadDir } from '@/download/download-filename';
 import { trackedDownloadIds } from '@/download/download-registry';
 import { rangeIndices } from '@/download/helpers';
 import type { DownloadJobMode } from '@/download/types';
@@ -50,11 +49,6 @@ export type RegisterChromeDownloadParams = {
   filename?: string;
 };
 
-export type ChromeDownloadMetadata = {
-  filename?: string;
-  error?: string;
-};
-
 const TERMINAL_TASK_STATUSES = new Set<ActiveDownloadTask['status']>([
   'completed',
   'partial_success',
@@ -75,17 +69,6 @@ const trimIndexMap = (
     delete next[String(id)];
   }
   return next;
-};
-
-const resolveDownloadExt = (sourceImageUrl: string): string => {
-  try {
-    const path = new URL(sourceImageUrl).pathname;
-    const dot = path.lastIndexOf('.');
-    if (dot === -1) return 'jpg';
-    return path.slice(dot + 1).toLowerCase() || 'jpg';
-  } catch {
-    return 'jpg';
-  }
 };
 
 const patchActiveTask = async (taskId: string, patch: Partial<ActiveDownloadTask>) => {
@@ -223,28 +206,6 @@ const isActiveTaskImage = async (galleryUrl: string, index: number, taskId: stri
   return true;
 };
 
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** 匹配期望 basename，或 Chrome uniquify 产生的 `name (N).ext` 变体 */
-const isExpectedBasenameOrUniquifyVariant = (actualBasename: string, expectedBasename: string) => {
-  if (actualBasename === expectedBasename) return true;
-  const dot = expectedBasename.lastIndexOf('.');
-  if (dot <= 0) return false;
-  const stem = expectedBasename.slice(0, dot);
-  const ext = expectedBasename.slice(dot);
-  return new RegExp(`^${escapeRegExp(stem)}(?: \\(\\d+\\))?${escapeRegExp(ext)}$`).test(
-    actualBasename
-  );
-};
-
-const pathIncludesDownloadDir = (absolutePath: string, downloadPath: string) => {
-  const normalized = absolutePath.replace(/\\/g, '/').toLowerCase();
-  const dir = normalizeDownloadDir(downloadPath).replace(/\/+$/, '').toLowerCase();
-  if (!dir) return true;
-  return normalized.includes(dir);
-};
-
-/** 相对路径与 Chrome 绝对路径视为同一文件，避免反复 patch 引发 UI 闪烁 */
 const filenamesEquivalent = (a?: string, b?: string) => {
   if (!a || !b) return a === b;
   if (a === b) return true;
@@ -343,58 +304,6 @@ export const registerChromeDownload = async (params: RegisterChromeDownloadParam
     updatedAt: Date.now(),
   });
   // register 只推进 in_progress，不会改变终态；settle/complete/fail 再 refresh
-  return true;
-};
-
-export const patchChromeDownloadMetadata = async (
-  chromeDownloadId: number,
-  patch: ChromeDownloadMetadata
-) => {
-  const context = await resolveDownloadBinding(chromeDownloadId);
-  if (!context) return false;
-
-  const { entry, image, taskId, needsBind } = context;
-
-  if (needsBind) {
-    const state =
-      image.taskId === taskId && (image.state === 'complete' || image.state === 'interrupted')
-        ? image.state
-        : 'in_progress';
-    await galleryRecordsStorage.upsertImage(entry.galleryUrl, {
-      index: entry.index,
-      sourceUrl: entry.sourceUrl || image.sourceUrl || '',
-      taskId,
-      state,
-      chromeDownloadId,
-      ...(patch.filename
-        ? { filename: patch.filename }
-        : image.filename
-          ? { filename: image.filename }
-          : {}),
-      ...(patch.error != null ? { error: patch.error } : {}),
-      updatedAt: Date.now(),
-    });
-    return true;
-  }
-
-  if (patch.filename && filenamesEquivalent(patch.filename, image.filename)) {
-    const { filename: _ignored, ...rest } = patch;
-    if (Object.keys(rest).length === 0) return true;
-    await galleryRecordsStorage.patchImageByDownloadId(
-      chromeDownloadId,
-      entry.galleryUrl,
-      entry.index,
-      rest
-    );
-    return true;
-  }
-
-  await galleryRecordsStorage.patchImageByDownloadId(
-    chromeDownloadId,
-    entry.galleryUrl,
-    entry.index,
-    patch
-  );
   return true;
 };
 
@@ -572,20 +481,32 @@ export const markDispatchComplete = async (taskId: string, galleryUrl: string) =
 export const clearActiveTask = async (taskId?: string) => {
   const task = await downloadTaskStorage.get();
   if (!task || (taskId && task.taskId !== taskId)) return;
+  const clearedTaskId = task.taskId;
   // 先清 task 再清 CBZ：IndexedDB 可能很慢，SW 若在 set(null) 前被挂起会导致
   // 「返回下载范围」后重开 popup 仍停在终态页。
   await downloadTaskStorage.set(null);
-  void clearCbzTask(task.taskId).catch(() => undefined);
+  await downloadIndexMapStorage.set((map) => {
+    if (!map) return map;
+    let changed = false;
+    const next = { ...map };
+    for (const [id, entry] of Object.entries(next)) {
+      if (entry.taskId !== clearedTaskId) continue;
+      delete next[id];
+      trackedDownloadIds.delete(Number(id));
+      changed = true;
+    }
+    return changed ? next : map;
+  });
+  void clearCbzTask(clearedTaskId).catch(() => undefined);
 };
 
+/** 按 chrome download id 自愈绑定并 settle（不做文件名全表搜索） */
 export const reconcileActiveTask = async (galleryUrl?: string) => {
   const task = await downloadTaskStorage.get();
   if (!task || (galleryUrl && task.galleryUrl !== galleryUrl)) return;
 
-  const config = await configStorage.get();
   const indexMap = downloadIndexMapStorage.getSnapshot() || (await downloadIndexMapStorage.get());
 
-  // 第一轮：按 chrome download id 自愈绑定并 settle
   for (const [idKey, entry] of Object.entries(indexMap || {})) {
     if (entry.galleryUrl !== task.galleryUrl || entry.taskId !== task.taskId) continue;
     const chromeDownloadId = Number(idKey);
@@ -595,89 +516,9 @@ export const reconcileActiveTask = async (galleryUrl?: string) => {
       const [item] = await chrome.downloads.search({ id: chromeDownloadId });
       if (item?.state === 'complete' || item?.state === 'interrupted') {
         await settleChromeDownload(chromeDownloadId, item.state, item.error, item.filename);
-      } else if (item) {
-        await patchChromeDownloadMetadata(chromeDownloadId, {
-          filename: item.filename,
-          error: item.error,
-        });
       }
     } catch {
       /* downloads.search can fail for stale ids */
-    }
-  }
-
-  const records = await galleryRecordsStorage.get();
-  const gallery = records?.[task.galleryUrl];
-  if (gallery) {
-    for (const index of taskTargetIndices(task)) {
-      const image = gallery.images[String(index)];
-      if (!image || image.taskId !== task.taskId || image.state === 'complete') continue;
-
-      // 已有 chromeDownloadId：优先按 id 再 settle 一次
-      if (image.chromeDownloadId != null) {
-        try {
-          const [item] = await chrome.downloads.search({ id: image.chromeDownloadId });
-          if (item?.state === 'complete' || item?.state === 'interrupted') {
-            await settleChromeDownload(
-              image.chromeDownloadId,
-              item.state,
-              item.error,
-              item.filename
-            );
-            continue;
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-
-      if (!image.sourceUrl) continue;
-
-      const expectedFilename = buildStorageRelativeFilename(config, {
-        downloadPath: task.downloadPath,
-        index,
-        total: task.totalImages,
-        ext: resolveDownloadExt(image.sourceUrl),
-        sourceUrl: image.sourceUrl,
-        taskId: task.taskId,
-        galleryUrl: task.galleryUrl,
-      });
-      const basename = expectedFilename.split('/').pop() ?? expectedFilename;
-      const searchStem = basename.includes('.')
-        ? basename.slice(0, basename.lastIndexOf('.'))
-        : basename;
-
-      try {
-        const items = await chrome.downloads.search({ query: [searchStem] });
-        const match = items.find((item) => {
-          if (item.state !== 'complete' && item.state !== 'interrupted') return false;
-          if (Date.parse(item.startTime) < image.updatedAt - 5000) return false;
-          const normalized = item.filename.replace(/\\/g, '/');
-          if (!pathIncludesDownloadDir(normalized, task.downloadPath)) return false;
-          const actualBasename = normalized.split('/').pop() ?? normalized;
-          return isExpectedBasenameOrUniquifyVariant(actualBasename, basename);
-        });
-        if (!match) continue;
-
-        await registerChromeDownload({
-          id: match.id,
-          index,
-          total: task.totalImages,
-          downloadPath: task.downloadPath,
-          galleryUrl: task.galleryUrl,
-          sourceUrl: image.sourceUrl,
-          taskId: task.taskId,
-          filename: match.filename || expectedFilename,
-        });
-        await settleChromeDownload(
-          match.id,
-          match.state as 'complete' | 'interrupted',
-          match.error,
-          match.filename
-        );
-      } catch {
-        /* The bounded filename search is a best-effort repair path. */
-      }
     }
   }
 

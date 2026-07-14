@@ -199,17 +199,3 @@ export const galleryRecordsStorage: GalleryRecordsStorage = {
     await baseStorage.set({});
   },
 };
-
-export type DownloadOwner = {
-  galleryUrl: string;
-  index: number;
-};
-
-export const downloadOwnerStorage = createStorage<Record<string, DownloadOwner>>(
-  'download-owner',
-  {},
-  {
-    storageType: StorageType.Local,
-    liveUpdate: true,
-  }
-);

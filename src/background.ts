@@ -17,7 +17,6 @@ import {
 import {
   clearActiveTask,
   ensureSettledIfAlreadyDone,
-  patchChromeDownloadMetadata,
   reconcileActiveTask,
   registerChromeDownload,
   settleChromeDownload,
@@ -25,122 +24,41 @@ import {
 import {
   configStorage,
   downloadIndexMapStorage,
-  downloadListStorage,
+  downloadTaskStorage,
   galleryRecordsStorage,
 } from './storage';
-import { DEFAULT_CONFIG, EXTENSION_NAME, isObject } from './utils';
+import { DEFAULT_CONFIG, EXTENSION_NAME } from './utils';
 import { splitFilename } from './utils';
 
 const textMime = 'text/plain';
 const extensionId = chrome.runtime.id;
 
-/** 仅跟踪本扩展发起的下载，避免监听全局 downloads 导致 storage 与内存暴涨 */
+/** 仅跟踪本扩展发起的下载，避免监听全局 downloads */
 
 let listenersRegistered = false;
-let patchFlushTimer: ReturnType<typeof setTimeout> | null = null;
-type DownloadPatch = Partial<chrome.downloads.DownloadItem> & { id: number };
-type GalleryDownloadPatch = {
-  filename?: string;
-  error?: string;
-};
-
-const pendingDownloadPatches = new Map<number, DownloadPatch>();
 
 const isOurExtensionDownload = (item: { byExtensionId?: string }) =>
   item.byExtensionId === extensionId;
 
-const rebuildTrackedIdsFromIndexMap = (map: Record<string, unknown> | null | undefined) => {
+const rebuildTrackedIdsFromIndexMap = (
+  map: Record<string, { taskId?: string } | unknown> | null | undefined,
+  activeTaskId?: string
+) => {
   clearTrackedDownloads();
-  if (!map) return;
-  for (const id of Object.keys(map)) {
+  // 无活动任务时不预热历史 id；新下载会在 onCreated/register 时加入
+  if (!map || !activeTaskId) return;
+  for (const [id, entry] of Object.entries(map)) {
+    const taskId =
+      entry && typeof entry === 'object' && 'taskId' in entry
+        ? (entry as { taskId?: string }).taskId
+        : undefined;
+    if (taskId !== activeTaskId) continue;
     trackedDownloadIds.add(Number(id));
   }
 };
 
-const backfillGalleryRecordsFromDownloads = async (items: chrome.downloads.DownloadItem[]) => {
-  await Promise.all(
-    items.map(async (item) => {
-      if (item.state === 'complete' || item.state === 'interrupted') {
-        await settleChromeDownload(item.id, item.state, item.error);
-        return;
-      }
-
-      await patchChromeDownloadMetadata(item.id, {
-        filename: item.filename,
-        error: item.error,
-      });
-    })
-  );
-};
-
-const syncDownloadList = async () => {
-  if (trackedDownloadIds.size === 0) {
-    await downloadListStorage.set([]);
-    return;
-  }
-  const results = await Promise.all(
-    [...trackedDownloadIds].map((id) => chrome.downloads.search({ id }))
-  );
-  const items = results.flat();
-  await downloadListStorage.set(items);
-  await backfillGalleryRecordsFromDownloads(items);
-};
-
-const flushPendingDownloadPatches = async () => {
-  if (pendingDownloadPatches.size === 0) return;
-  const patches = [...pendingDownloadPatches.values()];
-  pendingDownloadPatches.clear();
-
-  await downloadListStorage.set((list) => {
-    const next = [...(Array.isArray(list) ? list : [])];
-    for (const patch of patches) {
-      const index = next.findIndex((item) => item.id === patch.id);
-      if (index === -1) {
-        next.push(patch as chrome.downloads.DownloadItem);
-      } else {
-        next[index] = { ...next[index], ...patch };
-      }
-    }
-    return next.filter((item) => trackedDownloadIds.has(item.id));
-  });
-};
-
-const scheduleDownloadPatch = (patch: DownloadPatch) => {
-  if (!trackedDownloadIds.has(patch.id)) return;
-
-  const existing = pendingDownloadPatches.get(patch.id);
-  pendingDownloadPatches.set(patch.id, existing ? { ...existing, ...patch } : patch);
-
-  if (patchFlushTimer !== null) return;
-  patchFlushTimer = setTimeout(() => {
-    patchFlushTimer = null;
-    void flushPendingDownloadPatches();
-  }, 80);
-};
-
-const patchDownloadListNow = async (downloadItem: chrome.downloads.DownloadItem) => {
-  if (!trackedDownloadIds.has(downloadItem.id)) return;
-
-  trackedDownloadIds.add(downloadItem.id);
-  await downloadListStorage.set((list) => {
-    const next = [...(Array.isArray(list) ? list : [])];
-    const index = next.findIndex((item) => item.id === downloadItem.id);
-    if (index === -1) {
-      next.push(downloadItem);
-      return next;
-    }
-    next[index] = { ...next[index], ...downloadItem };
-    return next;
-  });
-};
-
-const clearPendingPatches = () => {
-  pendingDownloadPatches.clear();
-  if (patchFlushTimer !== null) {
-    clearTimeout(patchFlushTimer);
-    patchFlushTimer = null;
-  }
-};
+const isTrackedDownload = (id: number) =>
+  trackedDownloadIds.has(id) || Boolean(downloadIndexMapStorage.getSnapshot()?.[String(id)]);
 
 let currentConfig = DEFAULT_CONFIG;
 let currentDownloadContext: {
@@ -166,7 +84,6 @@ const registerListeners = () => {
     if (downloadItem.mime === textMime) return;
 
     trackedDownloadIds.add(downloadItem.id);
-    patchDownloadListNow(downloadItem);
 
     // 兜底：chrome.downloads.download 的 callback 在 service worker 休眠时可能丢失。
     // onCreated 用 pending intent 补注册 chrome id，注册成功后再消费 intent。
@@ -182,14 +99,10 @@ const registerListeners = () => {
         taskId: hint.taskId ?? null,
         filename: hint.filename,
       }).then((registered) => {
-        if (registered) {
-          void consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
-          void ensureSettledIfAlreadyDone(downloadItem.id).then((settled) => {
-            if (settled) releaseChromeDownloadSlot(downloadItem.id);
-          });
-        }
-        void patchChromeDownloadMetadata(downloadItem.id, {
-          filename: downloadItem.filename,
+        if (!registered) return;
+        void consumePendingDownloadFilename(downloadItem.url, downloadItem.finalUrl);
+        void ensureSettledIfAlreadyDone(downloadItem.id).then((settled) => {
+          if (settled) releaseChromeDownloadSlot(downloadItem.id);
         });
       });
     });
@@ -197,46 +110,21 @@ const registerListeners = () => {
 
   chrome.downloads.onChanged.addListener((downloadDelta) => {
     const { id } = downloadDelta;
+    if (!downloadDelta.state) return;
 
-    // 下载进入终态时，释放并发槽，并把终态交给 state-store 幂等提交。
-    // settle 已带上同事件的 filename/error 时，下面不再重复 patch，避免双写闪烁。
-    let settledTerminal = false;
-    if (downloadDelta.state) {
-      const nextState = downloadDelta.state.current;
-      if (nextState === 'complete' || nextState === 'interrupted') {
-        settledTerminal = true;
-        releaseChromeDownloadSlot(id);
-        void settleChromeDownload(
-          id,
-          nextState,
-          downloadDelta.error?.current,
-          downloadDelta.filename?.current
-        );
-      }
-    }
+    const nextState = downloadDelta.state.current;
+    if (nextState !== 'complete' && nextState !== 'interrupted') return;
 
-    // 非 state 字段回写 gallery record（不写 totalBytes：无消费方，且 onChanged 会放大全量写）
-    const galleryPatch: GalleryDownloadPatch = {};
-    if (!settledTerminal && downloadDelta.filename) {
-      galleryPatch.filename = downloadDelta.filename.current;
-    }
-    if (!settledTerminal && downloadDelta.error) {
-      galleryPatch.error = downloadDelta.error.current;
-    }
-    if (Object.keys(galleryPatch).length > 0) {
-      void patchChromeDownloadMetadata(id, galleryPatch);
-    }
+    releaseChromeDownloadSlot(id);
+    if (!isTrackedDownload(id)) return;
 
-    if (!trackedDownloadIds.has(id)) return;
-
-    const next: DownloadPatch = { id };
-    for (const key in downloadDelta) {
-      if (key === 'id') continue;
-      if (isObject(downloadDelta[key])) {
-        (next as Record<string, unknown>)[key] = downloadDelta[key].current;
-      }
-    }
-    scheduleDownloadPatch(next);
+    // 终态一次 settle：filename/error 随事件带入，不再单独 patch 进度字段
+    void settleChromeDownload(
+      id,
+      nextState,
+      downloadDelta.error?.current,
+      downloadDelta.filename?.current
+    );
   });
 
   chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
@@ -441,8 +329,6 @@ const registerListeners = () => {
       void downloadIndexMapStorage.set({});
       currentDownloadContext = null;
       clearTrackedDownloads();
-      clearPendingPatches();
-      void downloadListStorage.set([]);
       sendResponse({ ok: true });
       return true;
     }
@@ -459,11 +345,19 @@ registerListeners();
 (async () => {
   currentConfig = await configStorage.get();
   await hydratePendingDownloadHintsFromSession().catch(() => undefined);
+  const activeTask = await downloadTaskStorage.get().catch(() => null);
   const indexMap = await downloadIndexMapStorage.get();
-  rebuildTrackedIdsFromIndexMap(indexMap);
-  await downloadListStorage.get().catch(() => []);
+  // 仅预热未结束任务的 id；冷启动只做 id settle
+  const trackTaskId =
+    activeTask &&
+    activeTask.status !== 'completed' &&
+    activeTask.status !== 'partial_success' &&
+    activeTask.status !== 'failed' &&
+    activeTask.status !== 'cancelled'
+      ? activeTask.taskId
+      : undefined;
+  rebuildTrackedIdsFromIndexMap(indexMap, trackTaskId);
   await galleryRecordsStorage.get().catch(() => ({}));
-  await syncDownloadList().catch(() => undefined);
   await reconcileActiveTask().catch(() => undefined);
 
   configStorage.subscribe(() => {
