@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, ImageOff } from 'lucide-react';
 
 import { EhButton } from '@/components/eh-button';
 import type { GalleryInfo, GalleryRecord } from '@/storage';
@@ -137,9 +137,17 @@ const GalleryCover = ({ src, name }: { src?: string; name: string }) => {
   if (!src || hasError) {
     return (
       <div
-        className={`${coverFrameClass} flex items-center justify-center text-3xl font-normal text-muted-soft`}
+        className={`${coverFrameClass} flex items-center justify-center`}
+        role="img"
+        aria-label={name ? `${name} cover unavailable` : 'Cover unavailable'}
       >
-        {(name || 'E').slice(0, 1)}
+        <div className="eh-cover-fallback absolute inset-0" aria-hidden />
+        <ImageOff
+          size={28}
+          strokeWidth={1.5}
+          className="relative z-[1] text-muted-soft"
+          aria-hidden
+        />
       </div>
     );
   }

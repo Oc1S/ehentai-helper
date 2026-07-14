@@ -114,7 +114,8 @@
     box-shadow: 0 0 0 4px rgb(var(--eh-ink) / 0.14);
   }
 
-  .eh-cover-skeleton {
+  .eh-cover-skeleton,
+  .eh-cover-fallback {
     position: absolute;
     inset: 0;
     overflow: hidden;

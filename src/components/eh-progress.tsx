@@ -43,32 +43,36 @@ export const EhProgressBar = ({
       aria-label={ariaLabel}
     >
       {isSegmented ? (
-        <>
+        <div className="relative h-full w-full">
           {successWidth > 0 ? (
             <div
-              className="h-full bg-success transition-[width] duration-300"
-              style={{ width: `${successWidth}%` }}
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-success transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              style={{ transform: `scaleX(${successWidth / 100})` }}
             />
           ) : null}
           {inProgressWidth > 0 ? (
             <div
-              className="h-full bg-warning transition-[width] duration-300"
-              style={{ width: `${inProgressWidth}%` }}
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-warning transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              style={{
+                transform: `translateX(${successWidth}%) scaleX(${inProgressWidth / 100})`,
+              }}
             />
           ) : null}
           {failedWidth > 0 ? (
             <div
-              className="h-full bg-error transition-[width] duration-300"
-              style={{ width: `${failedWidth}%` }}
+              className="absolute inset-y-0 left-0 h-full w-full origin-left bg-error transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              style={{
+                transform: `translateX(${successWidth + inProgressWidth}%) scaleX(${failedWidth / 100})`,
+              }}
             />
           ) : null}
-        </>
+        </div>
       ) : (
         <div
-          className={`eh-progress-fill h-full transition-[width] duration-300 ${
+          className={`eh-progress-fill h-full w-full origin-left transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
             indeterminate ? 'eh-progress-fill--indeterminate' : ''
           }`}
-          style={{ width: `${percent}%` }}
+          style={{ transform: `scaleX(${percent / 100})` }}
         />
       )}
     </div>
