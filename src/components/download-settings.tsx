@@ -66,7 +66,7 @@ export const DownloadSettings = () => {
     setConfig(updatedConfig);
 
     configStorage.set(updatedConfig).then(() => {
-      toast.success(t('settingsSaved'));
+      toast.success(t('saved'));
       setIsOpen(false);
     });
   };
@@ -109,7 +109,7 @@ export const DownloadSettings = () => {
               {t('cancel')}
             </EhButton>
             <EhButton variant="primary" ehSize="sm" onPress={handleSave}>
-              {t('saveSettings')}
+              {t('saveChanges')}
             </EhButton>
           </footer>
         </motion.section>

@@ -37,16 +37,10 @@ export const OptionsPage = () => {
             <div className="options-header__text">
               <p className="options-header__eyebrow">E-Hentai Helper</p>
               <h1 className="options-header__title">{t('settings')}</h1>
-              <p className="options-header__desc">{t('optionsSubtitle')}</p>
             </div>
           </header>
           <main className="options-main scrollbar-glass">
-            <Settings
-              config={config}
-              setConfig={setConfig}
-              variant="page"
-              pathPreview={`${config.intermediateDownloadPath}${t('pathPreviewExample')}`}
-            />
+            <Settings config={config} setConfig={setConfig} variant="page" />
           </main>
           <footer className="options-footer">
             <EhButton variant="primary" ehSize="md" onPress={handleSave}>

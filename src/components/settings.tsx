@@ -153,8 +153,7 @@ export const Settings: FC<{
   config: Config;
   setConfig: (config: Config) => void;
   variant?: SettingsVariant;
-  pathPreview?: string;
-}> = ({ config, setConfig, variant = 'modal', pathPreview }) => {
+}> = ({ config, setConfig, variant = 'modal' }) => {
   type ConfigKey = keyof Config;
 
   const formItemMap: Record<keyof Config, { label: ReactNode; content: ReactNode }> = {
@@ -326,21 +325,10 @@ export const Settings: FC<{
   return (
     <div className={settingsPanelClass({ variant })}>
       {variant !== 'modal'
-        ? pageGroups.map((group, groupIndex) => (
+        ? pageGroups.map((group) => (
             <section key={group.title} className={settingsGroupClass({ variant })}>
               <h2 className="eh-settings-section-title select-none">{group.title}</h2>
-              <div className={settingsGroupRowsClass({ variant })}>
-                {group.keys.map(renderRow)}
-                {variant === 'page' && groupIndex === 0 && pathPreview ? (
-                  <p className="eh-settings-path-preview">
-                    {t('pathPreview')}{' '}
-                    <code>
-                      {t('defaultFolder')}
-                      {pathPreview}
-                    </code>
-                  </p>
-                ) : null}
-              </div>
+              <div className={settingsGroupRowsClass({ variant })}>{group.keys.map(renderRow)}</div>
             </section>
           ))
         : (Object.keys(formItemMap) as ConfigKey[]).map(renderRow)}

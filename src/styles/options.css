@@ -57,14 +57,6 @@
   text-wrap: balance;
 }
 
-.options-header__desc {
-  margin: 4px 0 0;
-  max-width: 42rem;
-  font-size: 13px;
-  line-height: 1.4;
-  color: rgb(var(--eh-muted));
-}
-
 .options-main {
   flex: 1;
   padding-top: 4px;
@@ -154,23 +146,6 @@
   min-width: 0;
   font-size: 14px;
   color: rgb(var(--eh-body));
-}
-
-.options-shell .eh-settings-path-preview {
-  margin: 4px 0 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgb(var(--eh-ink) / 0.028);
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgb(var(--eh-muted));
-}
-
-.options-shell .eh-settings-path-preview code {
-  font-family: 'Roboto Mono', ui-monospace, monospace;
-  font-size: 12px;
-  color: rgb(var(--eh-ink) / 0.82);
-  word-break: break-all;
 }
 
 @media (max-width: 640px) {
