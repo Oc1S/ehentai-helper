@@ -14,8 +14,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/noto-sans-sc": "^5.2.9",
     "@fontsource/roboto-mono": "^5.2.9",
     "@number-flow/react": "^0.6.0",
     "@tanstack/react-virtual": "^3.14.5",
@@ -55,6 +53,9 @@
     "host_permissions": [
       "https://*/*"
     ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+    },
     "options_ui": {
       "page": "options.html",
       "open_in_tab": true

@@ -47,8 +47,22 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
+          name: E-Hentai Helper v${{ steps.version.outputs.version }}
           files: build/ehentai-helper-*.zip
-          generate_release_notes: true
+          generate_release_notes: false
+          body: |
+            ## 安装方法（Chrome）
+
+            1. 到下方的 **Assets**，点击下载 `ehentai-helper-${{ steps.version.outputs.version }}.zip`
+            2. 解压这个 zip（会得到一个文件夹）
+            3. 在 Chrome 浏览器的地址栏输入下面这行并回车：
+
+               `chrome://extensions`
+
+            4. 打开右上角的 **「开发者模式」**
+            5. 点击 **「加载已解压的扩展程序」**，选择刚才解压出来的那个文件夹
+            6. 装好后，扩展列表里会出现 **E-Hentai Helper**
+
+            > 升级方法：重复以上步骤，选新解压的文件夹覆盖即可。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
