@@ -296,7 +296,6 @@ export const Settings: FC<{
           items={[
             { value: 'files', label: t('outputModeFiles') },
             { value: 'cbz', label: t('outputModeCbz') },
-            { value: 'both', label: t('outputModeBoth') },
           ]}
         />
       ),

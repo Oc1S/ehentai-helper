@@ -135,7 +135,7 @@ const packCompletedCbz = async (task: ActiveDownloadTask) => {
   if (!claimed) return;
 
   const config = await configStorage.get();
-  if ((config.outputMode ?? 'files') === 'files') return;
+  if (config.outputMode !== 'cbz') return;
 
   const records = await galleryRecordsStorage.get();
   const gallery = records?.[task.galleryUrl];

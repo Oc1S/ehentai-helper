@@ -127,10 +127,7 @@
     "message": "Individual files"
   },
   "outputModeCbz": {
-    "message": "CBZ only"
-  },
-  "outputModeBoth": {
-    "message": "Both"
+    "message": "CBZ"
   },
   "initializing": {
     "message": "Initializing..."

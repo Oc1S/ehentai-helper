@@ -4,15 +4,15 @@
 <h1>E-Hentai Helper</h1>
 </div>
 
-A Chrome / Chromium extension for downloading E-Hentai galleries.
+A Chrome / Edge (Chromium) extension for downloading galleries from E-Hentai and ExHentai — no GP or credits; resume from history and export CBZ.
 
 ✨ If this extension helps you, a Star would be appreciated 🤗
 
-## Install
+## Usage
 
 Take Google Chrome as an example:
 
-1. Go to the [Release Page](../../releases) to download the zip file and extract it.
+1. Go to the [Release Page](../../releases) to download the zip file and extract it
 2. Open `chrome://extensions`
 3. Enable **Developer mode**
 4. Click **Load unpacked**, then select the extracted extension directory
@@ -21,33 +21,31 @@ Take Google Chrome as an example:
 
 ## Features
 
-+ Download an entire gallery in one click — no credits / GP, no login required
-+ Freely select the image range to download
-+ Extract and save gallery information and tags
-+ Choose file naming rules (sequence number or original image name)
-+ Optional on-the-fly image format conversion
-+ Monitor download progress in real time; retry failed images
-+ **History**: resume missing pages or redownload a previously tracked gallery without starting over
-+ **CBZ export** (Settings → Output): pack images into a single `.cbz` (`CBZ only` or `Both` with individual files)
-+ Close the popup while downloading — the task continues in the background
+- Download an entire gallery in one click — no credits / GP
+- Freely select the image range to download
+- Extract and save gallery information and tags
+- Choose file naming rules (sequence number or original image name)
+- Optional on-the-fly image format conversion
+- Monitor download progress in real time; retry failed images
+- **History**: resume missing pages or redownload a previously tracked gallery without starting over
+- **CBZ export** (Settings → Output): pack images into a single `.cbz` instead of individual files
+- Close the popup while downloading — the task continues in the background
 
 ## Preview
-
-Three shots cover the main loop: configure → download → revisit history.
 
 <table>
   <tr>
     <td width="33%" align="center" valign="top">
       <img src="https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png" alt="Before download" width="100%" /><br />
-      <sub><b>Before download</b> · pick range &amp; start</sub>
+      <sub>Pick range &amp; start</sub>
     </td>
     <td width="33%" align="center" valign="top">
       <img src="https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png" alt="Downloading" width="100%" /><br />
-      <sub><b>Downloading</b> · live progress</sub>
+      <sub>Live progress</sub>
     </td>
     <td width="33%" align="center" valign="top">
       <img src="https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png" alt="History" width="100%" /><br />
-      <sub><b>History</b> · resume or redownload</sub>
+      <sub>Resume or redownload</sub>
     </td>
   </tr>
 </table>

@@ -29,8 +29,7 @@ const fallbackMessages: Record<string, string> = {
   storageLimitHint:
     'History keeps the latest $1 of $2 entries · Gallery tracking keeps $3 of $4 galleries. Older records are removed automatically.',
   outputModeFiles: 'Individual files',
-  outputModeCbz: 'CBZ only',
-  outputModeBoth: 'Both',
+  outputModeCbz: 'CBZ',
   initializing: 'Initializing...',
   notOnGalleryPage: 'Not on a Gallery Page',
   notOnGalleryDesc: 'Open a gallery from the list or search to start downloading.',

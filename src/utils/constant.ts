@@ -6,7 +6,7 @@ export const PATTERN_IMAGE_PAGE_URL = /https?:\/\/e[-x]hentai.org\/s\/*/;
 
 export type ImageFormat = 'original' | 'jpg' | 'png' | 'webp';
 
-export type OutputMode = 'files' | 'cbz' | 'both';
+export type OutputMode = 'files' | 'cbz';
 
 export type Config = {
   intermediateDownloadPath: string;

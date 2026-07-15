@@ -127,10 +127,7 @@
     "message": "逐张文件"
   },
   "outputModeCbz": {
-    "message": "仅 CBZ"
-  },
-  "outputModeBoth": {
-    "message": "两者都要"
+    "message": "CBZ"
   },
   "initializing": {
     "message": "初始化中..."

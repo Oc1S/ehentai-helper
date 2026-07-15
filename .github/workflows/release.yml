@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - '*release*'
+      - '*release*/**'
+      - '**/release*'
+      - '**/*release*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    if: contains(github.ref_name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Package
+        run: pnpm package
+
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Rename artifact
+        run: cp build/chrome-mv3-prod.zip "build/ehentai-helper-${{ steps.version.outputs.version }}.zip"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: build/ehentai-helper-*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

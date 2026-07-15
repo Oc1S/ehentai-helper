@@ -112,8 +112,8 @@ export const requestCancelDownload = () => {
   activeSlotIds.clear();
 };
 
-const needsCbzCache = (config: Config) => (config.outputMode ?? 'files') !== 'files';
-const needsFileDownload = (config: Config) => (config.outputMode ?? 'files') !== 'cbz';
+const needsCbzCache = (config: Config) => config.outputMode === 'cbz';
+const needsFileDownload = (config: Config) => config.outputMode !== 'cbz';
 const needsImageBlob = (config: Config) =>
   needsCbzCache(config) ||
   config.saveOriginalImages ||
