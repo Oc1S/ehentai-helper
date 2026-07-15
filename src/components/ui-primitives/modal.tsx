@@ -6,16 +6,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
 import { t } from '@/utils/i18n';
-import { dialogEnter, fadeEnter, overlayEnter, springSnappy } from '@/utils/motion';
+import { dialogEnter, overlayEnter } from '@/utils/motion';
 
 import { EhButton } from '../eh-button';
 
+/** Scrim/blur must appear instantly — never fade the root (opacity fades backdrop-filter). */
 const modalRootMotion = {
-  ...fadeEnter,
-  initial: { ...fadeEnter.initial, pointerEvents: 'auto' as const },
-  animate: { ...fadeEnter.animate, pointerEvents: 'auto' as const },
-  exit: { ...fadeEnter.exit, pointerEvents: 'none' as const },
-  transition: springSnappy,
+  initial: { opacity: 1, pointerEvents: 'auto' as const },
+  animate: { opacity: 1, pointerEvents: 'auto' as const },
+  exit: { opacity: 0, pointerEvents: 'none' as const },
+  transition: { duration: 0.1, ease: 'easeOut' },
 } as const;
 
 type ModalPresentation = 'dialog' | 'overlay';

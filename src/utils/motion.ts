@@ -5,19 +5,19 @@
 
 export const springSnappy = {
   type: 'spring',
-  visualDuration: 0.18,
+  visualDuration: 0.12,
   bounce: 0,
 } as const;
 
 export const springSoft = {
   type: 'spring',
-  visualDuration: 0.25,
+  visualDuration: 0.16,
   bounce: 0,
 } as const;
 
 export const springGentle = {
   type: 'spring',
-  visualDuration: 0.3,
+  visualDuration: 0.2,
   bounce: 0,
 } as const;
 
@@ -40,7 +40,7 @@ export const tabEnter = {
   initial: { opacity: 0, y: 4, filter: 'blur(2px)' },
   animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
   exit: { opacity: 0, y: -3, filter: 'blur(1px)' },
-  transition: { type: 'spring', visualDuration: 0.14, bounce: 0 },
+  transition: { type: 'spring', visualDuration: 0.1, bounce: 0 },
 } as const;
 
 /** Overlay / sheet enter — slightly more travel, subtler exit */
@@ -71,8 +71,8 @@ export const staggerContainer = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.02,
+      staggerChildren: 0.025,
+      delayChildren: 0.01,
     },
   },
 } as const;

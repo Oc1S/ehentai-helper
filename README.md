@@ -36,15 +36,15 @@ Take Google Chrome as an example:
 <table>
   <tr>
     <td width="33%" align="center" valign="top">
-      <img src="https://s2.loli.net/2025/05/18/dv8umQTNf5nletE.png" alt="Before download" width="100%" /><br />
+      <img src="./assets/screenshots/screenshot_main.png" alt="Main" width="100%" /><br />
       <sub>Pick range &amp; start</sub>
     </td>
     <td width="33%" align="center" valign="top">
-      <img src="https://s2.loli.net/2025/05/18/UilOgKQkseqI8jV.png" alt="Downloading" width="100%" /><br />
-      <sub>Live progress</sub>
+      <img src="./assets/screenshots/screenshot_settings.png" alt="Settings" width="100%" /><br />
+      <sub>Download &amp; output options</sub>
     </td>
     <td width="33%" align="center" valign="top">
-      <img src="https://s2.loli.net/2025/05/18/olwI84gX7Ku6tPd.png" alt="History" width="100%" /><br />
+      <img src="./assets/screenshots/screenshot_history.png" alt="History" width="100%" /><br />
       <sub>Resume or redownload</sub>
     </td>
   </tr>
