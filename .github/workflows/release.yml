@@ -66,3 +66,10 @@ jobs:
             > 升级方法：重复以上步骤，选新解压的文件夹覆盖即可。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete release branch
+        if: startsWith(github.ref_name, 'release/')
+        run: |
+          git push origin --delete "${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

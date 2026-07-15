@@ -10,6 +10,7 @@
     "test": "esbuild tests/download-state.test.ts --bundle --platform=node --format=cjs --outfile=test-results/download-state.test.cjs && node --test test-results/download-state.test.cjs",
     "package": "plasmo package",
     "check:indexes": "node scripts/check-download-indexes.mjs",
+    "release": "node scripts/release.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {
